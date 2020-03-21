@@ -1,9 +1,12 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 include 'globals.php';
 date_default_timezone_set('America/Bahia');
 
 //Login
-$api_url = 'http://pt.wikipedia.org/w/api.php';
+$api_url = 'https://pt.wikipedia.org/w/api.php';
 $username = 'AlbeROBOT';
 $password = 'password';
 $wiki = new Wikimate($api_url);
@@ -39,7 +42,7 @@ $saida = $saida."-->{{#ifeq:{{{2}}}|confirmados-UF|".$total[1][0]."{{#ifeq:{{{re
 
 //Compara se há diferença entre os totais
 if ($anterior == $total[1][0]) {
-	die('Total igual. Nada a fazer.');
+	die("Total igual (".$anterior."). Nada a fazer");
 } else {
 	echo "Total anterior = ".$anterior."<br>Total atual = ".$total[1][0]."<br>";
 }
@@ -53,8 +56,8 @@ $wikiCode = implode("%", $pieces);
 echo '<textarea rows="4" cols="50">'.$wikiCode."</textarea><br>";
 
 //Gravar código
-if ($page->setText($wikiCode)) {
-	echo "\n'Edição realizada.\n";
+if ($page->setText($wikiCode, 0, true, "bot: Atualizando estatísticas")) {
+	echo "\nEdição realizada.\n";
 } else {
 	$error = $page->getError();
 	echo "\nError: " . print_r($error, true) . "\n";
