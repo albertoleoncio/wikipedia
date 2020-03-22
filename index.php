@@ -7,8 +7,7 @@ date_default_timezone_set('America/Bahia');
 
 //Login
 $api_url = 'https://pt.wikipedia.org/w/api.php';
-$username = 'AlbeROBOT';
-$password = 'password';
+include 'credenciais.php';
 $wiki = new Wikimate($api_url);
 if ($wiki->login($username, $password))
 	echo 'Login OK<br>' ;
@@ -27,8 +26,17 @@ preg_match_all('/confirmados-UF\|([0-9]*)/', $wikiCode, $output_anterior);
 $anterior = $output_anterior[1][0];
 
 //Recupera dados da fonte
-$url = "https://g1.globo.com/bemestar/coronavirus/noticia/2020/03/".date("d")."/casos-de-coronavirus-no-brasil-em-".date("d")."-de-marco.ghtml";
-$html = file_get_contents($url);
+$dia = date("d");
+$url = "https://g1.globo.com/bemestar/coronavirus/noticia/2020/03/".$dia."/casos-de-coronavirus-no-brasil-em-".$dia."-de-marco.ghtml";
+$html = @file_get_contents($url);
+if ($html == false) {
+	$dia = $dia-1;
+	$url = "https://g1.globo.com/bemestar/coronavirus/noticia/2020/03/".$dia."/casos-de-coronavirus-no-brasil-em-".$dia."-de-marco.ghtml";
+	$html = @file_get_contents($url);
+	if ($html == false) {
+		die("Fonte não disponível.");
+	}
+}
 
 //Regex - extrai dados da fonte e insere em uma array
 preg_match_all('/<td>([A-Z]{2})<\/td> <td>([0-9]*)/', $html, $UFs);
@@ -38,13 +46,13 @@ for ($x = 0; $x < count($UFs[1]); $x++) {
     $saida = $saida.$linha;
 }
 preg_match_all('/<td>Total<\/td> <td>([0-9]*)/', $html, $total);
-$saida = $saida."-->{{#ifeq:{{{2}}}|confirmados-UF|".$total[1][0]."{{#ifeq:{{{ref}}}|sim|<ref name=\"casos confirmados - estaduais\">{{citar web|URL=".$url."|título=G1}}</ref>|}}|}}<!--\n".time()."\n";
+$saida = $saida."-->{{#ifeq:{{{2}}}|confirmados-UF|".$total[1][0]."{{#ifeq:{{{ref}}}|sim|<ref name=\"casos confirmados - estaduais\">{{citar web|URL=".$url."|título=G1}}</ref>|}}|}}<!--\n";
 
 //Compara se há diferença entre os totais
 if ($anterior == $total[1][0]) {
-	die("Total igual (".$anterior."). Nada a fazer");
+	die("Total igual (".$anterior."). Nada a fazer.");
 } else {
-	echo "Total anterior = ".$anterior."<br>Total atual = ".$total[1][0]."<br>";
+	echo "Total anterior = ".$anterior."<br>Total atual = ".$total[1][0].".<br>";
 }
 
 //Substituição do código antigo da predefinição pelo código novo
