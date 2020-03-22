@@ -53,9 +53,9 @@ $output = array_values($resultado);
 //Monta saida para inserir na página
 $saida = "<!--\n";
 for ($x = 0; $x < count($output); $x++) {
-    $linha ="-->{{#ifeq:{{{1}}}|".$output[$x][0]."-C|".preg_replace('/,/', '', $output[$x][1])."|}}<!--\n".
-    		"-->{{#ifeq:{{{1}}}|".$output[$x][0]."-M|".preg_replace('/,/', '', $output[$x][2])."|}}<!--\n".
-      		"-->{{#ifeq:{{{1}}}|".$output[$x][0]."-S|".preg_replace('/,/', '', $output[$x][3])."|}}<!--\n".
+    $linha ="-->{{#ifeq:{{{1}}}|".$output[$x][0]."-C|{{fmtn|".preg_replace('/,/', '', $output[$x][1])."}}|}}<!--\n".
+    		"-->{{#ifeq:{{{1}}}|".$output[$x][0]."-M|{{fmtn|".preg_replace('/,/', '', $output[$x][2])."}}|}}<!--\n".
+      		"-->{{#ifeq:{{{1}}}|".$output[$x][0]."-S|{{fmtn|".preg_replace('/,/', '', $output[$x][3])."}}|}}<!--\n".
     		"-->{{#ifeq:{{{1}}}|".$output[$x][0]."-F|".$output[$x][4]."|}}<!--\n";
     $saida = $saida.$linha;
 }
