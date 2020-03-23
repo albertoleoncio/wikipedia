@@ -9,7 +9,7 @@ $url = "https://en.wikipedia.org/w/index.php?title=Template:2019%E2%80%9320_coro
 $html = @file_get_contents($url);
 
 //Separa paises e insere em um array
-$html = explode("|-", $html);
+$htmle = explode("|-", $html);
 
 //Predefine $resultado como uma array
 $resultado = array();
@@ -19,20 +19,20 @@ $de = " March 2020";
 $para = "-03-2020"; 
 
 //Loop para processar cada item da array
-for ($x = 0; $x < count($html); $x++) {
+for ($x = 0; $x < count($htmle); $x++) {
 
 	//Verifica se item possui "flagdeco", indicando que a string se refere a um país
-	if (strpos($html[$x], 'flagdeco') !== false) {
+	if (strpos($htmle[$x], 'flagdeco') !== false) {
 
 		//Separa a string em substrings, baseado na marcação de estilo da tabela
-		$result = preg_split('/\| *?style="padding:0px 2px;" *?\| ?/', $html[$x]);
+		$result = preg_split('/\| *?style="padding:0px 2px;" *?\| ?/', $htmle[$x]);
 
 		//Separa o nome do país e insere na array de resultado
 		preg_match_all('/{{flagdeco\|([^}]*)}}/', $result[0], $array1);
 		$resultado[$x][0] = $array1[1][0];
 
 		//Separa informações numéricas e insere na array
-		preg_match_all('/\| *?style="padding:0px 2px;" *?\| *?([^\n]*)/', $html[$x], $array2);
+		preg_match_all('/\| *?style="padding:0px 2px;" *?\| *?([^\n]*)/', $htmle[$x], $array2);
 		$resultado[$x][1] = trim($array2[1][0]);
 		$resultado[$x][2] = trim($array2[1][1]);
 		$resultado[$x][3] = trim($array2[1][2]);
@@ -43,7 +43,7 @@ for ($x = 0; $x < count($html); $x++) {
 	} else {
 
 		//Removendo item, já que não se trata de um país
-		unset($html[$x]);
+		unset($htmle[$x]);
 	}
 }
 
@@ -59,6 +59,13 @@ for ($x = 0; $x < count($output); $x++) {
     		"-->{{#ifeq:{{{1}}}|".$output[$x][0]."-F|".$output[$x][4]."|}}<!--\n";
     $saida = $saida.$linha;
 }
+
+//Regex - captura total anterior
+preg_match_all('/! class="covid-total-row"[^\']*\'\'\'([^\']*)/', $html, $total);
+$saida = $saida."-->{{#ifeq:{{{1}}}|paises-C|{{fmtn|".preg_replace('/,/', '', $total[1][1])."}}|}}<!--\n".
+    			"-->{{#ifeq:{{{1}}}|paises-M|{{fmtn|".preg_replace('/,/', '', $total[1][2])."}}|}}<!--\n".
+      			"-->{{#ifeq:{{{1}}}|paises-S|{{fmtn|".preg_replace('/,/', '', $total[1][3])."}}|}}<!--\n".
+      			"-->{{#ifeq:{{{1}}}|paises-P|{{fmtn|".preg_replace('/,/', '', $total[1][0])."}}|}}\n";
 
 /*$saida = "{| class='wikitable'\n|+\n!Local\n!Casos\n!Mortes\n!Recuperados\n!Fonte\n";
 for ($x = 0; $x < count($output); $x++) {
