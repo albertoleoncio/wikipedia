@@ -3,6 +3,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 include 'globals.php';
+echo "<pre>";
 
 //Recupera dados da fonte
 $url = "https://en.wikipedia.org/w/index.php?title=Template:2019%E2%80%9320_coronavirus_pandemic_data&action=raw";
@@ -27,18 +28,20 @@ for ($x = 0; $x < count($htmle); $x++) {
 		//Separa a string em substrings, baseado na marcação de estilo da tabela
 		$result = preg_split('/\| *?style="padding:0px 2px;" *?\| ?/', $htmle[$x]);
 
-		//Separa o nome do país e insere na array de resultado
+		//Separa o nome do país e insere na array de resultado como uma key
 		preg_match_all('/{{flagdeco\|([^}]*)}}/', $result[0], $array1);
-		$resultado[$x][0] = $array1[1][0];
 
-		//Separa informações numéricas e insere na array
+		//Insere o nome do país como um valor na array de resultado
+		$resultado[$array1[1][0]][0] = $array1[1][0];
+
+		//Separa dados numéricos e insere na array de resultado
 		preg_match_all('/\| *?style="padding:0px 2px;" *?\| *?([^\n]*)/', $htmle[$x], $array2);
-		$resultado[$x][1] = trim($array2[1][0]);
-		$resultado[$x][2] = trim($array2[1][1]);
-		$resultado[$x][3] = trim($array2[1][2]);
+		$resultado[$array1[1][0]][1] = trim($array2[1][0]);
+		$resultado[$array1[1][0]][2] = trim($array2[1][1]);
+		$resultado[$array1[1][0]][3] = trim($array2[1][2]);
 
-		//Processa a fonte e insere na array
-		$resultado[$x][4] = str_replace($de, $para, preg_replace('/date=([0-9]{4})-([0-9]{2})-([0-9]{2})/', 'date=$3-$2-$1', trim($result[4])));
+		//Processa a fonte e insere na array de resultado
+		$resultado[$array1[1][0]][4] = str_replace($de, $para, preg_replace('/date=([0-9]{4})-([0-9]{2})-([0-9]{2})/', 'date=$3-$2-$1', trim($result[4])));
 
 	} else {
 
@@ -46,33 +49,6 @@ for ($x = 0; $x < count($htmle); $x++) {
 		unset($htmle[$x]);
 	}
 }
-
-//Reorganiza array
-$output = array_values($resultado);
-
-//Monta saida para inserir na página
-$saida = "<!--\n";
-for ($x = 0; $x < count($output); $x++) {
-    $linha ="-->{{#ifeq:{{{1}}}|".$output[$x][0]."-C|{{fmtn|".preg_replace('/,/', '', $output[$x][1])."}}|}}<!--\n".
-    		"-->{{#ifeq:{{{1}}}|".$output[$x][0]."-M|{{fmtn|".preg_replace('/,/', '', $output[$x][2])."}}|}}<!--\n".
-      		"-->{{#ifeq:{{{1}}}|".$output[$x][0]."-S|{{fmtn|".preg_replace('/,/', '', $output[$x][3])."}}|}}<!--\n".
-    		"-->{{#ifeq:{{{1}}}|".$output[$x][0]."-F|".$output[$x][4]."|}}<!--\n";
-    $saida = $saida.$linha;
-}
-
-//Regex - captura total anterior
-preg_match_all('/! class="covid-total-row"[^\']*\'\'\'([^\']*)/', $html, $total);
-$saida = $saida."-->{{#ifeq:{{{1}}}|paises-C|{{fmtn|".preg_replace('/,/', '', $total[1][1])."}}|}}<!--\n".
-    			"-->{{#ifeq:{{{1}}}|paises-M|{{fmtn|".preg_replace('/,/', '', $total[1][2])."}}|}}<!--\n".
-      			"-->{{#ifeq:{{{1}}}|paises-S|{{fmtn|".preg_replace('/,/', '', $total[1][3])."}}|}}<!--\n".
-      			"-->{{#ifeq:{{{1}}}|paises-P|{{fmtn|".preg_replace('/,/', '', $total[1][0])."}}|}}\n";
-
-/*$saida = "{| class='wikitable'\n|+\n!Local\n!Casos\n!Mortes\n!Recuperados\n!Fonte\n";
-for ($x = 0; $x < count($output); $x++) {
-    $linha = "|-\n|".$output[$x][0]."\n|".preg_replace('/,/', '', $output[$x][1])."\n|".preg_replace('/,/', '', $output[$x][2])."\n|".preg_replace('/,/', '', $output[$x][3])."\n|".$output[$x][4]."\n";
-    $saida = $saida.$linha;
-}
-$saida = $saida."|}";*/
 
 //Login
 $api_url = 'https://pt.wikipedia.org/w/api.php';
@@ -86,12 +62,45 @@ else {
 }
 
 //Recupera dados da predefinição
-$page = $wiki->getPage('Predefinição:Dados da pandemia de COVID-19/wikien');
+$page = $wiki->getPage('Predefinição:Dados da pandemia de COVID-19');
 if (!$page->exists()) die('Page not found');
 $wikiCode = $page->getText();
 
+//Separa países e insere em uma array, utilizando a marcação do bot <!-- #bot#(País)-->
+$pieces = explode("#bot", $wikiCode);
+
+//Loop para processar cada item da array
+for ($x = 0; $x < count($pieces); $x++) {
+
+	//Verifica se item possui "#(", indicando que a string se refere a um país
+	if (substr($pieces[$x], 0, 2) == "#(") {
+
+		//Extrai o nome do país
+		preg_match('/#\(([A-Za-z\ \-\(]*)\){1,2}/', $pieces[$x], $keyarray);
+
+		//Converte a array em uma string
+		$key = $keyarray[1];
+
+		//Verifica se o valor da string corresponde a um país listado na array de resultado
+		if (array_key_exists($key, $resultado)) {
+
+			//Substitui os dados no item com as informações atualizadas
+			$pieces[$x] = 
+				"#(".preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][0]).")-->{{formatnum:".
+				preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][1]))."}} || {{formatnum:".
+				preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][2]))."}} || {{formatnum:".
+				preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][3]))."}} || ".
+				preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][4])."<!-- "
+			;
+		}
+	}	
+}
+
+//Remonta o texto da predefinição a partir da array
+$wikiCode = implode("#bot", $pieces);
+
 //Gravar código
-if ($page->setText($saida, 0, true, "bot: Atualizando estatísticas")) {
+if ($page->setText($wikiCode, 0, true, "bot: Atualizando estatísticas")) {
 	echo "\nEdição realizada.\n";
 } else {
 	$error = $page->getError();
