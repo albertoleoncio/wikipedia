@@ -34,9 +34,13 @@ for ($x = 0; $x < count($htmle); $x++) {
 		//Insere o nome do país como um valor na array de resultado
 		$resultado[$array1[1][0]][0] = $array1[1][0];
 
+		//Conta o numero de strings dentro da array
 		$numitens = count($result);
 
+		//Confere se existe uma diferença entre a quantidade de chaves "}{", o que indica que a fonte está dividida em duas strings
 		if (substr_count($result[$numitens-1], '{') !== substr_count($result[$numitens-1], '}')) {
+
+			//Concatena as duas ultimas strings, elimina a última e subtrai 1 na contagem de strings da array
 			$result[$numitens-2] = $result[$numitens-2].'|'.$result[$numitens-1];
 			unset($result[$numitens-1]);
 			$numitens--;
