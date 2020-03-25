@@ -26,7 +26,7 @@ for ($x = 0; $x < count($htmle); $x++) {
 	if (strpos($htmle[$x], 'flagdeco') !== false) {
 
 		//Separa a string em substrings, baseado na marcação de estilo da tabela
-		$result = preg_split('/\| *?style="padding:0px 2px;" *?\| ?/', $htmle[$x]);
+		$result = preg_split('/\n\|/', $htmle[$x]);
 
 		//Separa o nome do país e insere na array de resultado como uma key
 		preg_match_all('/{{flagdeco\|([^}]*)}}/', $result[0], $array1);
@@ -34,14 +34,21 @@ for ($x = 0; $x < count($htmle); $x++) {
 		//Insere o nome do país como um valor na array de resultado
 		$resultado[$array1[1][0]][0] = $array1[1][0];
 
+		$numitens = count($result);
+
+		if (substr_count($result[$numitens-1], '{') !== substr_count($result[$numitens-1], '}')) {
+			$result[$numitens-2] = $result[$numitens-2].'|'.$result[$numitens-1];
+			unset($result[$numitens-1]);
+			$numitens--;
+		}
+		
 		//Separa dados numéricos e insere na array de resultado
-		preg_match_all('/\| *?style="padding:0px 2px;" *?\| *?([^\n]*)/', $htmle[$x], $array2);
-		$resultado[$array1[1][0]][1] = trim($array2[1][0]);
-		$resultado[$array1[1][0]][2] = trim($array2[1][1]);
-		$resultado[$array1[1][0]][3] = trim($array2[1][2]);
+		$resultado[$array1[1][0]][1] = trim($result[$numitens-4]);
+		$resultado[$array1[1][0]][2] = trim($result[$numitens-3]);
+		$resultado[$array1[1][0]][3] = trim($result[$numitens-2]);
 
 		//Processa a fonte e insere na array de resultado
-		$resultado[$array1[1][0]][4] = str_replace($de, $para, preg_replace('/date=([0-9]{4})-([0-9]{2})-([0-9]{2})/', 'date=$3-$2-$1', trim($result[4])));
+		$resultado[$array1[1][0]][4] = str_replace($de, $para, preg_replace('/date=([0-9]{4})-([0-9]{2})-([0-9]{2})/', 'date=$3-$2-$1', trim($result[$numitens-1])));
 
 	} else {
 
