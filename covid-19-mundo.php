@@ -22,17 +22,17 @@ $para = "-03-2020";
 //Loop para processar cada item da array
 for ($x = 0; $x < count($htmle); $x++) {
 
-	//Verifica se item possui "flagdeco", indicando que a string se refere a um país
-	if (strpos($htmle[$x], 'flagdeco') !== false) {
+	//Verifica se item possui marcação do arquivo da bandeira, indicando que a string se refere a um país
+	if (strpos($htmle[$x], '!scope="row"|[[File:F') !== false) {
 
 		//Separa a string em substrings, baseado na marcação de estilo da tabela
 		$result = preg_split('/\n\|/', $htmle[$x]);
 
-		//Separa o nome do país e insere na array de resultado como uma key
-		preg_match_all('/{{flagdeco\|([^}]*)}}/', $result[0], $array1);
+		//Separa o nome do país, elimina predefinições como as marcas de rodapé e insere na array de resultado como uma key
+		preg_match_all('/!scope="row"\|\[\[[^F][^\|]*\|([^\|]*)]]/', preg_replace('/{{[^}]*}}/', '', $result[0]), $array1);
 
 		//Insere o nome do país como um valor na array de resultado
-		$resultado[$array1[1][0]][0] = $array1[1][0];
+		$resultado[$array1[1][0]][0] = trim($array1[1][0]);
 
 		//Conta o numero de strings dentro da array
 		$numitens = count($result);
