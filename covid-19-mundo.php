@@ -73,7 +73,7 @@ else {
 }
 
 //Recupera dados da predefinição
-$page = $wiki->getPage('Usuário:Albertoleoncio/Teste2');
+$page = $wiki->getPage('Predefinição:Dados da pandemia de COVID-19');
 if (!$page->exists()) die('Page not found');
 $wikiCode = $page->getText();
 
