@@ -23,27 +23,32 @@ $para = "-03-2020";
 for ($x = 0; $x < count($htmle); $x++) {
 
 	//Verifica se item possui marcação do arquivo da bandeira, indicando que a string se refere a um país
-	if (strpos($htmle[$x], '!scope="row"|[[File:F') !== false) {
+	if (strpos($htmle[$x], '[[File:Flag') !== false) {
 
 		//Separa a string em substrings, baseado na marcação de estilo da tabela
 		$result = preg_split('/\n\|/', $htmle[$x]);
 
 		//Separa o nome do país, elimina predefinições como as marcas de rodapé e insere na array de resultado como uma key
-		preg_match_all('/!scope="row"\|\[\[[^F][^\|]*\|([^\|]*)]]/', preg_replace('/{{[^}]*}}/', '', $result[0]), $array1);
+		preg_match_all('/! ?scope="row" ?\|\[\[[^F][^\|]*\|([^\|]*)]]/', preg_replace('/{{[^}]*}}|<[^>]*>|\([^\)]*\)/', '', $result[0]), $array1);
+		$array1[1][0] = trim($array1[1][0]);
+
 
 		//Insere o nome do país como um valor na array de resultado
-		$resultado[$array1[1][0]][0] = trim($array1[1][0]);
+		$resultado[$array1[1][0]][0] = $array1[1][0];
 
 		//Conta o numero de strings dentro da array
 		$numitens = count($result);
 
 		//Confere se existe uma diferença entre a quantidade de chaves "}{", o que indica que a fonte está dividida em duas strings
-		if (substr_count($result[$numitens-1], '{') !== substr_count($result[$numitens-1], '}')) {
-
+		$abrechave = substr_count($result[$numitens-1], '{');
+		$fechachave = substr_count($result[$numitens-1], '}');
+		while ($abrechave !== $fechachave) {
 			//Concatena as duas ultimas strings, elimina a última e subtrai 1 na contagem de strings da array
 			$result[$numitens-2] = $result[$numitens-2].'|'.$result[$numitens-1];
 			unset($result[$numitens-1]);
 			$numitens--;
+			$abrechave = substr_count($result[$numitens-1], '{');
+			$fechachave = substr_count($result[$numitens-1], '}');
 		}
 		
 		//Separa dados numéricos e insere na array de resultado
@@ -53,11 +58,6 @@ for ($x = 0; $x < count($htmle); $x++) {
 
 		//Processa a fonte e insere na array de resultado
 		$resultado[$array1[1][0]][4] = str_replace($de, $para, preg_replace('/date=([0-9]{4})-([0-9]{2})-([0-9]{2})/', 'date=$3-$2-$1', trim($result[$numitens-1])));
-
-	} else {
-
-		//Removendo item, já que não se trata de um país
-		unset($htmle[$x]);
 	}
 }
 
@@ -73,7 +73,7 @@ else {
 }
 
 //Recupera dados da predefinição
-$page = $wiki->getPage('Predefinição:Dados da pandemia de COVID-19');
+$page = $wiki->getPage('Usuário:Albertoleoncio/Teste2');
 if (!$page->exists()) die('Page not found');
 $wikiCode = $page->getText();
 
@@ -87,7 +87,7 @@ for ($x = 0; $x < count($pieces); $x++) {
 	if (substr($pieces[$x], 0, 2) == "#(") {
 
 		//Extrai o nome do país
-		preg_match('/#\(([A-Za-z\ \-\(]*)\){1,2}/', $pieces[$x], $keyarray);
+		preg_match('/#\(([A-Za-z\ \.\-\(]*)\){1,2}/', $pieces[$x], $keyarray);
 
 		//Converte a array em uma string
 		$key = $keyarray[1];
