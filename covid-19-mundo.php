@@ -29,7 +29,8 @@ for ($x = 0; $x < count($htmle); $x++) {
 		$result = preg_split('/\n\|/', $htmle[$x]);
 
 		//Separa o nome do país, elimina predefinições como as marcas de rodapé e insere na array de resultado como uma key
-		preg_match_all('/! ?scope="row" ?\|\[\[[^F][^\|]*\|([^\|]*)]]/', preg_replace('/{{[^}]*}}|<[^>]*>|\([^\)]*\)/', '', $result[0]), $array1);
+		preg_match_all('/! ?scope="row" ?\|\'{0,2}\[\[[^F][^\|]*\|([^\|]*)]]/', preg_replace('/{{[^}]*}}|<[^>]*>|\([^\)]*\)/', '', $result[0]), $array1);
+		//var_dump($array1);
 		$array1[1][0] = trim($array1[1][0]);
 
 
