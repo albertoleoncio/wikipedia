@@ -25,21 +25,20 @@ $wikiCode = $page->getText();
 preg_match_all('/confirmados-UF\|([0-9]*)/', $wikiCode, $output_anterior);
 $anterior = $output_anterior[1][0];
 
-//Recupera dados do link da fonte
+//Recupera dados do link da referência
 $dia = date("d");
 $url = "https://g1.globo.com/bemestar/coronavirus/noticia/2020/03/".$dia."/casos-de-coronavirus-no-brasil-em-".$dia."-de-marco.ghtml";
-$html = @file_get_contents($url);
-if ($html == false) {
+$ref = @file_get_contents($url);
+if ($ref == false) {
 	$dia = $dia-1;
 	$url = "https://g1.globo.com/bemestar/coronavirus/noticia/2020/03/".$dia."/casos-de-coronavirus-no-brasil-em-".$dia."-de-marco.ghtml";
-	$html = @file_get_contents($url);
-	if ($html == false) {
+	$ref = @file_get_contents($url);
+	if ($ref == false) {
 		die("Fonte não disponível.");
 	}
 }
-unset($html);
 
-//Recupera dados da fonte real
+//Recupera dados da fonte
 $urlfonte = "https://www.datawrapper.de/_/eXkcW/";
 $html = @file_get_contents($urlfonte);
 
