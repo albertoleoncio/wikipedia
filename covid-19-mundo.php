@@ -10,14 +10,14 @@ $url = "https://en.wikipedia.org/w/index.php?title=Template:2019%E2%80%9320_coro
 $html = @file_get_contents($url);
 
 //Separa paises e insere em um array
-$htmle = explode("|-", $html);
+$htmle = explode("\n|-", $html);
 
 //Predefine $resultado como uma array
 $resultado = array();
 
 //Lista de substituição
-$de = " March 2020";
-$para = "-03-2020"; 
+$de = array(" March 2020"," April 2020","|url-status=live","April 2, 2020");
+$para = array("-03-2020","-04-2020","","02-04-2020"); 
 
 //Loop para processar cada item da array
 for ($x = 0; $x < count($htmle); $x++) {
@@ -26,12 +26,12 @@ for ($x = 0; $x < count($htmle); $x++) {
 	if (strpos($htmle[$x], '[[File:Flag') !== false) {
 
 		//Separa a string em substrings, baseado na marcação de estilo da tabela
-		$result = preg_split('/\n\|/', $htmle[$x]);
+		$result = preg_split('/\n *\|/', $htmle[$x]);
 
 		//Separa o nome do país, elimina predefinições como as marcas de rodapé e insere na array de resultado como uma key
 		preg_match_all('/! ?scope="row" ?\|\'{0,2}\[\[[^F][^\|]*\|([^\|]*)]]/', preg_replace('/{{[^}]*}}|<[^>]*>|\([^\)]*\)/', '', $result[0]), $array1);
-		//var_dump($array1);
-		$array1[1][0] = trim($array1[1][0]);
+		echo "-".@$array1[1][0]."\n";
+		$array1[1][0] = @trim($array1[1][0]);
 
 
 		//Insere o nome do país como um valor na array de resultado

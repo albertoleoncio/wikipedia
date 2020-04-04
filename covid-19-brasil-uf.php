@@ -27,90 +27,80 @@ $anterior = $output_anterior[1][0];
 
 //Recupera dados do link da referência
 $dia = date("d");
-$url = "https://g1.globo.com/bemestar/coronavirus/noticia/2020/03/".$dia."/casos-de-coronavirus-no-brasil-em-".$dia."-de-marco.ghtml";
-$ref = @file_get_contents($url);
+$urlfonte = "https://g1.globo.com/bemestar/coronavirus/noticia/2020/04/".$dia."/casos-de-coronavirus-no-brasil-em-".ltrim($dia,"0")."-de-abril.ghtml";
+$ref = @file_get_contents($urlfonte);
 if ($ref == false) {
-	$dia = $dia-1;
-	$url = "https://g1.globo.com/bemestar/coronavirus/noticia/2020/03/".$dia."/casos-de-coronavirus-no-brasil-em-".$dia."-de-marco.ghtml";
-	$ref = @file_get_contents($url);
+	$dia = date("d", strtotime("-1 day"));
+	$urlfonte = "https://g1.globo.com/bemestar/coronavirus/noticia/2020/04/".$dia."/casos-de-coronavirus-no-brasil-em-".ltrim($dia,"0")."-de-abril.ghtml";
+	$ref = @file_get_contents($urlfonte);
 	if ($ref == false) {
 		die("Fonte não disponível.");
 	}
 }
 
 //Recupera dados da fonte
-$urlfonte = "https://www.datawrapper.de/_/eXkcW/";
-$html = @file_get_contents($urlfonte);
+$url = "https://datawrapper.dwcdn.net/M2Eyg/";
+$html = @file_get_contents($url);
+$size = strlen($html);
 
-//Regex para isolar o JSON e transforma em array
-preg_match_all('/id="chart-data">(.*)<\/script><script/', $html, $json);
-$array = json_decode($json[1][0], true);
+//Loop para escapar dos redirecionamentos
+while ($size < 100) {
+	preg_match('/url=..\/..\/.{5}\/(.*)"/', $html, $redirect);
+	$urlget = $url.$redirect[1];
+	$html = @file_get_contents($urlget);
+	$size = strlen($html);
+}
 
-//Isola trecho do log de mudanças e insere em uma array
-$changes = $array['metadata']['data']['changes'];
+//Regex para isolar JSON de dados da página
+preg_match_all('/chartData: \"*(.*)\"\,\n/', $html, $chartData);
 
-//Insere valores de base no array final
+//Regex para isolar dados das UFs
+preg_match_all('/\n([^;]*);([0-9]*);([0-9]*)/', json_decode('{"1":"'.$chartData[1][0].'"}', true)[1], $dados);
+
+//Constroi array para conversão de nomes dos estados para siglas
+$estados = array_flip(array(
+"AC"=>"Acre",
+"AL"=>"Alagoas",
+"AM"=>"Amazonas",
+"AP"=>"Amapá",
+"BA"=>"Bahia",
+"CE"=>"Ceará",
+"DF"=>"Distrito Federal",
+"ES"=>"Espírito Santo",
+"GO"=>"Goiás",
+"MA"=>"Maranhão",
+"MT"=>"Mato Grosso",
+"MS"=>"Mato Grosso do Sul",
+"MG"=>"Minas Gerais",
+"PA"=>"Pará",
+"PB"=>"Paraíba",
+"PR"=>"Paraná",
+"PE"=>"Pernambuco",
+"PI"=>"Piauí",
+"RJ"=>"Rio de Janeiro",
+"RN"=>"Rio Grande do Norte",
+"RO"=>"Rondônia",
+"RS"=>"Rio Grande do Sul",
+"RR"=>"Roraima",
+"SC"=>"Santa Catarina",
+"SE"=>"Sergipe",
+"SP"=>"São Paulo",
+"TO"=>"Tocantins"));
+
+//Loop para montar a array das UFs
 $UFs = array();
-$UFs[1][1] = 'confirmados';	
-$UFs[1][2] = 'AC';	
-$UFs[1][3] = 'AL';	
-$UFs[1][4] = 'AP';	
-$UFs[1][5] = 'AM';	
-$UFs[1][6] = 'BA';	
-$UFs[1][7] = 'CE';	
-$UFs[1][8] = 'DF';	
-$UFs[1][9] = 'ES';	
-$UFs[1][10] = 'GO';	
-$UFs[1][11] = 'MA';	
-$UFs[1][12] = 'MT';	
-$UFs[1][13] = 'MS';	
-$UFs[1][14] = 'MG';	
-$UFs[1][15] = 'PA';	
-$UFs[1][16] = 'PB';	
-$UFs[1][17] = 'PR';	
-$UFs[1][18] = 'PE';	
-$UFs[1][19] = 'PI';	
-$UFs[1][20] = 'RJ';	
-$UFs[1][21] = 'RN';	
-$UFs[1][22] = 'RS';	
-$UFs[1][23] = 'RO';	
-$UFs[1][24] = 'RR';	
-$UFs[1][25] = 'SC';	
-$UFs[1][26] = 'SP';	
-$UFs[1][27] = 'SE';	
-$UFs[1][28] = 'TO';
-$UFs[2][1] = 3475;
-$UFs[2][2] = 25;
-$UFs[2][3] = 12;
-$UFs[2][4] = 2;
-$UFs[2][5] = 81;
-$UFs[2][6] = 123;
-$UFs[2][7] = 282;
-$UFs[2][8] = 240;
-$UFs[2][9] = 54;
-$UFs[2][10] = 49;
-$UFs[2][11] = 14;
-$UFs[2][12] = 11;
-$UFs[2][13] = 28;
-$UFs[2][14] = 189;
-$UFs[2][15] = 16;
-$UFs[2][16] = 10;
-$UFs[2][17] = 125;
-$UFs[2][18] = 57;
-$UFs[2][19] = 9;
-$UFs[2][20] = 493;
-$UFs[2][21] = 28;
-$UFs[2][22] = 197;
-$UFs[2][23] = 6;
-$UFs[2][24] = 12;
-$UFs[2][25] = 163;
-$UFs[2][26] = 1223;
-$UFs[2][27] = 16;
-$UFs[2][28] = 9;
-
-//Edita a array final com a array de mudanças
-foreach ($changes as $change) {
-	$UFs[2][$change['column']] = $change['value'];
+$UFs[1][1] = 'confirmados';
+$UFs[2][1] = 0;
+$UFs[3][1] = 0;
+$x = 2;
+foreach ($dados[0] as $linha) {
+	$linha = explode(";", $linha);
+	$UFs[1][$x] = $estados[trim($linha[0])];
+	$UFs[2][$x] = $linha[1];
+	$UFs[3][$x] = $linha[2];
+	$UFs[2][1] = $UFs[2][1] + $linha[1];
+	$UFs[3][1] = $UFs[3][1] + $linha[2];
+	$x++;
 }
 
 //Processa as linhas para inserir na predefinição
@@ -119,14 +109,15 @@ for ($x = 2; $x < 29; $x++) {
     $linha = "-->{{#ifeq:{{{2}}}|".$UFs[1][$x]."-UF|".$UFs[2][$x]."|}}<!--\n";
     $saida = $saida.$linha;
 }
-$saida = $saida."-->{{#ifeq:{{{2}}}|confirmados-UF|".$UFs[2][1]."{{#ifeq:{{{ref}}}|sim|<ref name=\"casos confirmados - estaduais\">{{citar web|URL=".$url."|título=G1}}</ref>|}}|}}<!--\n";
+$saida = $saida."-->{{#ifeq:{{{2}}}|confirmados-UF|".$UFs[2][1]."{{#ifeq:{{{ref}}}|sim|<ref name=\"casos confirmados - estaduais\">{{citar web|URL=".$urlfonte."|titulo=Casos de coronavírus no Brasil em ".$dia." de abril |data=2020-04-".$dia." |acessodata=2020-04-".$dia."  |ultimo=G1 |autorlink=G1 |lingua=pt-br}}</ref>|}}|}}<!--\n";
 
-//Compara se há diferença entre os totais
-if ($anterior == $UFs[2][1]) {
-	die("Total igual (".$anterior."). Nada a fazer.");
-} else {
-	echo "Total anterior = ".$anterior."<br>Total atual = ".$UFs[2][1].".<br>";
+for ($x = 2; $x < 29; $x++) {
+    $linha = "-->{{#ifeq:{{{2}}}|".$UFs[1][$x]."-o-UF|".$UFs[3][$x]."|}}<!--\n";
+    $saida = $saida.$linha;
 }
+$saida = $saida."-->{{#ifeq:{{{2}}}|confirmados-o-UF|".$UFs[3][1]."{{#ifeq:{{{ref}}}|sim|<ref name=\"casos confirmados - estaduais\"/>|}}|}}<!--\n";
+
+echo "Total anterior = ".$anterior."<br>Total atual = ".$UFs[2][1].".<br>";
 
 //Substituição do código antigo da predefinição pelo código novo
 $pieces = explode("%", $wikiCode);
