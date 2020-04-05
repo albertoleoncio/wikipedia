@@ -25,67 +25,10 @@ $wikiCode = $page->getText();
 preg_match_all('/confirmados-UF\|([0-9]*)/', $wikiCode, $output_anterior);
 $anterior = $output_anterior[1][0];
 
-//Recupera dados do link da referência
-$dia = date("d");
-$urlfonte = "https://g1.globo.com/bemestar/coronavirus/noticia/2020/04/".$dia."/casos-de-coronavirus-no-brasil-em-".ltrim($dia,"0")."-de-abril.ghtml";
+//Recupera dados da fonte e transforma em uma array
+$urlfonte = "https://brasil.io/api/dataset/covid19/caso/data?is_last=True&place_type=state";
 $ref = @file_get_contents($urlfonte);
-if ($ref == false) {
-	$dia = date("d", strtotime("-1 day"));
-	$urlfonte = "https://g1.globo.com/bemestar/coronavirus/noticia/2020/04/".$dia."/casos-de-coronavirus-no-brasil-em-".ltrim($dia,"0")."-de-abril.ghtml";
-	$ref = @file_get_contents($urlfonte);
-	if ($ref == false) {
-		die("Fonte não disponível.");
-	}
-}
-
-//Recupera dados da fonte
-$url = "https://datawrapper.dwcdn.net/M2Eyg/";
-$html = @file_get_contents($url);
-$size = strlen($html);
-
-//Loop para escapar dos redirecionamentos
-while ($size < 100) {
-	preg_match('/url=..\/..\/.{5}\/(.*)"/', $html, $redirect);
-	$urlget = $url.$redirect[1];
-	$html = @file_get_contents($urlget);
-	$size = strlen($html);
-}
-
-//Regex para isolar JSON de dados da página
-preg_match_all('/chartData: \"*(.*)\"\,\n/', $html, $chartData);
-
-//Regex para isolar dados das UFs
-preg_match_all('/\n([^;]*);([0-9]*);([0-9]*)/', json_decode('{"1":"'.$chartData[1][0].'"}', true)[1], $dados);
-
-//Constroi array para conversão de nomes dos estados para siglas
-$estados = array_flip(array(
-"AC"=>"Acre",
-"AL"=>"Alagoas",
-"AM"=>"Amazonas",
-"AP"=>"Amapá",
-"BA"=>"Bahia",
-"CE"=>"Ceará",
-"DF"=>"Distrito Federal",
-"ES"=>"Espírito Santo",
-"GO"=>"Goiás",
-"MA"=>"Maranhão",
-"MT"=>"Mato Grosso",
-"MS"=>"Mato Grosso do Sul",
-"MG"=>"Minas Gerais",
-"PA"=>"Pará",
-"PB"=>"Paraíba",
-"PR"=>"Paraná",
-"PE"=>"Pernambuco",
-"PI"=>"Piauí",
-"RJ"=>"Rio de Janeiro",
-"RN"=>"Rio Grande do Norte",
-"RO"=>"Rondônia",
-"RS"=>"Rio Grande do Sul",
-"RR"=>"Roraima",
-"SC"=>"Santa Catarina",
-"SE"=>"Sergipe",
-"SP"=>"São Paulo",
-"TO"=>"Tocantins"));
+$dados = json_decode($ref, true)['results'];
 
 //Loop para montar a array das UFs
 $UFs = array();
@@ -93,13 +36,12 @@ $UFs[1][1] = 'confirmados';
 $UFs[2][1] = 0;
 $UFs[3][1] = 0;
 $x = 2;
-foreach ($dados[0] as $linha) {
-	$linha = explode(";", $linha);
-	$UFs[1][$x] = $estados[trim($linha[0])];
-	$UFs[2][$x] = $linha[1];
-	$UFs[3][$x] = $linha[2];
-	$UFs[2][1] = $UFs[2][1] + $linha[1];
-	$UFs[3][1] = $UFs[3][1] + $linha[2];
+foreach ($dados as $linha) {
+	$UFs[1][$x] = $linha['state'];
+	$UFs[2][$x] = $linha['confirmed'];
+	$UFs[3][$x] = $linha['deaths'];
+	$UFs[2][1] = $UFs[2][1] + $linha['confirmed'];
+	$UFs[3][1] = $UFs[3][1] + $linha['deaths'];
 	$x++;
 }
 
@@ -109,7 +51,7 @@ for ($x = 2; $x < 29; $x++) {
     $linha = "-->{{#ifeq:{{{2}}}|".$UFs[1][$x]."-UF|".$UFs[2][$x]."|}}<!--\n";
     $saida = $saida.$linha;
 }
-$saida = $saida."-->{{#ifeq:{{{2}}}|confirmados-UF|".$UFs[2][1]."{{#ifeq:{{{ref}}}|sim|<ref name=\"casos confirmados - estaduais\">{{citar web|URL=".$urlfonte."|titulo=Casos de coronavírus no Brasil em ".$dia." de abril |data=2020-04-".$dia." |acessodata=2020-04-".$dia."  |ultimo=G1 |autorlink=G1 |lingua=pt-br}}</ref>|}}|}}<!--\n";
+$saida = $saida."-->{{#ifeq:{{{2}}}|confirmados-UF|".$UFs[2][1]."{{#ifeq:{{{ref}}}|sim|<ref name=\"casos confirmados - estaduais\">{{citar web|URL=http://brasil.io/dataset/covid19/caso|titulo=COVID-19 - Datasets - Brasil.IO|data=2020-04-".date("d")."|acessodata=2020-04-".date("d")."  |ultimo=Brasil.IO|lingua=pt-br}}</ref>|}}|}}<!--\n";
 
 for ($x = 2; $x < 29; $x++) {
     $linha = "-->{{#ifeq:{{{2}}}|".$UFs[1][$x]."-o-UF|".$UFs[3][$x]."|}}<!--\n";
@@ -117,6 +59,7 @@ for ($x = 2; $x < 29; $x++) {
 }
 $saida = $saida."-->{{#ifeq:{{{2}}}|confirmados-o-UF|".$UFs[3][1]."{{#ifeq:{{{ref}}}|sim|<ref name=\"casos confirmados - estaduais\"/>|}}|}}<!--\n";
 
+//Retorna valores totais para simples conferência
 echo "Total anterior = ".$anterior."<br>Total atual = ".$UFs[2][1].".<br>";
 
 //Substituição do código antigo da predefinição pelo código novo
