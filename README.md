@@ -10,7 +10,7 @@ Bot: https://pt.wikipedia.org/wiki/Usuário(a):AlbeROBOT
 
 ## Scripts
 
-covid-19-brasil-uf.php - 
+covid-19-brasil-uf.php - Atualiza os dados dos casos por unidade federativa brasileira. Utiliza os dados das secretarias de saúde das unidades federativas com a curadoria de Álvaro Justen e outros colaboradores. Link: https://brasil.io/dataset/covid19/caso.
 
 covid-19-brasil.php - Atualiza os dados dos casos por unidade federativa brasileira. Utiliza os dados do Ministério da Saúde. Link: https://covid.saude.gov.br/.
 
