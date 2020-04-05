@@ -30,6 +30,11 @@ $urlfonte = "https://brasil.io/api/dataset/covid19/caso/data?is_last=True&place_
 $ref = @file_get_contents($urlfonte);
 $dados = json_decode($ref, true)['results'];
 
+//Reordena de acordo com as UFs
+usort($dados, function ($a, $b) {
+    return $a['state'] <=> $b['state'];
+});
+
 //Loop para montar a array das UFs
 $UFs = array();
 $UFs[1][1] = 'confirmados';
