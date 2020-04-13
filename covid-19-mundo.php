@@ -29,8 +29,8 @@ for ($x = 0; $x < count($htmle); $x++) {
 		$result = preg_split('/\n *\|/', $htmle[$x]);
 
 		//Separa o nome do país, elimina predefinições como as marcas de rodapé e insere na array de resultado como uma key
-		preg_match_all('/! ?scope="row" ?\|\'{0,2}\[\[[^F][^\|]*\|([^\|]*)]]/', preg_replace('/{{[^}]*}}|<[^>]*>|\([^\)]*\)/', '', $result[0]), $array1);
-		echo "-".@$array1[1][0]."\n";
+		preg_match_all('/! ?scope="row" ?\| ?\'{0,2}\[\[[^F][^\|]*\|([^\|]*)]]/', preg_replace('/{{[^}]*}}|<[^>]*>|\([^\)]*\)/', '', $result[0]), $array1);
+		//echo "-".@$array1[1][0]."\n";
 		$array1[1][0] = @trim($array1[1][0]);
 
 
@@ -59,6 +59,8 @@ for ($x = 0; $x < count($htmle); $x++) {
 
 		//Processa a fonte e insere na array de resultado
 		$resultado[$array1[1][0]][4] = str_replace($de, $para, preg_replace('/date=([0-9]{4})-([0-9]{2})-([0-9]{2})/', 'date=$3-$2-$1', trim($result[$numitens-1])));
+
+		//var_dump($resultado[$array1[1][0]]);
 	}
 }
 
@@ -88,10 +90,12 @@ for ($x = 0; $x < count($pieces); $x++) {
 	if (substr($pieces[$x], 0, 2) == "#(") {
 
 		//Extrai o nome do país
-		preg_match('/#\(([A-Za-z\ \.\-\(]*)\){1,2}/', $pieces[$x], $keyarray);
+		preg_match('/#\(([A-Za-z\ \.\-\&\(Åçãéí\']*)\){1,2}/', $pieces[$x], $keyarray);
 
 		//Converte a array em uma string
+
 		$key = $keyarray[1];
+		//echo "+".@$key."\n";
 
 		//Verifica se o valor da string corresponde a um país listado na array de resultado
 		if (array_key_exists($key, $resultado)) {
