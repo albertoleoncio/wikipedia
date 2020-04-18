@@ -168,7 +168,7 @@ HEADER;
 | colspan="33" |
 |-
 | colspan="33" style="text-align: left;" | Notas:<br/>
-{{nota|1}} Balanço oficial dos casos segundo o Ministério da Saúde. <ref>{{citar web|url=https://covid.saude.gov.br/|titulo=Ministério da Saúde|data=Abril 2020}}</ref>.
+{{nota|1}} Balanço oficial dos casos segundo o Ministério da Saúde.<ref>{{citar web|url=https://covid.saude.gov.br/|titulo=Ministério da Saúde|data=Abril 2020}}</ref>
 |-
 |}<noinclude>{{documentação}}</noinclude>
 FOOTER;
