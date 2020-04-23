@@ -37,7 +37,7 @@ class CovidCsvReader
 	{
 		$reportedCase = new ReportedCase;
 		
-		$reportedCase->day = \DateTime::createFromFormat('Y-m-d', $data['data']);
+		$reportedCase->day = \DateTime::createFromFormat('d/m/Y', $data['data']) ?: \DateTime::createFromFormat('Y-m-d', $data['data']);
 		$reportedCase->state = $data['estado'];
 		$reportedCase->region = $data['regiao'];
 		$reportedCase->newCases = $data['casosNovos'];
