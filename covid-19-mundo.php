@@ -51,7 +51,7 @@ for ($x = 0; $x < count($htmle); $x++) {
 			$abrechave = substr_count($result[$numitens-1], '{');
 			$fechachave = substr_count($result[$numitens-1], '}');
 			if ($numitens < -10) {
-				die("Erro -10.");
+				die("Erro de chaves. A página-fonte possui diferenças entre a quantidade de chaves \"}{\" em alguma linha.");
 			}
 		}
 		
