@@ -6,7 +6,7 @@ include 'globals.php';
 echo "<pre>";
 
 //Recupera dados da fonte
-$url = "https://en.wikipedia.org/w/index.php?title=Template:2019%E2%80%9320_coronavirus_pandemic_data&action=raw";
+$url = "https://en.wikipedia.org/w/index.php?title=Template:COVID-19_pandemic_data&action=raw";
 $html = @file_get_contents($url);
 
 //Separa paises e insere em um array
@@ -16,8 +16,8 @@ $htmle = explode("\n|-", $html);
 $resultado = array();
 
 //Lista de substituição
-$de = array(" March 2020"," April 2020","|url-status=live","April 2, 2020");
-$para = array("-03-2020","-04-2020","","02-04-2020"); 
+$de = array(" March 2020"," April 2020"," May 2020","|url-status=live","April 2, 2020");
+$para = array("-03-2020","-04-2020","-05-2020","","02-04-2020"); 
 
 //Loop para processar cada item da array
 for ($x = 0; $x < count($htmle); $x++) {
@@ -29,7 +29,7 @@ for ($x = 0; $x < count($htmle); $x++) {
 		$result = preg_split('/\n *\|/', $htmle[$x]);
 
 		//Separa o nome do país, elimina predefinições como as marcas de rodapé e insere na array de resultado como uma key
-		preg_match_all('/! ?scope="row" ?\| ?\'{0,2}\[\[[^F][^\|]*\|([^\|]*)]]/', preg_replace('/{{[^}]*}}|<[^>]*>|\([^\)]*\)/', '', $result[0]), $array1);
+		preg_match_all('/! ?scope="row" ?(?:data-sort-value="[^"]*" ?)?\| ?\'{0,2}\[\[[^F][^\|]*\|([^\|]*)]]/', preg_replace('/{{[^}]*}}|<[^>]*>|\([^\)]*\)/', '', $result[0]), $array1);
 		//echo "-".@$array1[1][0]."\n";
 		$array1[1][0] = @trim($array1[1][0]);
 
@@ -50,6 +50,9 @@ for ($x = 0; $x < count($htmle); $x++) {
 			$numitens--;
 			$abrechave = substr_count($result[$numitens-1], '{');
 			$fechachave = substr_count($result[$numitens-1], '}');
+			if ($numitens < -10) {
+				die("Erro -10.");
+			}
 		}
 		
 		//Separa dados numéricos e insere na array de resultado
