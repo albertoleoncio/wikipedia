@@ -58,7 +58,7 @@ for ($x = 0; $x < count($htmle); $x++) {
 		//Separa dados numéricos e insere na array de resultado
 		$resultado[$array1[1][0]][1] = trim($result[$numitens-4]);
 		$resultado[$array1[1][0]][2] = trim($result[$numitens-3]);
-		$resultado[$array1[1][0]][3] = trim($result[$numitens-2]);
+		$resultado[$array1[1][0]][3] = str_replace('data-sort-value="-1" |No data', '{{color|darkgray|–}}', trim($result[$numitens-2]));
 
 		//Processa a fonte e insere na array de resultado
 		$resultado[$array1[1][0]][4] = str_replace($de, $para, preg_replace('/date=([0-9]{4})-([0-9]{2})-([0-9]{2})/', 'date=$3-$2-$1', trim($result[$numitens-1])));
