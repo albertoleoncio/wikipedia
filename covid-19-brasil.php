@@ -37,6 +37,7 @@ $saida = "\n"."-->{{#ifeq:{{{1}}}|confirmados|".$confirmado."|}}<!--\n".
 			"-->{{#ifeq:{{{1}}}|data|{{DataExt|".$dia."|".$mes."|".$ano."}}|}}<!--\n".
 			"-->{{#ifeq:{{{1}}}|hora|".$hora."|}}<!--\n";
 
+//Merge das arrays das regiões brasileiras
 $SinteseUFs = array_merge($PortalSintese[1]['listaMunicipios'], $PortalSintese[2]['listaMunicipios'], $PortalSintese[3]['listaMunicipios'], $PortalSintese[4]['listaMunicipios'], $PortalSintese[5]['listaMunicipios']);
 
 //Loop para montar a array das UFs
