@@ -13,78 +13,41 @@ $headers = array(
 $curl = curl_init();
 curl_setopt_array($curl, [
     CURLOPT_RETURNTRANSFER => 1,
-    CURLOPT_URL => 'https://xx9p7hp1p7.execute-api.us-east-1.amazonaws.com/prod/PortalGeral',
+    CURLOPT_URL => 'https://xx9p7hp1p7.execute-api.us-east-1.amazonaws.com/prod/PortalSintese',
     CURLOPT_HTTPHEADER => $headers
 ]);
 $result = curl_exec($curl);
-$PortalGeral = json_decode($result, true);
-
-$curl2 = curl_init();
-curl_setopt_array($curl2, [
-    CURLOPT_RETURNTRANSFER => 1,
-    CURLOPT_URL => 'https://xx9p7hp1p7.execute-api.us-east-1.amazonaws.com/prod/PortalMapa',
-    CURLOPT_HTTPHEADER => $headers
-]);
-$result2 = curl_exec($curl2);
-$PortalMapa = json_decode($result2, true);
-//var_dump($PortalGeral['results'][0]);
-//var_dump($PortalMapa['results']);
-
-//Constroi array para conversão de nomes dos estados para siglas
-$estados = array_flip(array(
-"AC"=>"Acre",
-"AL"=>"Alagoas",
-"AM"=>"Amazonas",
-"AP"=>"Amapá",
-"BA"=>"Bahia",
-"CE"=>"Ceará",
-"DF"=>"Distrito Federal",
-"ES"=>"Espírito Santo",
-"GO"=>"Goiás",
-"MA"=>"Maranhão",
-"MT"=>"Mato Grosso",
-"MS"=>"Mato Grosso do Sul",
-"MG"=>"Minas Gerais",
-"PA"=>"Pará",
-"PB"=>"Paraíba",
-"PR"=>"Paraná",
-"PE"=>"Pernambuco",
-"PI"=>"Piauí",
-"RJ"=>"Rio de Janeiro",
-"RN"=>"Rio Grande do Norte",
-"RO"=>"Rondônia",
-"RS"=>"Rio Grande do Sul",
-"RR"=>"Roraima",
-"SC"=>"Santa Catarina",
-"SE"=>"Sergipe",
-"SP"=>"São Paulo",
-"TO"=>"Tocantins"));
-
-//Loop para montar a array das UFs
-$UFs = array();
-$x = 1;
-foreach ($PortalMapa['results'] as $linha) {
-	$UFs[1][$x] = $estados[trim($linha['nome'])];
-	$UFs[2][$x] = $linha['qtd_confirmado'];
-	$UFs[3][$x] = $linha['qtd_obito'];
-	$x++;
-}
+$PortalSintese = json_decode($result, true);
 
 //Formação dos campos de dados gerais
-$confirmado = str_replace(".", "", $PortalGeral['results'][0]['total_confirmado']);
-$obitos = str_replace(".", "", $PortalGeral['results'][0]['total_obitos']);
-$datahora = explode(" ", $PortalGeral['results'][0]['dt_atualizacao']);
-$hora = $datahora[0];
-$datacompleta = explode("/", $datahora[1]);
-$dia = $datacompleta[0];
+$confirmado = str_replace(".", "", $PortalSintese[0]['casosAcumuladoN']);
+$obitos = str_replace(".", "", $PortalSintese[0]['obitosAcumuladoN']);
+$datahora = explode("T", $PortalSintese[0]['updated_at']);
+$horacompleta = explode(":", $datahora[1]);
+$horacompleta[0] = $horacompleta[0]-3;
+$hora = $horacompleta[0].":".$horacompleta[1];
+$datacompleta = explode("-", $datahora[0]);
+$dia = $datacompleta[2];
 $mes = $datacompleta[1];
-$ano = $datacompleta[2];
+$ano = $datacompleta[0];
 
 //Construção do wikitexto dos dados gerais
 $saida = "\n"."-->{{#ifeq:{{{1}}}|confirmados|".$confirmado."|}}<!--\n".
 			"-->{{#ifeq:{{{1}}}|confirmados-o|<!-- ÓBITOS -->".$obitos."|}}<!--\n".
 			"-->{{#ifeq:{{{1}}}|data|{{DataExt|".$dia."|".$mes."|".$ano."}}|}}<!--\n".
 			"-->{{#ifeq:{{{1}}}|hora|".$hora."|}}<!--\n";
+
+$SinteseUFs = array_merge($PortalSintese[1]['listaMunicipios'], $PortalSintese[2]['listaMunicipios'], $PortalSintese[3]['listaMunicipios'], $PortalSintese[4]['listaMunicipios'], $PortalSintese[5]['listaMunicipios']);
+
+//Loop para montar a array das UFs
+$UFs = array();
+$x = 0;
+foreach ($SinteseUFs as $linha) {
+	$UFs[1][$x] = $linha['_id'];
+	$UFs[2][$x] = $linha['casosAcumulado'];
+	$UFs[3][$x] = $linha['obitosAcumulado'];
+	$x++;
+}
 
 //Loop para construção do wikitexto das UFs
 for ($y = 1; $y < $x; $y++) {

@@ -8,6 +8,7 @@ echo "<pre>";
 //Recupera dados da fonte
 $url = "https://en.wikipedia.org/w/index.php?title=Template:COVID-19_pandemic_data&action=raw";
 $html = @file_get_contents($url);
+echo "<b>Processamento da Template:COVID-19_pandemic_data</b>\n";
 
 //Separa paises e insere em um array
 $htmle = explode("\n|-", $html);
@@ -30,7 +31,7 @@ for ($x = 0; $x < count($htmle); $x++) {
 
 		//Separa o nome do país, elimina predefinições como as marcas de rodapé e insere na array de resultado como uma key
 		preg_match_all('/! ?scope="row" ?(?:data-sort-value="[^"]*" ?)?\| ?\'{0,2}\[\[[^F][^\|]*\|([^\|]*)]]/', preg_replace('/{{[^}]*}}|<[^>]*>|\([^\)]*\)/', '', $result[0]), $array1);
-		//echo "-".@$array1[1][0]."\n";
+		echo @$array1[1][0]."...";
 		$array1[1][0] = @trim($array1[1][0]);
 
 
@@ -64,6 +65,7 @@ for ($x = 0; $x < count($htmle); $x++) {
 		$resultado[$array1[1][0]][4] = str_replace($de, $para, preg_replace('/date=([0-9]{4})-([0-9]{2})-([0-9]{2})/', 'date=$3-$2-$1', trim($result[$numitens-1])));
 
 		//var_dump($resultado[$array1[1][0]]);
+		echo "OK\n";
 	}
 }
 
@@ -72,7 +74,7 @@ $api_url = 'https://pt.wikipedia.org/w/api.php';
 include 'credenciais.php';
 $wiki = new Wikimate($api_url);
 if ($wiki->login($username, $password))
-	echo 'Login OK<br>' ;
+	echo "<hr><b>Predefinição:Dados_da_pandemia_de_COVID-19</b>\n" ;
 else {
 	$error = $wiki->getError();
 	echo "<b>Wikimate error</b>: ".$error['login'];
@@ -98,7 +100,7 @@ for ($x = 0; $x < count($pieces); $x++) {
 		//Converte a array em uma string
 
 		$key = $keyarray[1];
-		//echo "+".@$key."\n";
+		echo @$key."\n";
 
 		//Verifica se o valor da string corresponde a um país listado na array de resultado
 		if (array_key_exists($key, $resultado)) {
@@ -120,10 +122,10 @@ $wikiCode = implode("#bot", $pieces);
 
 //Gravar código
 if ($page->setText($wikiCode, 0, true, "bot: Atualizando estatísticas")) {
-	echo "\nEdição realizada.\n";
+	echo "<hr>Edição realizada.\n";
 } else {
 	$error = $page->getError();
-	echo "\nError: " . print_r($error, true) . "\n";
+	echo "<hr>Error: " . print_r($error, true) . "\n";
 }
 
 ?>
