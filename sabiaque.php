@@ -15,7 +15,7 @@ else {
 	$error = $wiki->getError();
 	die("<b>Wikimate error</b>: ".$error['login']);
 }
-echo "<pre>";
+echo "<pre>\n";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //																						
@@ -36,6 +36,33 @@ echo "<pre>";
 //	$htmlF: arquivo de discussão da proposição											
 //																						
 ////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////
+//																						
+//	Contador																					
+//																						
+////////////////////////////////////////////////////////////////////////////////////////
+
+//Recupera horário da última alteração
+$antes = date("U",strtotime(json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php/w/api.php?action=query&format=json&prop=revisions&titles=Wikip%C3%A9dia%3ASabia%20que%2FArquivo%2FRecentes&rvprop=timestamp&rvslots=*"), true)['query']['pages']['3879358']['revisions']['0']['timestamp']));
+
+//Calcula diferença
+$dif = ($antes + 172800) - time();
+
+if ($dif < 0) {
+	echo "Disponível para atualização.\n";
+} else {
+	echo "Faltam ";
+	if ($dif > 86400) {
+		echo gmdate("d H:i:s", time() - 86400);
+	} else {
+		echo gmdate("H:i:s", time());
+	}
+	echo " para atualização.\n";
+	/*die();*/
+}
 
 
 
@@ -74,7 +101,7 @@ unset($htmlAe[1]);
 $htmlA = implode("\n==",$htmlAe);
 
 //Grava página
-/*if ($pageA->setText($htmlA, , true, "bot: Arquivando proposição publicada")) {
+/*if ($pageA->setText($htmlA, , true, "bot: (1/6) Arquivando proposição publicada")) {
 	echo "<hr>Arquivando proposição publicada\n";
 } else {
 	$error = $pageA->getError();
@@ -120,7 +147,7 @@ array_pop($htmlBe);
 $htmlB = implode("\n…",$htmlBe);
 
 //Grava página
-/*if ($pageB->setText($htmlB, , true, "bot: Inserindo SabiaQueDiscussão")) {
+/*if ($pageB->setText($htmlB, , true, "bot: (2/6) Inserindo SabiaQueDiscussão")) {
 	echo "<hr>Inserindo SabiaQueDiscussão\n";
 } else {
 	$error = $pageB->getError();
@@ -145,11 +172,20 @@ $htmlC = $pageC->getSection(0);
 if (strpos($htmlC, "SabiaQueDiscussão") == false) {
 	$htmlC = $htmlC."{{SabiaQueDiscussão\n|data1    = ".strftime('%d de %B de %Y', $today)."\n|entrada1 = … ".$dados[1]."\n}}";
 } else {
-	
+
+	//A partir do número máximo (10), verifica qual o maior número encontrado.
+	$n = 10;
+	while ($n > 0 AND strpos($htmlC, "entrada".$n) == FALSE) {$n--;}
+
+	//Caso n = 0, significa que a entrada mais recente não possui número (nesse caso, a proxima entrada é 2). Nos outros casos, a próxima entrada é a encontrada +1.
+	if ($n == 0) {$n = 2;} else {$n++;}
+
+	//Efetua inserção
+	$htmlC = str_replace("{{SabiaQueDiscussão", "{{SabiaQueDiscussão\n|data".$n."    = ".strftime('%d de %B de %Y', $today)."\n|entrada".$n." = … ".$dados[1], $htmlC);
 }
 
 //Grava página
-/*if ($pageC->setText($htmlC, 0, true, "bot: Inserindo SabiaQueDiscussão")) {
+/*if ($pageC->setText($htmlC, 0, true, "bot: (3/6) Inserindo SabiaQueDiscussão")) {
 	echo "<hr>Inserindo SabiaQueDiscussão\n";
 } else {
 	$error = $pageC->getError();
@@ -171,7 +207,7 @@ $pageD = $wiki->getPage("Usuário Discussão:".$dados[3]);
 $htmlD = "{{subst:ParabénsSQ|artigo=''[[".$dados[2]."]]''|data=".strftime('%d de %B de %Y', $today)."|curiosidade=…".$dados[1]."|arquivo=".strftime('%Y/%m', $today)."}} --~~~~";
 
 //Grava página
-/*if ($pageD->setText($htmlD, 'new', true, "bot: Inserindo ParabénsSQ")) {
+/*if ($pageD->setText($htmlD, 'new', true, "bot: (4/6) Inserindo ParabénsSQ")) {
 	echo "<hr>Inserindo ParabénsSQ\n";
 } else {
 	$error = $pageD->getError();
@@ -208,7 +244,7 @@ if (array_key_exists($recente[1], $sections)) {
 }
 
 //Grava página
-/*if ($pageE->setText($htmlE, $section, true, "bot: Inserindo Arquivo/Recentes")) {
+/*if ($pageE->setText($htmlE, $section, true, "bot: (5/6) Inserindo Arquivo/Recentes")) {
 	echo "<hr>Inserindo Arquivo/Recentes\n";
 } else {
 	$error = $pageE->getError();
@@ -230,7 +266,7 @@ $pageF = $wiki->getPage("Wikipédia:Sabia que/Propostas/Arquivo/".strftime('%Y/%
 $htmlF = "==".$dados[5]."{{ADC|sim|".strftime('%d de %B de %Y', $today)."|{{u|AlbeROBOT}}}}";
 
 //Grava página
-/*if ($pageF->setText($htmlF, 'new', true, "bot: Inserindo Propostas/Arquivo")) {
+/*if ($pageF->setText($htmlF, 'new', true, "bot: (6/6) Inserindo Propostas/Arquivo")) {
 	echo "<hr>Inserindo Propostas/Arquivo\n";
 } else {
 	$error = $pageF->getError();
