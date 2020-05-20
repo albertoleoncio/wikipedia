@@ -22,6 +22,7 @@ $PortalSintese = json_decode($result, true);
 //Formação dos campos de dados gerais
 $confirmado = str_replace(".", "", $PortalSintese[0]['casosAcumuladoN']);
 $obitos = str_replace(".", "", $PortalSintese[0]['obitosAcumuladoN']);
+$recuperados = str_replace(".", "", $PortalSintese[0]['Recuperadosnovos']);
 $datahora = explode("T", $PortalSintese[0]['updated_at']);
 $horacompleta = explode(":", $datahora[1]);
 $horacompleta[0] = $horacompleta[0]-3;
@@ -34,11 +35,17 @@ $ano = $datacompleta[0];
 //Construção do wikitexto dos dados gerais
 $saida = "\n"."-->{{#ifeq:{{{1}}}|confirmados|".$confirmado."|}}<!--\n".
 			"-->{{#ifeq:{{{1}}}|confirmados-o|<!-- ÓBITOS -->".$obitos."|}}<!--\n".
+			"-->{{#ifeq:{{{1}}}|recuperados|".$recuperados."|}}<!--\n".
 			"-->{{#ifeq:{{{1}}}|data|{{DataExt|".$dia."|".$mes."|".$ano."}}|}}<!--\n".
 			"-->{{#ifeq:{{{1}}}|hora|".$hora."|}}<!--\n";
 
 //Merge das arrays das regiões brasileiras
 $SinteseUFs = array_merge($PortalSintese[1]['listaMunicipios'], $PortalSintese[2]['listaMunicipios'], $PortalSintese[3]['listaMunicipios'], $PortalSintese[4]['listaMunicipios'], $PortalSintese[5]['listaMunicipios']);
+
+//Ordenar unidades federativas por ordem alfabética
+usort($SinteseUFs, function ($a, $b) {
+	return $a['_id'] <=> $b['_id'];
+});
 
 //Loop para montar a array das UFs
 $UFs = array();
