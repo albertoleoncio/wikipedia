@@ -9,32 +9,32 @@ include 'credenciais.php';
 $today = strtotime('today');
 $dados = array();
 $wiki = new Wikimate('https://pt.wikipedia.org/w/api.php');
+echo "<pre>";
 if ($wiki->login($username, $password)) {
-	echo "OK";
+	echo "Wikimate connected.\n";
 }
 else {
 	$error = $wiki->getError();
 	die("<b>Wikimate error</b>: ".$error['login']);
 }
-echo "<pre>\n";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //																						
 //	LISTA DE VARIÁVEIS																	
 //																						
-//	 $dados: array armazenadora das informações da proposição							
+//	 $dados: array armazenadora das informações											
 //		[1]: texto da proposição														
 //		[2]: título do artigo-chave da proposição										
 //		[3]: nome de usuário do proponente 												
 //		[4]: texto da proposição para arquivamento										
 //		[5]: discussão da proposição para arquivamento									
 //																						
-//	$htmlA:	página de propostas aprovadas													
-//	$htmlB: predefinição da página principal 											
-//	$htmlC: página de discussão do artigo-chave 										
-//	$htmlD: página de discussão do usuário 												
-//	$htmlE: proposições recentes		 												
-//	$htmlF: arquivo de discussão da proposição											
+//	      A: página de propostas aprovadas												
+//	      B: predefinição da página principal 											
+//	      C: página de discussão do artigo-chave 										
+//	      D: página de discussão do usuário 											
+//	      E: proposições recentes		 												
+//	      F: arquivo de discussão da proposição											
 //																						
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -46,23 +46,34 @@ echo "<pre>\n";
 //																						
 ////////////////////////////////////////////////////////////////////////////////////////
 
+//Define página
+$pageTime = $wiki->getPage("Wikipédia:Sabia que/Frequência");
+
+//Recupera codigo-fonte da página
+$htmlTime = $pageTime->getText();
+
+//Limite de segurança
+if (is_numeric($htmlTime) == FALSE OR $htmlTime < 43200) {
+	die("'Wikipédia:Sabia que/Frequência' possui valor não numérico ou menor que 43200. Bloqueio de segurança.");
+}
+
 //Recupera horário da última alteração
 $antes = date("U",strtotime(json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php/w/api.php?action=query&format=json&prop=revisions&titles=Wikip%C3%A9dia%3ASabia%20que%2FArquivo%2FRecentes&rvprop=timestamp&rvslots=*"), true)['query']['pages']['3879358']['revisions']['0']['timestamp']));
 
 //Calcula diferença
-$dif = ($antes + 172800) - time();
+$dif = ($antes + $htmlTime) - time();
 
-//Continua atualização, ou encerra o script
+//Continua atualização, ou retorna contagem regressiva e encerra o script
 if ($dif < 0) {
 	echo "Disponível para atualização.\n";
 } else {
-	echo "Faltam ";
-	if ($dif > 86400) {
-		echo gmdate("d H:i:s", $dif - 86400);
+	echo "Contagem regressiva para atualização: ";
+	if ($dif > ($htmlTime / 2)) {
+		echo gmdate("j \d\i\a\, H:i:s", $dif - ($htmlTime / 2));
 	} else {
 		echo gmdate("H:i:s", $dif);
 	}
-	echo " para atualização.\n";
+	echo "\n";
 	die();
 }
 
@@ -76,6 +87,11 @@ if ($dif < 0) {
 
 //Define página
 $pageA = $wiki->getPage("Wikipédia:Sabia que/Propostas/Aprovadas");
+
+//Recupera número de seções e encerra script caso só exista uma ou nenhuma proposição
+if ($pageA->getNumSections() <= 2) {
+	die("Não existem propostas para publicação.");
+}
 
 //Recupera codigo-fonte da página
 $htmlA = $pageA->getText();
