@@ -10,7 +10,7 @@ $today = strtotime('today');
 $dados = array();
 $wiki = new Wikimate('https://pt.wikipedia.org/w/api.php');
 echo "<pre>";
-if ($wiki->login($username, $password)) {
+if ($wiki->login($usernameSQ, $passwordSQ)) {
 	echo "Wikimate connected.\n";
 }
 else {
@@ -104,8 +104,12 @@ preg_match_all('/\|texto = ([^\n]*)/', $htmlAe[1], $output1);
 $dados[1] = ltrim($output1[1][0],"… ");
 
 //Coleta artigo-chave da proposição
-preg_match_all('/\'\'\'\[\[([^\]\|]*)/', $output1[1][0], $output2);
-$dados[2] = $output2[1][0];
+preg_match_all('/\'\'\'\[\[([^\]\|\#]*)|\[\[([^\|]*)\|\'\'\'/', $output1[1][0], $output2);
+if ($output2[1][0] = "") {
+	$dados[2] = $output2[2][0];
+} else {
+	$dados[2] = $output2[1][0];
+}
 
 //Coleta nome de proponente
 preg_match_all('/\* \'\'\'Proponente\'\'\' – [^\[]*\[\[[^:]*:([^|]*)/', $htmlAe[1], $output3);
@@ -287,7 +291,7 @@ $pageF = $wiki->getPage("Wikipédia:Sabia que/Propostas/Arquivo/".strftime('%Y/%
 $htmlF = $pageF->getText();
 
 //Monta código da ParabénsSQ
-$htmlF = $htmlF."==".$dados[5]."{{ADC|sim|".strftime('%d de %B de %Y', $today)."|~~~}}";
+$htmlF = $htmlF."\n\n==".$dados[5]."{{ADC|sim|".strftime('%d de %B de %Y', $today)."|~~~}}";
 
 //Grava página
 if ($pageF->setText($htmlF, NULL, FALSE, "bot: (6/6) Inserindo Propostas/Arquivo")) {
