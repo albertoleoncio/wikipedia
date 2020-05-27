@@ -180,6 +180,12 @@ if ($pageB->setText($htmlB, NULL, FALSE, "bot: (2/6) Inserindo SabiaQueDiscussã
 //																						
 ////////////////////////////////////////////////////////////////////////////////////////
 
+//Verifica se página é redirect
+$APIQuery = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&titles=".urlencode($dados[2])."&redirects=1"), TRUE);
+if (isset($APIQuery["query"]["redirects"])) {
+	$dados[2] = $APIQuery["query"]["redirects"][0]["to"];
+}
+
 //Define página
 $pageC = $wiki->getPage("Discussão:".$dados[2]);
 
