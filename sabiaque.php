@@ -105,11 +105,7 @@ $dados[1] = ltrim($output1[1][0],"… ");
 
 //Coleta artigo-chave da proposição
 preg_match_all('/\'\'\'\[\[([^\]\|\#]*)|\[\[([^\|]*)\|\'\'\'/', $output1[1][0], $output2);
-if ($output2[1][0] = "") {
-	$dados[2] = $output2[2][0];
-} else {
-	$dados[2] = $output2[1][0];
-}
+$dados[2] = $output2[2][0].$output2[1][0];
 
 //Coleta nome de proponente
 preg_match_all('/\* \'\'\'Proponente\'\'\' – [^\[]*\[\[[^:]*:([^|]*)/', $htmlAe[1], $output3);
@@ -192,7 +188,7 @@ $htmlC = $pageC->getSection(0);
 
 //Verifica se a predefinição já existe. Se sim, insere nova predefinição no final da seção. Se não...
 if (strpos($htmlC, "SabiaQueDiscussão") == false) {
-	$htmlC = $htmlC."{{SabiaQueDiscussão\n|data1    = ".strftime('%d de %B de %Y', $today)."\n|entrada1 = … ".$dados[1]."\n}}";
+	$htmlC = $htmlC."\n\n{{SabiaQueDiscussão\n|data1    = ".strftime('%d de %B de %Y', $today)."\n|entrada1 = … ".$dados[1]."\n}}";
 } else {
 
 	//A partir do número máximo (10), verifica qual o maior número encontrado.
