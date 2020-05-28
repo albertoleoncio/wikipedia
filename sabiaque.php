@@ -1,9 +1,16 @@
 <?php
 include 'globals.php';
 
+//Define fuso horário como UTC
 date_default_timezone_set('UTC');
+
+//Define data atual
 $today = strtotime('today');
+
+//Define $dados como uma array
 $dados = array();
+
+//Login
 $wiki = new Wikimate($api_url);
 echo "<pre>";
 if ($wiki->login($usernameSQ, $passwordSQ)) {
@@ -15,31 +22,31 @@ else {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
-//																						
-//	LISTA DE VARIÁVEIS																	
-//																						
-//	 $dados: array armazenadora das informações											
-//		[1]: texto da proposição														
-//		[2]: título do artigo-chave da proposição										
-//		[3]: nome de usuário do proponente 												
-//		[4]: texto da proposição para arquivamento										
-//		[5]: discussão da proposição para arquivamento									
-//																						
-//	      A: página de propostas aprovadas												
-//	      B: predefinição da página principal 											
-//	      C: página de discussão do artigo-chave 										
-//	      D: página de discussão do usuário 											
-//	      E: proposições recentes		 												
-//	      F: arquivo de discussão da proposição											
-//																						
+//
+//	LISTA DE VARIÁVEIS EM $dados e OUTRAS VARIÁVEIS
+//
+//	 $dados: array armazenadora das informações
+//		[1]: texto da proposição
+//		[2]: título do artigo-chave da proposição
+//		[3]: nome de usuário do proponente
+//		[4]: texto da proposição para arquivamento
+//		[5]: discussão da proposição para arquivamento
+//
+//	      A: página de propostas aprovadas
+//	      B: predefinição da página principal
+//	      C: página de discussão do artigo-chave
+//	      D: página de discussão do usuário
+//	      E: proposições recentes
+//	      F: arquivo de discussão da proposição
+//
 ////////////////////////////////////////////////////////////////////////////////////////
 
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
-//																						
-//	Contador																					
-//																						
+//
+//	Contador
+//
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Define página
@@ -76,9 +83,9 @@ if ($dif < 0) {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
-//																						
-//	A																					
-//																						
+//
+//	A
+//
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Define página
@@ -125,9 +132,9 @@ if ($pageA->setText($htmlA, NULL, FALSE, "bot: (1/6) Arquivando proposição pub
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
-//																						
-//	B																					
-//																						
+//
+//	B
+//
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Define página
@@ -171,9 +178,9 @@ if ($pageB->setText($htmlB, NULL, FALSE, "bot: (2/6) Inserindo SabiaQueDiscussã
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
-//																						
-//	C																					
-//																						
+//
+//	C
+//
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Verifica se página é redirect
@@ -215,9 +222,9 @@ if ($pageC->setText($htmlC, 0, FALSE, "bot: (3/6) Inserindo SabiaQueDiscussão")
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
-//																						
-//	D																					
-//																						
+//
+//	D
+//
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Define página
@@ -240,9 +247,9 @@ if ($pageD->setText($htmlD, NULL, FALSE, "bot: (4/6) Inserindo ParabénsSQ")) {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
-//																						
-//	E																					
-//																						
+//
+//	E
+//
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Define página
@@ -277,9 +284,9 @@ if ($pageE->setText($htmlE, $section, FALSE, "bot: (5/6) Inserindo Arquivo/Recen
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
-//																						
-//	F																					
-//																						
+//
+//	F
+//
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Define página
@@ -302,9 +309,9 @@ if ($pageF->setText($htmlF, NULL, FALSE, "bot: (6/6) Inserindo Propostas/Arquivo
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
-//																						
-//	Seção provisória, até a ativação da função de gravar página							
-//																						
+//
+//	Seção provisória, até a ativação da função de gravar página
+//
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //print_r($dados);
@@ -319,6 +326,6 @@ echo '<hr><a href="https://pt.wikipedia.org/wiki/Usu%C3%A1rio_Discuss%C3%A3o:'.$
 echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Wikipédia:Sabia que/Arquivo/Recentes&action=edit&section='.$section.'">LINK</a>
 	<textarea rows="4" cols="50">'.$htmlE.'</textarea>';
 echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Wikipédia:Sabia que/Propostas/Arquivo/'.strftime('%Y/%m', $today).'&action=edit&section=new">LINK</a>
-	<textarea rows="4" cols="50">'.$htmlF.'</textarea>';*/
-
+	<textarea rows="4" cols="50">'.$htmlF.'</textarea>';*
 ?>
+/
