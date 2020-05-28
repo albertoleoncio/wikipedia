@@ -1,0 +1,40 @@
+{
+    "name": "albertoleoncio/alberobot",
+    "description": "AlbeROBOT",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        { "name": "Alberto Leoncio", "email": "albertoleoncio@example.php" }
+    ],
+    "autoload": {
+        "psr-4": {"App\\": "src/"}
+    },
+    "require": {
+        "php": ">=7.2",
+        "hamstar/wikimate": "^0.12.0",
+        "nesbot/carbon": "^2.35",
+        "phpoffice/phpspreadsheet": "^1.12",
+        "symfony/finder": "^5.0",
+        "vlucas/phpdotenv": "^4.1",
+        "webmozart/assert": "^1.8"
+    },
+    "config": {
+        "bin-dir": "bin",
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "scripts": {
+        "required-assets": [
+            "cp -n .env.dist .env",
+            "mkdir -p var/input",
+            "mkdir -p var/output",
+            "mkdir -p var/tmp"
+        ],
+        "post-install-cmd": [
+            "@required-assets"
+        ],
+        "post-update-cmd": [
+            "@required-assets"
+        ]
+    }
+}
