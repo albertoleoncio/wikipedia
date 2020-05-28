@@ -1,117 +1,79 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Infrastructure\MediaWiki;
 
 use App\Application\ParserInterface;
+use App\Domain\ReportedCase;
 use App\Domain\ReportedCases;
-use App\Domain\States;
-use Carbon\CarbonImmutable as DateTimeImmutable;
-use Carbon\CarbonInterface as DateTimeInterface;
-use Carbon\CarbonInterval as DateInterval;
-use Carbon\CarbonPeriod as DatePeriod;
 
-final class PortugueseTable implements ParserInterface
+class PortugueseTable implements ParserInterface
 {
-    private const VALUE_FORMAT = '{{#ifeq: {{{exibir|acumulados}}} | novos | %s | %s }}';
+	public function parse(ReportedCases $cases): string
+	{
+		$contents = $this->buildHeader();
 
-    public function parse($reportedCases): string
-    {
-        $contents = $this->buildHeader();
+		foreach ($this->getDateInterval() as $day) {
+			$contents .= $this->buildRow($day, $cases);
+		}
 
-        $nationalCases = $reportedCases->nationalCases();
-        $stateCases = $reportedCases->stateCases();
+		$contents .= $this->buildFooter();
 
-        foreach ($this->getDateRange($reportedCases) as $date) {
-            $contents .= $this->buildRow($date, $nationalCases, $stateCases);
-        }
+		return $contents;
+	}
 
-        $contents .= "\n" . $this->buildFooter();
+	private function getDateInterval(): \DatePeriod
+	{
+		$begin = new \DateTime('2020-02-26');
+		$end = new \DateTime('today');
+		$end = $end->modify('+1 day');
 
-        return $contents;
-    }
+		$interval = new \DateInterval('P1D');
+		
+		return new \DatePeriod($begin, $interval ,$end);
+	}
 
-    private function buildRow(DateTimeInterface $date, ReportedCases $nationalCases, ReportedCases $stateCases): string
-    {
-        // filters data
-        $currentCases = $nationalCases->filterByDate($date);
+	private function buildRow(\DateTime $day, ReportedCases $cases): string
+	{
+		if (!$cases->getTotalCumulativeCases($day)) {
+			return '';
+		}
 
-        if (0 === $currentCases->getTotalCumulativeCases()) {
-            return '';
-        }
+		// $states = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
+		$states = ['AC', 'AP', 'AM', 'PA', 'RO', 'RR', 'TO', 'AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE', 'DF', 'GO', 'MT', 'MS', 'ES', 'MG', 'RJ', 'SP', 'PR', 'RS', 'SC'];
 
-        $previousCases = $nationalCases->filterByDate($date->sub(1, 'day'));
+		$row = "\n!rowspan=2 style='vertical-align:top'| " . $day->format('d/m') . "\n! Casos\n";
 
-        $states = States::portuguese()->sort();
+		foreach ($states as $key => $state) {
+			$row .= !$key ? '| ' : '|| ';
 
-        $currentStateCases = $stateCases->filterByDate($date);
-        $previousStateCases = $stateCases->filterByDate($date->sub(1, 'day'));
+			$reportedCase = $cases->getReportedCase($day, $state);
+			$row .= ($reportedCase && $reportedCase->cumulativeCases ? $reportedCase->cumulativeCases : '') . ' ';
+		}
 
-        // calculates data
-        $totalCumulativeCases = $currentCases->getTotalCumulativeCases();
-        $totalNewCases = $totalCumulativeCases - $previousCases->getTotalCumulativeCases();
+		$row .= "\n";
+		$row .= '!rowspan=2| ' . ($cases->getTotalNewCases($day) ? '+' . $cases->getTotalNewCases($day) : '=') . "\n";
+		$row .= '!rowspan=2| ' . $cases->getTotalCumulativeCases($day) . "\n";
 
-        $totalCumulativeDeaths = $currentCases->getTotalCumulativeDeaths();
-        $totalNewDeaths = $totalCumulativeDeaths - $previousCases->getTotalCumulativeDeaths();
+		$row .= '|rowspan=2| ' . ($cases->getTotalCumulativeDeaths($day) ? ($cases->getTotalNewDeaths($day) ? '+' . $cases->getTotalNewDeaths($day) : '=') : '')  . "\n";
+		$row .= '|rowspan=2| ' . ($cases->getTotalCumulativeDeaths($day) ?: '') . "\n";
 
-        $casesByState = $this->listStateData($currentStateCases, $previousStateCases, 'getTotalCumulativeCases');
-        $deathsByState = $this->listStateData($currentStateCases, $previousStateCases, 'getTotalCumulativeDeaths');
+		$row .= "|-\n! Mortes\n";
 
-        // parses data to textual mode
-        $totalNewCases = $totalCumulativeCases ? ($totalNewCases ? '+' . ($totalNewCases) : '=') : '';
-        $totalCumulativeCases = $totalCumulativeCases ?: '';
+		foreach ($states as $key => $state) {
+			$row .= !$key ? '| ' : '|| ';
 
-        $totalNewDeaths = $totalCumulativeDeaths ? ($totalNewDeaths ? '+' . ($totalNewDeaths) : '=') : '';
-        $totalCumulativeDeaths = $totalCumulativeDeaths ?: '';
+			$reportedCase = $cases->getReportedCase($day, $state);
+			$row .= ($reportedCase && $reportedCase->cumulativeDeaths ? $reportedCase->cumulativeDeaths : '') . ' ';
+		}
 
-        $casesByState = preg_replace('/  /', ' ', implode(' || ', $casesByState));
-        $deathsByState = preg_replace('/  /', ' ', implode(' || ', $deathsByState));
+		$row .= "\n|-\n";
 
-        // parses the row
-        return <<<ROW
-|-
-!rowspan=2 style='vertical-align:top'| {$date->format('d/m')}
-! Casos
-| {$casesByState}
-!rowspan=2| {$totalNewCases}
-!rowspan=2| {$totalCumulativeCases}
-|rowspan=2| {$totalNewDeaths}
-|rowspan=2| {$totalCumulativeDeaths}
-|-
-! Óbitos
-| {$deathsByState}
+		return $row;		
+	}
 
-ROW;
-    }
-
-    private function listStateData(ReportedCases $currentCases, ReportedCases $previousCases, string $method): array
-    {
-        $states = States::portuguese()->sort();
-        $data = [];
-
-        foreach ($states->getArrayCopy() as $state) {
-            $cumulative = $currentCases->filterByState($state)->{$method}();
-
-            if (!$cumulative) {
-                $data[] = '';
-
-                continue;
-            }
-
-            $new = $cumulative - $previousCases->filterByState($state)->{$method}();
-
-            $data[] = sprintf(static::VALUE_FORMAT, $new ?: '', $cumulative ?: '');
-        }
-
-        return $data;
-    }
-
-    private function buildHeader()
-    {
-        $states = $this->stateColumns();
-
-        return <<<HEADER
+	private function buildHeader()
+	{
+		return <<<HEADER
 {| class="wikitable mw-datatable mw-collapsible" style="font-size:80%; text-align: center;"
 |+ style="font-size:125%" |{{nowrap|Casos e mortes pela COVID-19 no Brasil, por estado ({{navbar|{{subst:PAGENAME}}|mini=1|nodiv=1}})}}
 !rowspan=2 colspan=2|
@@ -121,26 +83,75 @@ ROW;
 !colspan=4| [[Região Sudeste do Brasil|Sudeste]]
 !colspan=3| [[Região Sul do Brasil|Sul]]
 !colspan=2| Casos
-!colspan=2| Óbitos
+!colspan=2| Mortes
 |-
-{$states}
+! {{flagicon|Acre}} <br/> [[Acre|AC]] 
+! {{flagicon|Amapá}} <br/> [[Amapá|AP]]
+! {{flagicon|Amazonas}} <br/> [[Amazonas|AM]]
+! {{flagicon|Pará}} <br/> [[Pará|PA]]
+! {{flagicon|Rondônia}} <br/> [[Rondônia|RO]]
+! {{flagicon|Roraima}} <br/> [[Roraima|RR]]
+! {{flagicon|Tocantins}} <br/> [[Tocantins|TO]]
+! {{flagicon|Alagoas}} <br/> [[Alagoas|AL]]
+! {{flagicon|Bahia}} <br/> [[Bahia|BA]]
+! {{flagicon|Ceará}} <br/> [[Ceará|CE]]
+! {{flagicon|Maranhão}} <br/> [[Maranhão|MA]]
+! {{flagicon|Paraíba}} <br/> [[Paraíba|PB]]
+! {{flagicon|Pernambuco}} <br/> [[Pernambuco|PE]]
+! {{flagicon|Piauí}} <br/> [[Piauí|PI]]
+! {{flagicon|Rio Grande do Norte}} <br/> [[Rio Grande do Norte|RN]]
+! {{flagicon|Sergipe}} <br/> [[Sergipe|SE]]
+! {{flagicon|Distrito Federal}} <br/> [[Distrito Federal (Brasil)|DF]]
+! {{flagicon|Goiás}} <br/> [[Goiás|GO]]
+! {{flagicon|Mato Grosso}} <br/> [[Mato Grosso|MT]]
+! {{flagicon|Mato Grosso do Sul}} <br/> [[Mato Grosso do Sul|MS]]
+! {{flagicon|Espírito Santo}} <br/> [[Espírito Santo (estado)|ES]]
+! {{flagicon|Minas Gerais}} <br/> [[Minas Gerais|MG]]
+! {{flagicon|Rio de Janeiro}} <br/> [[Rio de Janeiro|RJ]] 
+! {{flagicon|São Paulo}} <br/> [[São Paulo|SP]]
+! {{flagicon|Paraná}} <br/> [[Paraná|PR]]
+! {{flagicon|Rio Grande do Sul}} <br/> [[Rio Grande do Sul|RS]]
+! {{flagicon|Santa Catarina}} <br/> [[Santa Catarina|SC]]
 ! Novos
 ! Total
 ! Novos
 ! Total
-
+|-
 HEADER;
-    }
+	}
 
-    private function buildFooter()
-    {
-        $states = $this->stateColumns();
-
-        return <<<FOOTER
-|-
+	private function buildFooter()
+	{
+		return <<<FOOTER
 |-
 !rowspan=2 colspan=2|
-{$states}
+! {{flagicon|Acre}} <br/> [[Acre|AC]] 
+! {{flagicon|Amapá}} <br/> [[Amapá|AP]]
+! {{flagicon|Amazonas}} <br/> [[Amazonas|AM]]
+! {{flagicon|Pará}} <br/> [[Pará|PA]]
+! {{flagicon|Rondônia}} <br/> [[Rondônia|RO]]
+! {{flagicon|Roraima}} <br/> [[Roraima|RR]]
+! {{flagicon|Tocantins}} <br/> [[Tocantins|TO]]
+! {{flagicon|Alagoas}} <br/> [[Alagoas|AL]]
+! {{flagicon|Bahia}} <br/> [[Bahia|BA]]
+! {{flagicon|Ceará}} <br/> [[Ceará|CE]]
+! {{flagicon|Maranhão}} <br/> [[Maranhão|MA]]
+! {{flagicon|Paraíba}} <br/> [[Paraíba|PB]]
+! {{flagicon|Pernambuco}} <br/> [[Pernambuco|PE]]
+! {{flagicon|Piauí}} <br/> [[Piauí|PI]]
+! {{flagicon|Rio Grande do Norte}} <br/> [[Rio Grande do Norte|RN]]
+! {{flagicon|Sergipe}} <br/> [[Sergipe|SE]]
+! {{flagicon|Distrito Federal}} <br/> [[Distrito Federal (Brasil)|DF]]
+! {{flagicon|Goiás}} <br/> [[Goiás|GO]]
+! {{flagicon|Mato Grosso}} <br/> [[Mato Grosso|MT]]
+! {{flagicon|Mato Grosso do Sul}} <br/> [[Mato Grosso do Sul|MS]]
+! {{flagicon|Espírito Santo}} <br/> [[Espírito Santo (estado)|ES]]
+! {{flagicon|Minas Gerais}} <br/> [[Minas Gerais|MG]]
+! {{flagicon|Rio de Janeiro}} <br/> [[Rio de Janeiro|RJ]] 
+! {{flagicon|São Paulo}} <br/> [[São Paulo|SP]]
+! {{flagicon|Paraná}} <br/> [[Paraná|PR]]
+! {{flagicon|Rio Grande do Sul}} <br/> [[Rio Grande do Sul|RS]]
+! {{flagicon|Santa Catarina}} <br/> [[Santa Catarina|SC]]
 ! Novos
 ! Total
 ! Novos
@@ -152,7 +163,7 @@ HEADER;
 !colspan=4| [[Região Sudeste do Brasil|Sudeste]]
 !colspan=3| [[Região Sul do Brasil|Sul]]
 !colspan=2| Casos
-!colspan=2| Óbitos
+!colspan=2| Mortes
 |-
 | colspan="33" |
 |-
@@ -160,30 +171,6 @@ HEADER;
 {{nota|1}} Balanço oficial dos casos segundo o Ministério da Saúde.<ref>{{citar web|url=https://covid.saude.gov.br/|titulo=Ministério da Saúde|data=Abril 2020}}</ref>
 |-
 |}<noinclude>{{documentação}}</noinclude>
-
 FOOTER;
-    }
-
-    private function stateColumns(): string
-    {
-        $contents = [];
-
-        $format = '! {{flagicon|%s}} <br/> [[%s|%s]]';
-
-        $states = States::portuguese()->sort();
-        foreach ($states->getArrayCopy() as $state) {
-            $contents[] = sprintf($format, $state->wikipediaFlag(), $state->wikipediaEntry(), $state->code());
-        }
-
-        return implode("\n", $contents);
-    }
-
-    private function getDateRange(ReportedCases $reportedCases): array
-    {
-        return DatePeriod::create()
-            ->every(DateInterval::make(1, 'day'))
-            ->setDates($reportedCases->getFirstReportedDate(), $reportedCases->getLastReportedDate())
-            ->setDateClass(DateTimeImmutable::class)
-            ->toArray();
-    }
+	}
 }
