@@ -1,9 +1,5 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 include 'globals.php';
-date_default_timezone_set('America/Bahia');
 
 //Recupera dados da fonte - Adaptado de https://github.com/wcota/covid19br/blob/master/scrape-covid-saude-gov-br.sh
 $headers = array(
@@ -58,14 +54,12 @@ foreach ($SinteseUFs as $linha) {
 }
 
 //Loop para construção do wikitexto das UFs
-for ($y = 1; $y < $x; $y++) {
+for ($y = 0; $y < $x; $y++) {
     $linha = "-->{{#ifeq:{{{1}}}|".$UFs[1][$y]."|".$UFs[2][$y]."|}}<!--\n-->{{#ifeq:{{{1}}}|".$UFs[1][$y]."-o|".$UFs[3][$y]."|}}<!--\n";
     $saida = $saida.$linha;
 }
 
 //Login
-$api_url = 'https://pt.wikipedia.org/w/api.php';
-include 'credenciais.php';
 $wiki = new Wikimate($api_url);
 if ($wiki->login($username, $password))
 	echo 'Login OK<br>' ;

@@ -1,10 +1,14 @@
 <?php
-include 'globals.php';
-
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+setlocale(LC_TIME, 'pt_BR', 'pt_BR.utf-8', 'pt_BR.utf-8', 'portuguese');
 date_default_timezone_set('UTC');
+include 'globals.php';
+include 'credenciais.php';
 $today = strtotime('today');
 $dados = array();
-$wiki = new Wikimate($api_url);
+$wiki = new Wikimate('https://pt.wikipedia.org/w/api.php');
 echo "<pre>";
 if ($wiki->login($usernameSQ, $passwordSQ)) {
 	echo "Wikimate connected.\n";
@@ -70,10 +74,7 @@ if ($dif < 0) {
 		echo gmdate("H:i:s", $dif);
 	}
 	echo "\n";
-	die();
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //																						
@@ -82,7 +83,7 @@ if ($dif < 0) {
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Define página
-$pageA = $wiki->getPage("Wikipédia:Sabia que/Propostas/Aprovadas");
+$pageA = $wiki->getPage("Usuário:Albertoleoncio/Teste3");
 
 //Recupera número de seções e encerra script caso só exista uma ou nenhuma proposição
 if ($pageA->getNumSections() <= 2) {
@@ -113,14 +114,6 @@ unset($htmlAe[1]);
 
 //Remonta código da página
 $htmlA = implode("\n==",$htmlAe);
-
-//Grava página
-if ($pageA->setText($htmlA, NULL, FALSE, "bot: (1/6) Arquivando proposição publicada")) {
-	echo "<hr>Arquivando proposição publicada\n";
-} else {
-	$error = $pageA->getError();
-	echo "<hr>Error: ".print_r($error, true)."\n";
-}
 
 
 
@@ -160,14 +153,6 @@ array_pop($htmlBe);
 //Remonta código da página
 $htmlB = implode("\n…",$htmlBe);
 
-//Grava página
-if ($pageB->setText($htmlB, NULL, FALSE, "bot: (2/6) Inserindo SabiaQueDiscussão")) {
-	echo "<hr>Inserindo SabiaQueDiscussão\n";
-} else {
-	$error = $pageB->getError();
-	echo "<hr>Error: ".print_r($error, true)."\n";
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -176,7 +161,6 @@ if ($pageB->setText($htmlB, NULL, FALSE, "bot: (2/6) Inserindo SabiaQueDiscussã
 //																						
 ////////////////////////////////////////////////////////////////////////////////////////
 
-//Verifica se página é redirect
 $APIQuery = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&titles=".urlencode($dados[2])."&redirects=1"), TRUE);
 if (isset($APIQuery["query"]["redirects"])) {
 	$dados[2] = $APIQuery["query"]["redirects"][0]["to"];
@@ -204,14 +188,6 @@ if (strpos($htmlC, "SabiaQueDiscussão") == false) {
 	$htmlC = str_replace("{{SabiaQueDiscussão", "{{SabiaQueDiscussão\n|data".$n."    = ".strftime('%d de %B de %Y', $today)."\n|entrada".$n." = … ".$dados[1], $htmlC);
 }
 
-//Grava página
-if ($pageC->setText($htmlC, 0, FALSE, "bot: (3/6) Inserindo SabiaQueDiscussão")) {
-	echo "<hr>Inserindo SabiaQueDiscussão\n";
-} else {
-	$error = $pageC->getError();
-	echo "<hr>Error: ".print_r($error, true)."\n";
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -228,14 +204,6 @@ $htmlD = $pageD->getText();
 
 //Monta código da ParabénsSQ
 $htmlD = $htmlD."{{subst:ParabénsSQ|artigo=''[[".$dados[2]."]]''|data=".strftime('%d de %B de %Y', $today)."|curiosidade=…".$dados[1]."|arquivo=".strftime('%Y/%m', $today)."}} --~~~~";
-
-//Grava página
-if ($pageD->setText($htmlD, NULL, FALSE, "bot: (4/6) Inserindo ParabénsSQ")) {
-	echo "<hr>Inserindo ParabénsSQ\n";
-} else {
-	$error = $pageD->getError();
-	echo "<hr>Error: ".print_r($error, true)."\n";
-}
 
 
 
@@ -266,14 +234,6 @@ if (array_key_exists($recente[1], $sections)) {
 	$section = 0;
 }
 
-//Grava página
-if ($pageE->setText($htmlE, $section, FALSE, "bot: (5/6) Inserindo Arquivo/Recentes")) {
-	echo "<hr>Inserindo Arquivo/Recentes\n";
-} else {
-	$error = $pageE->getError();
-	echo "<hr>Error: ".print_r($error, true)."\n";
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -291,14 +251,6 @@ $htmlF = $pageF->getText();
 //Monta código da ParabénsSQ
 $htmlF = $htmlF."\n\n==".$dados[5]."{{ADC|sim|".strftime('%d de %B de %Y', $today)."|~~~}}";
 
-//Grava página
-if ($pageF->setText($htmlF, NULL, FALSE, "bot: (6/6) Inserindo Propostas/Arquivo")) {
-	echo "<hr>Inserindo Propostas/Arquivo\n";
-} else {
-	$error = $pageF->getError();
-	echo "<hr>Error: ".print_r($error, true)."\n";
-}
-	
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -307,8 +259,10 @@ if ($pageF->setText($htmlF, NULL, FALSE, "bot: (6/6) Inserindo Propostas/Arquivo
 //																						
 ////////////////////////////////////////////////////////////////////////////////////////
 
-//print_r($dados);
-/*echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Wikip%C3%A9dia:Sabia_que/Propostas&action=edit">LINK</a>
+var_dump($output2);
+
+print_r($dados);
+echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Wikip%C3%A9dia:Sabia_que/Propostas&action=edit">LINK</a>
 	<textarea rows="4" cols="50">'.$htmlA.'</textarea>';
 echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Predefini%C3%A7%C3%A3o:Sabia_que&action=edit">LINK</a>
 	<textarea rows="4" cols="50">'.$htmlB.'</textarea>';
@@ -319,6 +273,6 @@ echo '<hr><a href="https://pt.wikipedia.org/wiki/Usu%C3%A1rio_Discuss%C3%A3o:'.$
 echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Wikipédia:Sabia que/Arquivo/Recentes&action=edit&section='.$section.'">LINK</a>
 	<textarea rows="4" cols="50">'.$htmlE.'</textarea>';
 echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Wikipédia:Sabia que/Propostas/Arquivo/'.strftime('%Y/%m', $today).'&action=edit&section=new">LINK</a>
-	<textarea rows="4" cols="50">'.$htmlF.'</textarea>';*/
+	<textarea rows="4" cols="50">'.$htmlF.'</textarea>';
 
 ?>

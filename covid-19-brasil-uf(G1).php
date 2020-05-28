@@ -1,4 +1,5 @@
 <?php
+/*
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -135,5 +136,5 @@ if ($page->setText($wikiCode, 0, true, "bot: Atualizando estatísticas")) {
 	$error = $page->getError();
 	echo "\nError: " . print_r($error, true) . "\n";
 }
-
+*/
 ?>

@@ -1,9 +1,5 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 include 'globals.php';
-date_default_timezone_set('America/Bahia');
 
 $headers = array(
     'X-Parse-Application-Id: unAFkcaNDeXajurGB7LChj8SgQYS2ptm',
@@ -40,8 +36,6 @@ $portugueseParser = new MediawikiPortugueseTable();
 $wikiCode = $portugueseParser->parse($cases);
 
 //Login
-$api_url = 'https://pt.wikipedia.org/w/api.php';
-include 'credenciais.php';
 $wiki = new Wikimate($api_url);
 if ($wiki->login($username, $password))
 	echo '<pre>Login OK<br>' ;
