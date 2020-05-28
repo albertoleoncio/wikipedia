@@ -12,9 +12,9 @@ use Carbon\CarbonInterface as DateTimeInterface;
 use Carbon\CarbonInterval as DateInterval;
 use Carbon\CarbonPeriod as DatePeriod;
 
-final class PortugueseTable implements ParserInterface
+final class EnglishTable implements ParserInterface
 {
-    private const VALUE_FORMAT = '{{#ifeq: {{{exibir|acumulados}}} | novos | %s | %s }}';
+    private const VALUE_FORMAT = '{{#ifeq: {{{show|total}}} | new | %s | %s }}';
 
     public function parse($reportedCases): string
     {
@@ -43,7 +43,7 @@ final class PortugueseTable implements ParserInterface
 
         $previousCases = $nationalCases->filterByDate($date->sub(1, 'day'));
 
-        $states = States::portuguese()->sort();
+        $states = States::english()->sort();
 
         $currentStateCases = $stateCases->filterByDate($date);
         $previousStateCases = $stateCases->filterByDate($date->sub(1, 'day'));
@@ -71,15 +71,15 @@ final class PortugueseTable implements ParserInterface
         // parses the row
         return <<<ROW
 |-
-!rowspan=2 style='vertical-align:top'| {$date->format('d/m')}
-! Casos
+!rowspan=2 style='vertical-align:top'| {$date->format('M j')}
+! Cases
 | {$casesByState}
 !rowspan=2| {$totalNewCases}
 !rowspan=2| {$totalCumulativeCases}
 |rowspan=2| {$totalNewDeaths}
 |rowspan=2| {$totalCumulativeDeaths}
 |-
-! Óbitos
+! Deaths
 | {$deathsByState}
 
 ROW;
@@ -87,7 +87,7 @@ ROW;
 
     private function listStateData(ReportedCases $currentCases, ReportedCases $previousCases, string $method): array
     {
-        $states = States::portuguese()->sort();
+        $states = States::english()->sort();
         $data = [];
 
         foreach ($states->getArrayCopy() as $state) {
@@ -113,20 +113,20 @@ ROW;
 
         return <<<HEADER
 {| class="wikitable mw-datatable mw-collapsible" style="font-size:80%; text-align: center;"
-|+ style="font-size:125%" |{{nowrap|Casos e mortes pela COVID-19 no Brasil, por estado ({{navbar|{{subst:PAGENAME}}|mini=1|nodiv=1}})}}
+|+ style="font-size:125%" |{{nowrap|COVID-19 cases and deaths in Brazil, by state({{navbar|COVID-19 pandemic data/Brazil medical cases|mini=1|nodiv=1}})}}
 !rowspan=2 colspan=2|
-!colspan=7| [[Região Norte do Brasil|Norte]]
-!colspan=9| [[Região Nordeste do Brasil|Nordeste]]
-!colspan=4| [[Região Centro-Oeste do Brasil|Centro-Oeste]]
-!colspan=4| [[Região Sudeste do Brasil|Sudeste]]
-!colspan=3| [[Região Sul do Brasil|Sul]]
-!colspan=2| Casos
-!colspan=2| Óbitos
+!colspan=7| [[North_Region,_Brazil|North]]
+!colspan=9| [[Northeast_Region,_Brazil|Northeast]]
+!colspan=4| [[Central-West_Region,_Brazil|Central-West]]
+!colspan=4| [[Southeast_Region,_Brazil|Southeast]]
+!colspan=3| [[South_Region,_Brazil|South]]
+!colspan=2| Cases
+!colspan=2| Deaths
 |-
 {$states}
-! Novos
+! New
 ! Total
-! Novos
+! New
 ! Total
 
 HEADER;
@@ -141,25 +141,25 @@ HEADER;
 |-
 !rowspan=2 colspan=2|
 {$states}
-! Novos
+! New
 ! Total
-! Novos
+! New
 ! Total
 |-
-!colspan=7| [[Região Norte do Brasil|Norte]]
-!colspan=9| [[Região Nordeste do Brasil|Nordeste]]
-!colspan=4| [[Região Centro-Oeste do Brasil|Centro-Oeste]]
-!colspan=4| [[Região Sudeste do Brasil|Sudeste]]
-!colspan=3| [[Região Sul do Brasil|Sul]]
-!colspan=2| Casos
-!colspan=2| Óbitos
+!colspan=7| [[North_Region,_Brazil|North]]
+!colspan=9| [[Northeast_Region,_Brazil|Northeast]]
+!colspan=4| [[Central-West_Region,_Brazil|Central-West]]
+!colspan=4| [[Southeast_Region,_Brazil|Southeast]]
+!colspan=3| [[South_Region,_Brazil|South]]
+!colspan=2| Cases
+!colspan=2| Deaths
 |-
 | colspan="33" |
 |-
-| colspan="33" style="text-align: left;" | Notas:<br/>
-{{nota|1}} Balanço oficial dos casos segundo o Ministério da Saúde.<ref>{{citar web|url=https://covid.saude.gov.br/|titulo=Ministério da Saúde|data=Abril 2020}}</ref>
+| colspan="33" style="text-align: left;" | Notes:<br/>
+{{note|1}} Official data provided by the Brazilian Ministry of Health<ref name=brazil>{{cite web|url=https://covid.saude.gov.br/|title=Ministério da Saúde|date=April 2020}}</ref>
 |-
-|}<noinclude>{{documentação}}</noinclude>
+|}<noinclude>{{doc}}</noinclude>
 
 FOOTER;
     }
@@ -170,7 +170,7 @@ FOOTER;
 
         $format = '! {{flagicon|%s}} <br/> [[%s|%s]]';
 
-        $states = States::portuguese()->sort();
+        $states = States::english()->sort();
         foreach ($states->getArrayCopy() as $state) {
             $contents[] = sprintf($format, $state->wikipediaFlag(), $state->wikipediaEntry(), $state->code());
         }

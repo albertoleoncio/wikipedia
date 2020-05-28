@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Application;
+declare(strict_types=1);
 
-use App\Domain\ReportedCases;
+namespace App\Application;
 
 interface ParserInterface
 {
-	public function parse(ReportedCases $cases): string;
+    public function parse($cases): string;
 }
