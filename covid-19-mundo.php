@@ -70,7 +70,7 @@ for ($x = 0; $x < count($htmle); $x++) {
 
 //Login
 $wiki = new Wikimate($api_url);
-if ($wiki->login($username, $password))
+if ($wiki->login('AlbeROBOT', $password))
 	echo "<hr><b>Predefinição:Dados_da_pandemia_de_COVID-19</b>\n" ;
 else {
 	$error = $wiki->getError();

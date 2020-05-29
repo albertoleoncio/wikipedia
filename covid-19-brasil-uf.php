@@ -3,7 +3,7 @@ include 'globals.php';
 
 //Login
 $wiki = new Wikimate($api_url);
-if ($wiki->login($username, $password))
+if ($wiki->login('AlbeROBOT', $password))
 	echo 'Login OK<br>' ;
 else {
 	$error = $wiki->getError();

@@ -10,7 +10,7 @@ date_default_timezone_set('America/Bahia');
 $api_url = 'https://pt.wikipedia.org/w/api.php';
 include 'credenciais.php';
 $wiki = new Wikimate($api_url);
-if ($wiki->login($username, $password))
+if ($wiki->login('AlbeROBOT', $password))
 	echo '<pre>Login OK<br>' ;
 else {
 	$error = $wiki->getError();
