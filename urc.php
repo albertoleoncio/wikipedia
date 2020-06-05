@@ -25,9 +25,6 @@ if (isset($_POST["nome"])) {
 		}
 		$history = $file->getHistory(true);
 
-		//print_r($history);
-		//echo "<hr>";
-
 		if ($file->getHeight() > 500) {
 			echo "Height > 500\n";
 			break;
