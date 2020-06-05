@@ -56,7 +56,7 @@ $pageTime = $wiki->getPage("Wikipédia:Sabia que/Frequência");
 $htmlTime = $pageTime->getText();
 
 //Limite de segurança
-if (is_numeric($htmlTime) == FALSE OR $htmlTime < 43200) {
+if (is_numeric($htmlTime) === FALSE OR $htmlTime < 43200) {
 	die("'Wikipédia:Sabia que/Frequência' possui valor não numérico ou menor que 43200. Bloqueio de segurança.");
 }
 

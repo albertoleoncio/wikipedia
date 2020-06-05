@@ -73,5 +73,3 @@ if ($page->setText($wikiCode, 0, true, "bot: Atualizando estatísticas")) {
 	$error = $page->getError();
 	echo "\nError: " . print_r($error, true) . "\n";
 }
-
-?>

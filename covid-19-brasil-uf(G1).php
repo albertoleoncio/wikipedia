@@ -1,14 +1,8 @@
 <?php
-/*
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-include 'globals.php';
-date_default_timezone_set('America/Bahia');
 
 //Login
 $api_url = 'https://pt.wikipedia.org/w/api.php';
-include 'credenciais.php';
+include 'globals.php';
 $wiki = new Wikimate($api_url);
 if ($wiki->login('AlbeROBOT', $password))
 	echo '<pre>Login OK<br>' ;
@@ -40,53 +34,29 @@ if ($ref == false) {
 }
 
 //Recupera dados da fonte
-$url = "https://datawrapper.dwcdn.net/M2Eyg/";
+$url = "https://datawrapper.dwcdn.net/wdY56/";
 $html = @file_get_contents($url);
 $size = strlen($html);
 
 //Loop para escapar dos redirecionamentos
-while ($size < 100) {
-	preg_match('/url=..\/..\/.{5}\/(.*)"/', $html, $redirect);
-	$urlget = $url.$redirect[1];
+while ($size < 200) {
+	preg_match_all('/url=https:\/\/datawrapper\.dwcdn\.net\/wdY56\/([^\/]*)/', $html, $redirect);
+	$urlget = $url.$redirect[1][0]."/";
 	$html = @file_get_contents($urlget);
 	$size = strlen($html);
 }
 
 //Regex para isolar JSON de dados da página
-preg_match_all('/chartData: \"*(.*)\"\,\n/', $html, $chartData);
+preg_match_all('/chartData\\\":\\\"([^"]*)/', $html, $chartData);
 
-//Regex para isolar dados das UFs
-preg_match_all('/\n([^;]*);([0-9]*);([0-9]*)/', json_decode('{"1":"'.$chartData[1][0].'"}', true)[1], $dados);
+$rawdata = explode('\\\r\\\n', $chartData[1][0]);
+$dados = explode(',', trim(end($rawdata), "\\"));
 
+print_r($rawdata);
+
+/*
 //Constroi array para conversão de nomes dos estados para siglas
-$estados = array_flip(array(
-"AC"=>"Acre",
-"AL"=>"Alagoas",
-"AM"=>"Amazonas",
-"AP"=>"Amapá",
-"BA"=>"Bahia",
-"CE"=>"Ceará",
-"DF"=>"Distrito Federal",
-"ES"=>"Espírito Santo",
-"GO"=>"Goiás",
-"MA"=>"Maranhão",
-"MT"=>"Mato Grosso",
-"MS"=>"Mato Grosso do Sul",
-"MG"=>"Minas Gerais",
-"PA"=>"Pará",
-"PB"=>"Paraíba",
-"PR"=>"Paraná",
-"PE"=>"Pernambuco",
-"PI"=>"Piauí",
-"RJ"=>"Rio de Janeiro",
-"RN"=>"Rio Grande do Norte",
-"RO"=>"Rondônia",
-"RS"=>"Rio Grande do Sul",
-"RR"=>"Roraima",
-"SC"=>"Santa Catarina",
-"SE"=>"Sergipe",
-"SP"=>"São Paulo",
-"TO"=>"Tocantins"));
+$estados = array( "AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RO", "RS", "RR", "SC", "SE", "SP", "TO" );
 
 //Loop para montar a array das UFs
 $UFs = array();
@@ -95,7 +65,7 @@ $UFs[2][1] = 0;
 $UFs[3][1] = 0;
 $x = 2;
 
-foreach ($dados[0] as $linha) {
+foreach ($dados as $linha) {
 	$linha = explode(";", $linha);
 	$UFs[1][$x] = $estados[trim($linha[0])];
 	$UFs[2][$x] = $linha[1];
@@ -130,11 +100,12 @@ $pieces[1] = $saida;
 $wikiCode = implode("%", $pieces);
 
 //Gravar código
+/*
 if ($page->setText($wikiCode, 0, true, "bot: Atualizando estatísticas")) {
 	echo "\nEdição realizada.\n";
 } else {
 	$error = $page->getError();
 	echo "\nError: " . print_r($error, true) . "\n";
-}
-*/
+}*/
+
 ?>
