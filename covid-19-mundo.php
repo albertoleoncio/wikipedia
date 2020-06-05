@@ -16,8 +16,8 @@ $wikien = array();
 $wikipt = array();
 
 //Lista de substituição
-$de = array(" June 2020"," July 2020"," March 2020"," April 2020"," May 2020","|url-status=live","April 2, 2020");
-$para = array("-06-2020","-07-2020","-03-2020","-04-2020","-05-2020","","02-04-2020"); 
+$de = array(" June 2020"," July 2020"," March 2020"," April 2020"," May 2020","|url-status=live");
+$para = array("-06-2020","-07-2020","-03-2020","-04-2020","-05-2020",""); 
 
 //Loop para processar cada item da array
 for ($x = 0; $x < count($htmle); $x++) {
@@ -32,6 +32,8 @@ for ($x = 0; $x < count($htmle); $x++) {
 		preg_match_all('/! ?scope="row" ?(?:data-sort-value="[^"]*" ?)?\| ?\'{0,2}\[\[[^F][^\|]*\|([^\|]*)]]/', preg_replace('/{{[^}]*}}|<[^>]*>|\([^\)]*\)/', '', $result[0]), $array1);
 		echo @$array1[1][0]."...";
 		$array1[1][0] = @trim($array1[1][0]);
+
+		//Insere nome do país na lista do relatório
 		array_push($wikien, $array1[1][0]);
 
 		//Insere o nome do país como um valor na array de resultado
@@ -63,7 +65,10 @@ for ($x = 0; $x < count($htmle); $x++) {
 		//Processa a fonte e insere na array de resultado
 		$resultado[$array1[1][0]][4] = str_replace($de, $para, preg_replace('/date=([0-9]{4})-([0-9]{2})-([0-9]{2})/', 'date=$3-$2-$1', trim($result[$numitens-1])));
 
+		//Seção para ser utilizada em debug
 		//var_dump($resultado[$array1[1][0]]);
+
+		//Aviso de fim de loop
 		echo "OK\n";
 	}
 }
@@ -98,12 +103,13 @@ for ($x = 0; $x < count($pieces); $x++) {
 		$key = $keyarray[1];
 		echo @$key."\n";
 
+		//Insere nome do país na lista do relatório
 		array_push($wikipt, @$key);
 
 		//Verifica se o valor da string corresponde a um país listado na array de resultado
 		if (array_key_exists($key, $resultado)) {
 
-			//Substitui os dados no item com as informações atualizadas
+			//Substitui os dados no item com as informações atualizadas, removendo comentários que estejam na tabela da wiki-en
 			$pieces[$x] = 
 				"#(".preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][0]).")-->{{formatnum:".
 				preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][1]))."}} || {{formatnum:".
@@ -126,6 +132,7 @@ if ($page->setText($wikiCode, 0, true, "bot: Atualizando estatísticas")) {
 	echo "<hr>Error: " . print_r($error, true) . "\n";
 }
 
+//Gera relatório
 echo "<hr>";
 $adicionar = array_diff($wikien, $wikipt);
 if (($keyadd = array_search("Brazil", $adicionar)) !== false) {
@@ -136,5 +143,3 @@ echo "Territórios para adicionar:\n";
 print_r($adicionar);
 echo "Territórios para remover:\n";
 print_r($eliminar);
-
-?>
