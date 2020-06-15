@@ -11,12 +11,12 @@ else {
 }
 
 //Recupera dados da predefinição
-$page = $wiki->getPage('Predefinição:Número de casos de COVID-19/Brasil-UF/quantidade');
+$page = $wiki->getPage('Predefinição:Números de casos de COVID-19 por Unidade Federativa no Brasil/Estados');
 if (!$page->exists()) die('Page not found');
 $wikiCode = $page->getText();
 
 //Regex - captura total anterior
-preg_match_all('/confirmados-UF\|([0-9]*)/', $wikiCode, $output_anterior);
+preg_match_all('/confirmados\|([0-9]*)/', $wikiCode, $output_anterior);
 $anterior = $output_anterior[1][0];
 
 //Recupera dados da fonte e transforma em uma array
@@ -47,16 +47,16 @@ foreach ($dados as $linha) {
 //Processa as linhas para inserir na predefinição
 $saida = "\n";
 for ($x = 2; $x < 29; $x++) {
-    $linha = "-->{{#ifeq:{{{2}}}|".$UFs[1][$x]."-UF|".$UFs[2][$x]."|}}<!--\n";
+    $linha = "-->{{#ifeq:{{{1}}}|".$UFs[1][$x]."-c|".$UFs[2][$x]."|}}<!--\n";
     $saida = $saida.$linha;
 }
-$saida = $saida."-->{{#ifeq:{{{2}}}|confirmados-UF|".$UFs[2][1]."{{#ifeq:{{{ref}}}|sim|<ref name=\"casos confirmados - estaduais\">{{citar web|URL=http://brasil.io/dataset/covid19/caso|titulo=COVID-19 - Datasets - Brasil.IO|data=2020-04-".date("d")."|acessodata=2020-04-".date("d")."  |ultimo=Brasil.IO|lingua=pt-br}}</ref>|}}|}}<!--\n";
+$saida = $saida."-->{{#ifeq:{{{1}}}|confirmados|".$UFs[2][1]."|}}<!--\n";
 
 for ($x = 2; $x < 29; $x++) {
-    $linha = "-->{{#ifeq:{{{2}}}|".$UFs[1][$x]."-o-UF|".$UFs[3][$x]."|}}<!--\n";
+    $linha = "-->{{#ifeq:{{{1}}}|".$UFs[1][$x]."-o|".$UFs[3][$x]."|}}<!--\n";
     $saida = $saida.$linha;
 }
-$saida = $saida."-->{{#ifeq:{{{2}}}|confirmados-o-UF|".$UFs[3][1]."{{#ifeq:{{{ref}}}|sim|<ref name=\"casos confirmados - estaduais\"/>|}}|}}<!--\n";
+$saida = $saida."-->{{#ifeq:{{{1}}}|obitos|".$UFs[3][1]."|}}<!--\n";
 
 //Retorna valores totais para simples conferência
 echo "Total anterior = ".$anterior."<br>Total atual = ".$UFs[2][1].".<br>";

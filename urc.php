@@ -1,4 +1,5 @@
 <?php
+
 include 'globals.php';
 echo "<pre>";
 
@@ -32,7 +33,7 @@ if (isset($_POST["nome"])) {
 
 		for ($i=1; $i < count($history); $i++) { 
 			$archivename = $file->getArchivename($i);
-			//$file->delete('bot: Solicitado em [[Special:diff/58435108|58435108]]', $archivename);
+			$file->delete('Versão antiga de [[WP:URC|conteúdo restrito]] (bot: [[Special:diff/58435108|58435108]])', $archivename);
 			echo $archivename." processado\n";
 		}
 		echo "<hr>";
@@ -42,7 +43,7 @@ if (isset($_POST["nome"])) {
 
 Separar arquivo por cada linha
 <br>
-<form action="/alberobot/test.php" method="post">
+<form action="/alberobot/urc.php" method="post">
   <textarea rows="6" cols="50" name="nome"></textarea>
   <input type="submit">
 </form>

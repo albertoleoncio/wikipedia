@@ -30,7 +30,7 @@ $ano = $datacompleta[0];
 
 //Construção do wikitexto dos dados gerais
 $saida = "\n"."-->{{#ifeq:{{{1}}}|confirmados|".$confirmado."|}}<!--\n".
-			"-->{{#ifeq:{{{1}}}|confirmados-o|<!-- ÓBITOS -->".$obitos."|}}<!--\n".
+			"-->{{#ifeq:{{{1}}}|obitos|".$obitos."|}}<!--\n".
 			"-->{{#ifeq:{{{1}}}|recuperados|".$recuperados."|}}<!--\n".
 			"-->{{#ifeq:{{{1}}}|data|{{DataExt|".$dia."|".$mes."|".$ano."}}|}}<!--\n".
 			"-->{{#ifeq:{{{1}}}|hora|".$hora."|}}<!--\n";
@@ -55,7 +55,7 @@ foreach ($SinteseUFs as $linha) {
 
 //Loop para construção do wikitexto das UFs
 for ($y = 0; $y < $x; $y++) {
-    $linha = "-->{{#ifeq:{{{1}}}|".$UFs[1][$y]."|".$UFs[2][$y]."|}}<!--\n-->{{#ifeq:{{{1}}}|".$UFs[1][$y]."-o|".$UFs[3][$y]."|}}<!--\n";
+    $linha = "-->{{#ifeq:{{{1}}}|".$UFs[1][$y]."-c|".$UFs[2][$y]."|}}<!--\n-->{{#ifeq:{{{1}}}|".$UFs[1][$y]."-o|".$UFs[3][$y]."|}}<!--\n";
     $saida = $saida.$linha;
 }
 
@@ -69,7 +69,7 @@ else {
 }
 
 //Recupera dados da predefinição
-$page = $wiki->getPage('Predefinição:Número de casos de COVID-19/Brasil');
+$page = $wiki->getPage('Predefinição:Números de casos de COVID-19 por Unidade Federativa no Brasil/Ministério da Saúde');
 if (!$page->exists()) die('Page not found');
 $wikiCode = $page->getText();
 
