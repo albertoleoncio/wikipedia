@@ -1,5 +1,5 @@
 <?php
-include 'globals.php';
+include './bin/globals.php';
 
 //Recupera dados da fonte - Adaptado de https://github.com/wcota/covid19br/blob/master/scrape-covid-saude-gov-br.sh
 $headers = array(

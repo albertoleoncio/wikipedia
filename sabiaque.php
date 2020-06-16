@@ -1,5 +1,5 @@
 <?php
-include 'globals.php';
+include './bin/globals.php';
 
 //Define fuso horário como UTC
 date_default_timezone_set('UTC');

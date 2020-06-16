@@ -1,5 +1,5 @@
 <?php
-include 'globals.php';
+include './bin/globals.php';
 
 //Login
 $wiki = new Wikimate($api_url);

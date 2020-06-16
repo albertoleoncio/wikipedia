@@ -6,5 +6,5 @@ $template = "Шаблон:Пандемія COVID-19 за країнами та �
 $sumario  = "бот: оновлення статистики";
 $report   = FALSE;
 
-include 'globals.php';
-include 'covid-19-mundo.php';
+include './bin/globals.php';
+include './bin/covid-19-mundo.php';
