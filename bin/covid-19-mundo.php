@@ -19,8 +19,26 @@ $wikien = array();
 $wikiXX = array();
 
 //Lista de substituição
-$de = array(" June 2020"," July 2020"," March 2020"," April 2020"," May 2020","|url-status=live");
-$para = array("-06-2020","-07-2020","-03-2020","-04-2020","-05-2020",""); 
+$de = array(
+	"|script-",
+	"| name-list-format = vanc ",
+	"|url-status=live",
+	" March 2020",
+	" April 2020",
+	" May 2020",
+	" June 2020",
+	" July 2020"
+);
+$para = array(
+	"|",
+	"",
+	"",
+	"-03-2020",
+	"-04-2020",
+	"-05-2020",
+	"-06-2020",
+	"-07-2020"
+); 
 
 //Loop para processar cada item da array
 for ($x = 0; $x < count($htmle); $x++) {
