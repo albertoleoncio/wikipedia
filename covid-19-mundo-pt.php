@@ -4,8 +4,8 @@ echo "<pre>";
 $isocode  = "pt";
 $template = "Predefinição:Dados da pandemia de COVID-19";
 $sumario  = "bot: Atualizando estatísticas";
-$toadd    = "Países a adicionar";
-$toremove = "Países a remover";
+$toadd    = "Territórios a adicionar";
+$toremove = "Territórios a remover";
 $logpage  = "Usuário(a):AlbeROBOT/log";
 
 include './bin/globals.php';
