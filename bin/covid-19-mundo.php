@@ -140,17 +140,15 @@ if ($page->setText($wikiCode, 0, true, $sumario)) {
 }
 
 //Gera relatório
-if ($report) {
-	echo "<hr>";
+$adicionar = array_diff($wikien, $wikiXX);
+$eliminar = array_diff($wikiXX, $wikien);
+$report = $toadd.":\n#".implode("\n#", $adicionar)."\n\n".$toremove.":\n#".implode("\n#", $eliminar);
 
-	echo "Territórios para adicionar:\n";
-	$adicionar = array_diff($wikien, $wikiXX);
-	if (($keyadd = array_search("Brazil", $adicionar)) !== false) {
-	    unset($adicionar[$keyadd]);
-	}
-	print_r($adicionar);
-
-	echo "Territórios para remover:\n";
-	$eliminar = array_diff($wikiXX, $wikien);
-	print_r($eliminar);
+//Grava log
+$log = $wiki->getPage($logpage);
+if ($log->setText($report, 0, true, $sumario." (log)")) {
+	echo "<hr>Edição realizada.\n";
+} else {
+	$error = $page->getError();
+	echo "<hr>Error: " . print_r($error, true) . "\n";
 }
