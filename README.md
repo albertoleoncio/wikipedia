@@ -1,6 +1,6 @@
 # AlbeROBOT
 
-Script para atualização dos dados do COVID-19 nas páginas da Wikipédia em Português.
+Script para atualização dos dados do COVID-19 nas páginas da Wikipédia, dentre outras coisas.
 
 ## Usuários
 

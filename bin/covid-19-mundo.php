@@ -43,7 +43,7 @@ $para = array(
 //Loop para processar cada item da array
 for ($x = 0; $x < count($htmle); $x++) {
 
-	//Verifica se item possui marcação do arquivo da bandeira, indicando que a string se refere a um país
+	//Verifica se item possui marcação do arquivo de bandeira ou barco, indicando que a string se refere a um país ou a um cruzeiro
 	if ((strpos($htmle[$x], '[[File:Flag') !== false) OR (strpos($htmle[$x], '[[File:Cruise') !== false)) {
 
 		//Separa a string em substrings, baseado na marcação de estilo da tabela
@@ -164,7 +164,7 @@ $report = $toadd.":\n#".implode("\n#", $adicionar)."\n\n".$toremove.":\n#".implo
 
 //Grava log
 $log = $wiki->getPage("User:AlbeROBOT/".$log);
-if ($log->setText($report, 0, true, "")) {
+if ($log->setText($report, 0, false, "")) {
 	echo "<hr>Edição realizada.\n";
 } else {
 	$error = $page->getError();
