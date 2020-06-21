@@ -44,7 +44,7 @@ $para = array(
 for ($x = 0; $x < count($htmle); $x++) {
 
 	//Verifica se item possui marcação do arquivo da bandeira, indicando que a string se refere a um país
-	if (strpos($htmle[$x], '[[File:Flag') !== false) {
+	if ((strpos($htmle[$x], '[[File:Flag') !== false) OR (strpos($htmle[$x], '[[File:Cruise') !== false)) {
 
 		//Separa a string em substrings, baseado na marcação de estilo da tabela
 		$result = preg_split('/\n *\|/', $htmle[$x]);
@@ -52,7 +52,7 @@ for ($x = 0; $x < count($htmle); $x++) {
 		//Separa o nome do país, elimina predefinições como as marcas de rodapé e insere na array de resultado como uma key
 		preg_match_all(
 			'/! ?scope="row" ?(?:data-sort-value="[^"]*" ?)?\| ?\'{0,2}\[\[[^F][^\|]*\|([^\|]*)]]/', 
-			preg_replace('/{{[^}]*}}|<[^>]*>|\([^\)]*\)/', '', $result[0]), 
+			preg_replace('/{{[^}]*}}|<[^>]*>|\'|\([^\)]*\)/', '', $result[0]), 
 			$array1
 		);
 		echo @$array1[1][0]."...";
