@@ -150,7 +150,7 @@ for ($x = 0; $x < count($pieces); $x++) {
 $wikiCode = implode("#bot", $pieces);
 
 //Gravar código
-if ($page->setText($wikiCode, 0, true, $sumario)) {
+if ($page->setText($wikiCode, 0, true, $sumario." ([[User:AlbeROBOT/".$log."|".$log."]])")) {
 	echo "<hr>Edição realizada.\n";
 } else {
 	$error = $page->getError();
@@ -163,8 +163,8 @@ $eliminar = array_diff($wikiXX, $wikien);
 $report = $toadd.":\n#".implode("\n#", $adicionar)."\n\n".$toremove.":\n#".implode("\n#", $eliminar);
 
 //Grava log
-$log = $wiki->getPage($logpage);
-if ($log->setText($report, 0, true, $sumario." (log)")) {
+$log = $wiki->getPage("User:AlbeROBOT/".$log);
+if ($log->setText($report, 0, true, "")) {
 	echo "<hr>Edição realizada.\n";
 } else {
 	$error = $page->getError();
