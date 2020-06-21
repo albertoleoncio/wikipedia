@@ -159,7 +159,9 @@ if ($page->setText($wikiCode, 0, true, $sumario." ([[User:AlbeROBOT/".$log."|".$
 
 //Gera relatório
 $adicionar = array_diff($wikien, $wikiXX);
+asort($adicionar);
 $eliminar = array_diff($wikiXX, $wikien);
+asort($eliminar);
 $report = $toadd.":\n#".implode("\n#", $adicionar)."\n\n".$toremove.":\n#".implode("\n#", $eliminar);
 
 //Grava log
