@@ -137,9 +137,9 @@ for ($x = 0; $x < count($pieces); $x++) {
 			//Substitui os dados no item com as informações atualizadas, removendo comentários que estejam na tabela da wiki-en
 			$pieces[$x] = 
 				"#(".preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][0]).")-->{{formatnum:".
-				preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][1]))."}} || {{formatnum:".
-				preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][2]))."}} || {{formatnum:".
-				preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][3]))."}} || ".
+				preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][1]))."}}\n|{{formatnum:".
+				preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][2]))."}}\n|{{formatnum:".
+				preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][3]))."}}\n|".
 				preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][4])."<!-- "
 			;
 		}
