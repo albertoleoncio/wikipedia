@@ -135,13 +135,25 @@ for ($x = 0; $x < count($pieces); $x++) {
 		if (array_key_exists($key, $resultado)) {
 
 			//Substitui os dados no item com as informações atualizadas, removendo comentários que estejam na tabela da wiki-en
-			$pieces[$x] = 
-				"#(".preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][0]).")-->{{formatnum:".
-				preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][1]))."}}\n|{{formatnum:".
-				preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][2]))."}}\n|{{formatnum:".
-				preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][3]))."}}\n|".
-				preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][4])."<!-- "
-			;
+			$parte = array();
+
+			if (!isset($ignoreconf)) {
+				array_push($parte, "{{formatnum:".preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][1]))."}}");
+			}
+			
+			if (!isset($ignoremortes)) {
+				array_push($parte, "{{formatnum:".preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][2]))."}}");
+			}
+
+			if (!isset($ignorecurados)) {
+				array_push($parte, "{{formatnum:".preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][3]))."}}");
+			}
+
+			if (!isset($ignoreref)) {
+				array_push($parte, preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][4]));
+			}
+
+			$pieces[$x] = "#(".preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][0]).")-->".implode("\n|", $parte)."<!-- ";
 		}
 	}	
 }
@@ -167,7 +179,7 @@ $report = $toadd.":\n#".implode("\n#", $adicionar)."\n\n".$toremove.":\n#".implo
 //Grava log
 $log = $wiki->getPage("User:AlbeROBOT/".$log);
 if ($log->setText($report, 0, false, "")) {
-	echo "<hr>Edição realizada.\n";
+	echo "<hr>Log gravado.\n";
 } else {
 	$error = $page->getError();
 	echo "<hr>Error: " . print_r($error, true) . "\n";
