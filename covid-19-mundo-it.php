@@ -1,17 +1,15 @@
 <?php
 echo "<pre>";
 
-$isocode  = "az";
-$template = "Şablon:2019–20 koronavirus pandemiyası verilənləri";
-$sumario  = "bot: Statistikanı yeniləyir";
-$toadd    = "Əlavə ediləcək ərazilər";
-$toremove = "İstisna ediləcək ərazilər";
+$isocode  = "it";
+$template = "Template:Dati della pandemia di COVID-19 del 2019-2020";
+$sumario  = "bot: Aggiornamento delle statistiche";
+$toadd    = "Territori da aggiungere";
+$toremove = "Territori da rimuovere";
 $log      = "log";
 
 function refparser($ref) {
 	$de = array(
-		"|script-",
-		"| name-list-format = vanc ",
 		"|url-status=live",
 		" March 2020",
 		" April 2020",
@@ -20,8 +18,6 @@ function refparser($ref) {
 		" July 2020"
 	);
 	$para = array(
-		"|",
-		"",
 		"",
 		"-03-2020",
 		"-04-2020",

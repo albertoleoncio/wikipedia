@@ -1,12 +1,13 @@
 <?php
 echo "<pre>";
 
-$isocode  = "az";
-$template = "Şablon:2019–20 koronavirus pandemiyası verilənləri";
-$sumario  = "bot: Statistikanı yeniləyir";
-$toadd    = "Əlavə ediləcək ərazilər";
-$toremove = "İstisna ediləcək ərazilər";
-$log      = "log";
+$isocode   = "et";
+$template  = "Mall:2020 aasta koroonaviirushaigus riigiti";
+$sumario   = "bot: Statistika värskendamine";
+$toadd     = "Aladel lisada";
+$toremove  = "Aladel eemaldada";
+$log       = "log";
+$ignoreref = TRUE;
 
 function refparser($ref) {
 	$de = array(

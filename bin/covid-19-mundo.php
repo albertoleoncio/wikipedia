@@ -5,6 +5,11 @@ if (!isset($isocode)) {
 	die("Não deve ser chamado diretamente.");
 }
 
+function removedatasort ($info) {
+	$info = str_replace('data-sort-value="-1" |{{Color|grey|No data}}', '{{color|darkgray|–}}', trim($info));
+	return $info;
+} 
+
 //Recupera dados da fonte
 $url = "https://en.wikipedia.org/w/index.php?title=Template:COVID-19_pandemic_data&action=raw";
 $html = @file_get_contents($url);
@@ -17,28 +22,6 @@ $htmle = explode("\n|-", $html);
 $resultado = array();
 $wikien = array();
 $wikiXX = array();
-
-//Lista de substituição
-$de = array(
-	"|script-",
-	"| name-list-format = vanc ",
-	"|url-status=live",
-	" March 2020",
-	" April 2020",
-	" May 2020",
-	" June 2020",
-	" July 2020"
-);
-$para = array(
-	"|",
-	"",
-	"",
-	"-03-2020",
-	"-04-2020",
-	"-05-2020",
-	"-06-2020",
-	"-07-2020"
-); 
 
 //Loop para processar cada item da array
 for ($x = 0; $x < count($htmle); $x++) {
@@ -83,21 +66,19 @@ for ($x = 0; $x < count($htmle); $x++) {
 		}
 		
 		//Separa dados numéricos e insere na array de resultado
-		$resultado[$array1[1][0]][1] = str_replace('data-sort-value="-1" |{{Color|grey|No data}}', '{{color|darkgray|–}}', trim($result[$numitens-4]));
-		if(strpos($resultado[$array1[1][0]][1], "formatnum") !== false){
-		    $resultado[$array1[1][0]][1] = preg_replace('/{{formatnum:(.*)}}/', '$1', $resultado[$array1[1][0]][1]);
-		} 
-		$resultado[$array1[1][0]][2] = str_replace('data-sort-value="-1" |{{Color|grey|No data}}', '{{color|darkgray|–}}', trim($result[$numitens-3]));
-		if(strpos($resultado[$array1[1][0]][2], "formatnum") !== false){
-		    $resultado[$array1[1][0]][2] = preg_replace('/{{formatnum:(.*)}}/', '$1', $resultado[$array1[1][0]][2]);
-		} 
-		$resultado[$array1[1][0]][3] = str_replace('data-sort-value="-1" |{{Color|grey|No data}}', '{{color|darkgray|–}}', trim($result[$numitens-2]));
-		if(strpos($resultado[$array1[1][0]][3], "formatnum") !== false){
-		    $resultado[$array1[1][0]][3] = preg_replace('/{{formatnum:(.*)}}/', '$1', $resultado[$array1[1][0]][3]);
-		} 
+		$resultado[$array1[1][0]][1] = removedatasort($result[$numitens-4]);
+		$resultado[$array1[1][0]][2] = removedatasort($result[$numitens-3]);
+		$resultado[$array1[1][0]][3] = removedatasort($result[$numitens-2]);
+
+		//Remove duplo formatnum
+		for ($i=1; $i < 4; $i++) { 
+			if(strpos($resultado[$array1[1][0]][$i], "formatnum") !== false){
+			    $resultado[$array1[1][0]][$i] = preg_replace('/{{formatnum:(.*)}}/', '$1', $resultado[$array1[1][0]][$i]);
+			} 
+		}
 
 		//Processa a fonte e insere na array de resultado
-		$resultado[$array1[1][0]][4] = str_replace($de, $para, preg_replace('/date=([0-9]{4})-([0-9]{2})-([0-9]{2})/', 'date=$3-$2-$1', trim($result[$numitens-1])));
+		$resultado[$array1[1][0]][4] = refparser($result[$numitens-1]);
 
 		//Seção para ser utilizada em debug
 		//var_dump($resultado[$array1[1][0]]);
@@ -119,7 +100,7 @@ else {
 //Recupera dados da predefinição
 $page = $wiki->getPage($template);
 if (!$page->exists()) die('Page not found');
-$wikiCode = $page->getText();
+$wikiCode = $page->getSection(0);
 
 //Separa países e insere em uma array, utilizando a marcação do bot <!-- #bot#(País)-->
 $pieces = explode("#bot", $wikiCode);
