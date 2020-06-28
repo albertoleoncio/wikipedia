@@ -5,8 +5,10 @@ if (!isset($isocode)) {
 	die("Não deve ser chamado diretamente.");
 }
 
-function removedatasort ($info) {
+function cleandata ($info) {
 	$info = str_replace('data-sort-value="-1" |{{Color|grey|No data}}', '{{color|darkgray|–}}', trim($info));
+	$info = preg_replace('/<!--[\s\S]*?-->/', '', $info);
+	$info = preg_replace('/,/', '', $info);
 	return $info;
 } 
 
@@ -66,9 +68,9 @@ for ($x = 0; $x < count($htmle); $x++) {
 		}
 		
 		//Separa dados numéricos e insere na array de resultado
-		$resultado[$array1[1][0]][1] = removedatasort($result[$numitens-4]);
-		$resultado[$array1[1][0]][2] = removedatasort($result[$numitens-3]);
-		$resultado[$array1[1][0]][3] = removedatasort($result[$numitens-2]);
+		$resultado[$array1[1][0]][1] = cleandata($result[$numitens-4]);
+		$resultado[$array1[1][0]][2] = cleandata($result[$numitens-3]);
+		$resultado[$array1[1][0]][3] = cleandata($result[$numitens-2]);
 
 		//Remove duplo formatnum
 		for ($i=1; $i < 4; $i++) { 
@@ -87,6 +89,19 @@ for ($x = 0; $x < count($htmle); $x++) {
 		echo "OK\n";
 	}
 }
+
+//Proteção contra bagunça na tabela
+if (!$resultado['Brazil'][1] OR !$resultado['Brazil'][2] OR !$resultado['Brazil'][3]) die('Tabela com erro');
+
+//Insere dados totais do mundo
+$urltotal = "https://en.wikipedia.org/w/index.php?title=Template:Cases_in_the_COVID-19_pandemic&action=raw";
+preg_match_all('/ \|[cdr][^=]*= ([0-9]*)\n|({{cite[^}]*}})/', @file_get_contents($urltotal), $total);
+array_push($wikien, 'World');
+$resultado['World'][0] = "World";
+$resultado['World'][1] = $total[1][0];
+$resultado['World'][2] = $total[1][1];
+$resultado['World'][3] = $total[1][2];
+$resultado['World'][4] = "<ref>".$total[2][3]."</ref>";
 
 //Login
 $wiki = new Wikimate("https://".$isocode.".wikipedia.org/w/api.php");
@@ -124,26 +139,17 @@ for ($x = 0; $x < count($pieces); $x++) {
 		//Verifica se o valor da string corresponde a um país listado na array de resultado
 		if (array_key_exists($key, $resultado)) {
 
-			//Substitui os dados no item com as informações atualizadas, removendo comentários que estejam na tabela da wiki-en
+			//Substitui os dados no item com as informações atualizadas
 			$parte = array();
+			if (!isset($ignoreconf)) 	array_push($parte, "{{formatnum:".$resultado[$key][1]."}}");
+			if (!isset($ignoremortes))	array_push($parte, "{{formatnum:".$resultado[$key][2]."}}");
+			if (!isset($ignorecurados)) array_push($parte, "{{formatnum:".$resultado[$key][3]."}}");
+			if (!isset($ignoreref)) 	array_push($parte, preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][4]));
 
-			if (!isset($ignoreconf)) {
-				array_push($parte, "{{formatnum:".preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][1]))."}}");
-			}
+			if ($resultado[$key][0] == "World") {$sep = "\n!";} else {$sep = "\n|";}
+			$pieces[$x] = "#(".preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][0]).")-->".implode($sep, $parte)."<!-- ";
 			
-			if (!isset($ignoremortes)) {
-				array_push($parte, "{{formatnum:".preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][2]))."}}");
-			}
-
-			if (!isset($ignorecurados)) {
-				array_push($parte, "{{formatnum:".preg_replace('/,/', '', preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][3]))."}}");
-			}
-
-			if (!isset($ignoreref)) {
-				array_push($parte, preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][4]));
-			}
-
-			$pieces[$x] = "#(".preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][0]).")-->".implode("\n|", $parte)."<!-- ";
+			unset($parte);
 		}
 	}	
 }
