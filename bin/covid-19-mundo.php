@@ -29,7 +29,7 @@ $wikiXX = array();
 for ($x = 0; $x < count($htmle); $x++) {
 
 	//Verifica se item possui marcação do arquivo de bandeira ou barco, indicando que a string se refere a um país ou a um cruzeiro
-	if ((strpos($htmle[$x], '[[File:Flag') !== false) OR (strpos($htmle[$x], '[[File:Cruise') !== false)) {
+	if ((strpos($htmle[$x], '[[File:Flag') !== false) OR (strpos($htmle[$x], '[[File:Cruise') !== false) OR (strpos($htmle[$x], '[[File:Sub') !== false) OR (strpos($htmle[$x], '[[File:Flug') !== false)) {
 
 		//Separa a string em substrings, baseado na marcação de estilo da tabela
 		$result = preg_split('/\n *\|/', $htmle[$x]);
