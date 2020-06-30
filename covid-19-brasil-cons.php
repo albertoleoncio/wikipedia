@@ -1,4 +1,5 @@
 <?php
+echo "<pre>";
 include './bin/globals.php';
 
 //Login
@@ -11,7 +12,7 @@ else {
 }
 
 //Recupera dados da predefinição
-$page = $wiki->getPage('Predefinição:Números de casos de COVID-19 por Unidade Federativa no Brasil/BrasilIO');
+$page = $wiki->getPage('Predefinição:Números de casos de COVID-19 por Unidade Federativa no Brasil/Consórcio');
 if (!$page->exists()) die('Page not found');
 $wikiCode = $page->getText();
 
@@ -20,14 +21,39 @@ preg_match_all('/confirmados\|([0-9]*)/', $wikiCode, $output_anterior);
 $anterior = $output_anterior[1][0];
 
 //Recupera dados da fonte e transforma em uma array
-$urlfonte = "https://brasil.io/api/dataset/covid19/caso/data?is_last=True&place_type=state";
+$urlfonte = "https://infogbucket.s3.amazonaws.com/google_planilhas/corona-casos-brasil/corona-casos-brasil.json";
 $ref = @file_get_contents($urlfonte);
-$dados = json_decode($ref, true)['results'];
+$dados = json_decode($ref, true);
 
-//Reordena de acordo com as UFs
-usort($dados, function ($a, $b) {
-    return $a['state'] <=> $b['state'];
-});
+//Constroi array para conversão de nomes dos estados para siglas
+$estados = array_flip(array(
+"AC"=>"Acre",
+"AL"=>"Alagoas",
+"AM"=>"Amazonas",
+"AP"=>"Amapá",
+"BA"=>"Bahia",
+"CE"=>"Ceará",
+"DF"=>"Distrito Federal",
+"ES"=>"Espírito Santo",
+"GO"=>"Goiás",
+"MA"=>"Maranhão",
+"MT"=>"Mato Grosso",
+"MS"=>"Mato Grosso do Sul",
+"MG"=>"Minas Gerais",
+"PA"=>"Pará",
+"PB"=>"Paraíba",
+"PR"=>"Paraná",
+"PE"=>"Pernambuco",
+"PI"=>"Piauí",
+"RJ"=>"Rio de Janeiro",
+"RN"=>"Rio Grande do Norte",
+"RO"=>"Rondônia",
+"RS"=>"Rio Grande do Sul",
+"RR"=>"Roraima",
+"SC"=>"Santa Catarina",
+"SE"=>"Sergipe",
+"SP"=>"São Paulo",
+"TO"=>"Tocantins"));
 
 //Loop para montar a array das UFs
 $UFs = array();
@@ -36,11 +62,11 @@ $UFs[2][1] = 0;
 $UFs[3][1] = 0;
 $x = 2;
 foreach ($dados as $linha) {
-	$UFs[1][$x] = $linha['state'];
-	$UFs[2][$x] = $linha['confirmed'];
-	$UFs[3][$x] = $linha['deaths'];
-	$UFs[2][1] = $UFs[2][1] + $linha['confirmed'];
-	$UFs[3][1] = $UFs[3][1] + $linha['deaths'];
+	$UFs[1][$x] = $estados[$linha['local']];
+	$UFs[2][$x] = $linha['casosConfirmados'];
+	$UFs[3][$x] = $linha['mortes'];
+	$UFs[2][1] = $UFs[2][1] + $linha['casosConfirmados'];
+	$UFs[3][1] = $UFs[3][1] + $linha['mortes'];
 	$x++;
 }
 

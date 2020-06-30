@@ -1,6 +1,9 @@
 <?php
 echo "<pre>";
 
+//Limite de horário - https://it.wikipedia.org/wiki/Wikipedia:Bot#Policy_d'uso_ed_etica_del_manovratore
+if ((strftime("%H") >= 22) OR (rtrim(strftime("%H"), "0") < 6)) die("Horário não permitido: ".strftime("%H"));
+
 $isocode  = "it";
 $template = "Template:Dati della pandemia di COVID-19 del 2019-2020";
 $sumario  = "bot: Aggiornamento delle statistiche";
