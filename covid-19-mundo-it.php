@@ -13,7 +13,6 @@ $log      = "log";
 
 function refparser($ref) {
 	$de = array(
-		"#invoke:WikidataIB|getValue",
 		"|url-status=live",
 		" March 2020",
 		" April 2020",
@@ -22,7 +21,6 @@ function refparser($ref) {
 		" July 2020"
 	);
 	$para = array(
-		"wdib",
 		"",
 		"-03-2020",
 		"-04-2020",

@@ -10,14 +10,12 @@ $log      = "log";
 
 function refparser($ref) {
 	$de = array(
-		"#invoke:WikidataIB|getValue",
 		"|script-",
 		"|lang=",
 		"| name-list-format = vanc ",
 		"|url-status=live"
 	);
 	$para = array(
-		"wdib",
 		"|",
 		"|language=",
 		"",

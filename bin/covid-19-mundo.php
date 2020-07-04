@@ -7,6 +7,7 @@ if (!isset($isocode)) {
 
 function cleandata ($info) {
 	$info = str_replace('data-sort-value="-1" |{{Color|grey|No data}}', '{{color|darkgray|–}}', trim($info));
+	$info = str_replace('#invoke:WikidataIB|getValue', 'wdib', $info);
 	$info = preg_replace('/<!--[\s\S]*?-->/', '', $info);
 	$info = preg_replace('/,/', '', $info);
 	return $info;
