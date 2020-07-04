@@ -11,7 +11,7 @@ else {
 }
 
 //Recupera dados da predefinição
-$page = $wiki->getPage('Predefinição:Números de casos de COVID-19 por Unidade Federativa no Brasil/BrasilIO');
+$page = $wiki->getPage('Predefinição:Números de casos de COVID-19 por Unidade Federativa no Brasil/Externo');
 if (!$page->exists()) die('Page not found');
 $wikiCode = $page->getText();
 

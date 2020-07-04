@@ -2,13 +2,13 @@
 echo "<pre>";
 
 //Verifica se alguma página foi informada
-if ($_POST["nome"]) {
+if ($_GET["nome"]) {
 
 	//Introdução da ferramenta
-	echo "Editores do artigo <b>".trim($_POST["nome"])."</b>:<br><small>Inativo: +90 dias</small><br><br>";
+	echo "Editores do artigo <b>".trim($_GET["nome"])."</b>:<br><small>Inativo: +90 dias</small><br><br>";
 
 	//Coleta nome dos usuários não-bot que editaram o artigo
-	$artigo = pos(json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=contributors&titles=".urlencode(trim($_POST["nome"]))."&pcexcluderights=bot&pclimit=max"), true)['query']['pages'])['contributors'];
+	$artigo = pos(json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=contributors&titles=".urlencode(trim($_GET["nome"]))."&pcexcluderights=bot&pclimit=max"), true)['query']['pages'])['contributors'];
 
 	//Loop de verificação dos usuários
 	foreach ($artigo as $list) {
@@ -30,13 +30,13 @@ if ($_POST["nome"]) {
 		}
 
 		//Retorna link para envio de aviso
-		echo "<a target='_blank' href='https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($list['name'])."&action=edit&section=new&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_POST["nome"]))."&preloadparams%5b%5d='>".$list['name']."</a><br>";
+		echo "<a target='_blank' href='https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($list['name'])."&action=edit&section=new&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["nome"]))."&preloadparams%5b%5d='>".$list['name']."</a><br>";
 	}
 }
 
 //Formulário de submissão do nome do artigo
 ?><br>
-<form action="/alberobot/siw.php" method="post">
+<form action="/alberobot/siw.php" method="get">
   <input type="text" placeholder="Nome do artigo" name="nome">
   <input type="submit">
 </form>
