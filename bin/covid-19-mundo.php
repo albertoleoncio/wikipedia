@@ -96,7 +96,7 @@ if (!$resultado['Brazil'][1] OR !$resultado['Brazil'][2] OR !$resultado['Brazil'
 
 //Insere dados totais do mundo
 $urltotal = "https://en.wikipedia.org/w/index.php?title=Template:Cases_in_the_COVID-19_pandemic&action=raw";
-preg_match_all('/ \|[cdr][^=]*= ([0-9]*)\n|({{cite[^}]*}})/', @file_get_contents($urltotal), $total);
+preg_match_all('/ \|[cdr][^=]*= ([0-9]*) *\n|({{cite[^}]*}})/', @file_get_contents($urltotal), $total);
 array_push($wikien, 'World');
 $resultado['World'][0] = "World";
 $resultado['World'][1] = $total[1][0];
