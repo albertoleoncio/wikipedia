@@ -8,10 +8,10 @@ if ($_GET["artigo_titulo"]) {
 	echo "Editores do artigo <b>".trim($_GET["artigo_titulo"])."</b>:<br><small>Inativo: +90 dias</small><br><br>";
 
 	//Coleta nome dos usuários não-bot que editaram o artigo
-	$artigo = pos(json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=contributors&titles=".urlencode(trim($_GET["artigo_titulo"]))."&pcexcluderights=bot&pclimit=max"), true)['query']['pages'])['contributors'];
+	$editores_artigo = pos(json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=contributors&titles=".urlencode(trim($_GET["artigo_titulo"]))."&pcexcluderights=bot&pclimit=max"), true)['query']['pages'])['contributors'];
 
 	//Loop de verificação dos usuários
-	foreach ($artigo as $list) {
+	foreach ($editores_artigo as $list) {
 
 		//Coleta informações do usuário
 		$user = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=users%7Cusercontribs&usprop=blockinfo&uclimit=1&ususers=".urlencode($list['name'])."&ucuser=".urlencode($list['name'])), true)['query'];
