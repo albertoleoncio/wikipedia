@@ -19,18 +19,19 @@ if ($_GET["artigo_titulo"]) {
 		//Verifica se usuário está bloqueado e encerra loop em caso positivo
 		if (isset($user['users'][0]['blockid']) AND !isset($user['users'][0]['blockpartial'])) {
 			$block = TRUE;
-			echo $list['name']." <small>(bloqueado)</small><br>";
+			echo $list['name']." <small>(bloqueado)</small>";
 			continue;
 		}
 		
-		//Verifica se usuário está inativo e encerra loop em caso positivo
+		//Retorna link para envio de aviso
+		echo "<a target='_blank' href='https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($list['name'])."&action=edit&section=new&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d='>".$list['name']."</a>";
+
+		//Verifica se usuário está inativo e comenta isso ao lado do nome dele se positivo
 		if ((date("U", strtotime($user['usercontribs'][0]['timestamp'])) + 7776000) < time()) {
-			echo $list['name']." <small>(inativo)</small><br>";
-			continue;
+			echo $list['name']." <small>(inativo)</small>";
 		}
 
-		//Retorna link para envio de aviso
-		echo "<a target='_blank' href='https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($list['name'])."&action=edit&section=new&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d='>".$list['name']."</a><br>";
+		echo "<br>";
 	}
 }
 
