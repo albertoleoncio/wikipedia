@@ -19,7 +19,7 @@ if ($_GET["artigo_titulo"]) {
 		//Verifica se usuário está bloqueado e encerra loop em caso positivo
 		if (isset($user['users'][0]['blockid']) AND !isset($user['users'][0]['blockpartial'])) {
 			$block = TRUE;
-			echo $list['name']." <small>(bloqueado)</small>";
+			echo $list['name']." <small>(bloqueado)</small><br>";
 			continue;
 		}
 		
@@ -28,7 +28,8 @@ if ($_GET["artigo_titulo"]) {
 
 		//Verifica se usuário está inativo e comenta isso ao lado do nome dele se positivo
 		if ((date("U", strtotime($user['usercontribs'][0]['timestamp'])) + 7776000) < time()) {
-			echo $list['name']." <small>(inativo)</small>";
+			$dias_inativo = round((time() - date("U", strtotime($user['usercontribs'][0]['timestamp']))) / 86400);
+			echo " <small>(inativo há ".$dias_inativo." dias)</small>";
 		}
 
 		echo "<br>";
