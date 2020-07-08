@@ -42,3 +42,5 @@ if ($_GET["artigo_titulo"]) {
   <input type="text" placeholder="Nome do artigo" name="artigo_titulo">
   <input type="submit">
 </form>
+<br>
+<a href="https://wikitech.wikimedia.org/wiki/Portal:Toolforge"><img src="https://tools-static.wmflabs.org/toolforge/banners/Powered-by-Toolforge-button.png" alt="Powered by Wikimedia Toolforge"></a>
