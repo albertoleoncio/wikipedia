@@ -28,6 +28,9 @@ $dia = $datacompleta[2];
 $mes = $datacompleta[1];
 $ano = $datacompleta[0];
 
+//Proteção contra erro
+if (!isset($confirmado) OR $confirmado == FALSE) die("Erro no total de confirmados");
+
 //Construção do wikitexto dos dados gerais
 $saida = "\n"."-->{{#ifeq:{{{1}}}|confirmados|".$confirmado."|}}<!--\n".
 			"-->{{#ifeq:{{{1}}}|obitos|".$obitos."|}}<!--\n".
