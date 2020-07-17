@@ -81,7 +81,7 @@ for ($x = 0; $x < count($htmle); $x++) {
 		}
 
 		//Processa a fonte e insere na array de resultado
-		$resultado[$array1[1][0]][4] = refparser($result[$numitens-1]);
+		$resultado[$array1[1][0]][4] = refparser(str_replace("\n", "", $result[$numitens-1]));
 
 		//Seção para ser utilizada em debug
 		//var_dump($resultado[$array1[1][0]]);
