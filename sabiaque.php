@@ -84,7 +84,7 @@ if ($dif < 0) {
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
-//	A
+//	A-1
 //
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -120,14 +120,6 @@ unset($htmlAe[1]);
 
 //Remonta código da página
 $htmlA = implode("\n==",$htmlAe);
-
-//Grava página
-if ($pageA->setText($htmlA, NULL, FALSE, "bot: (1/6) Arquivando proposição publicada")) {
-	echo "<hr>Arquivando proposição publicada\n";
-} else {
-	$error = $pageA->getError();
-	echo "<hr>Error: ".print_r($error, true)."\n";
-}
 
 
 
@@ -168,7 +160,7 @@ array_pop($htmlBe);
 $htmlB = implode("\n…",$htmlBe);
 
 //Grava página
-if ($pageB->setText($htmlB, NULL, FALSE, "bot: (2/6) Inserindo SabiaQueDiscussão")) {
+if ($pageB->setText($htmlB, NULL, FALSE, "bot: (1/6) Inserindo SabiaQueDiscussão")) {
 	echo "<hr>Inserindo SabiaQueDiscussão\n";
 } else {
 	$error = $pageB->getError();
@@ -212,7 +204,7 @@ if (strpos($htmlC, "SabiaQueDiscussão") == false) {
 }
 
 //Grava página
-if ($pageC->setText($htmlC, 0, FALSE, "bot: (3/6) Inserindo SabiaQueDiscussão")) {
+if ($pageC->setText($htmlC, 0, FALSE, "bot: (2/6) Inserindo SabiaQueDiscussão")) {
 	echo "<hr>Inserindo SabiaQueDiscussão\n";
 } else {
 	$error = $pageC->getError();
@@ -237,7 +229,7 @@ $htmlD = $pageD->getText();
 $htmlD = $htmlD."{{subst:ParabénsSQ|artigo=''[[".$dados[2]."]]''|data=".strftime('%d de %B de %Y', $today)."|curiosidade=…".$dados[1]."|arquivo=".strftime('%Y/%m', $today)."}} --~~~~";
 
 //Grava página
-if ($pageD->setText($htmlD, NULL, FALSE, "bot: (4/6) Inserindo ParabénsSQ")) {
+if ($pageD->setText($htmlD, NULL, FALSE, "bot: (3/6) Inserindo ParabénsSQ")) {
 	echo "<hr>Inserindo ParabénsSQ\n";
 } else {
 	$error = $pageD->getError();
@@ -274,7 +266,7 @@ if (array_key_exists($recente[1], $sections)) {
 }
 
 //Grava página
-if ($pageE->setText($htmlE, $section, FALSE, "bot: (5/6) Inserindo Arquivo/Recentes")) {
+if ($pageE->setText($htmlE, $section, FALSE, "bot: (4/6) Inserindo Arquivo/Recentes")) {
 	echo "<hr>Inserindo Arquivo/Recentes\n";
 } else {
 	$error = $pageE->getError();
@@ -299,13 +291,28 @@ $htmlF = $pageF->getText();
 $htmlF = $htmlF."\n\n==".$dados[5]."{{ADC|sim|".strftime('%d de %B de %Y', $today)."|~~~}}";
 
 //Grava página
-if ($pageF->setText($htmlF, NULL, FALSE, "bot: (6/6) Inserindo Propostas/Arquivo")) {
+if ($pageF->setText($htmlF, NULL, FALSE, "bot: (5/6) Inserindo Propostas/Arquivo")) {
 	echo "<hr>Inserindo Propostas/Arquivo\n";
 } else {
 	$error = $pageF->getError();
 	echo "<hr>Error: ".print_r($error, true)."\n";
 }
 	
+
+
+////////////////////////////////////////////////////////////////////////////////////////
+//
+//	A-2
+//
+////////////////////////////////////////////////////////////////////////////////////////
+
+//Grava página
+if ($pageA->setText($htmlA, NULL, FALSE, "bot: (6/6) Arquivando proposição publicada")) {
+	echo "<hr>Arquivando proposição publicada\n";
+} else {
+	$error = $pageA->getError();
+	echo "<hr>Error: ".print_r($error, true)."\n";
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
