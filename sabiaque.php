@@ -61,7 +61,9 @@ if (is_numeric($htmlTime) === FALSE OR $htmlTime < 43200) {
 }
 
 //Recupera horário da última alteração
-$antes = date("U",strtotime(json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=usercontribs&uclimit=1&ucuser=SabiaQueBot&ucprop=timestamp"), true)['query']['usercontribs']['0']['timestamp']));
+$get = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=usercontribs&uclimit=1&ucuser=SabiaQueBot&ucprop=timestamp");
+if ($get === FALSE) die("Nao foi possível recuperar os dados da API.");
+$antes = date("U",strtotime(json_decode($get, true)['query']['usercontribs']['0']['timestamp']));
 
 //Calcula diferença
 $dif = ($antes + $htmlTime) - time();
