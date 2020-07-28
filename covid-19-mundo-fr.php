@@ -21,7 +21,7 @@ function refparser($ref) {
 		"title=",
 		"-03-2020"
 	); 
-	$refparsed = str_replace($de, $para, trim($ref));;
+	$refparsed = str_replace($de, $para, trim($ref));
 	return $refparsed;
 }
 
