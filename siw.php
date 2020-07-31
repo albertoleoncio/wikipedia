@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>ESR-SIW</title>
-  </head>
-  <body>
-    <pre><?php
+<html lang="pt-BR">
+	<head>
+		<title>ESR-SIW</title>
+	</head>
+	<body>
+		<pre><?php
 //Verifica se alguma página foi informada
 if ($_GET["artigo_titulo"]) {
 
@@ -42,13 +42,13 @@ if ($_GET["artigo_titulo"]) {
 
 //Formulário de submissão do nome do artigo
 ?>
-      <br>
-      <form action="/alberobot/siw.php" method="get">
-        <input type="text" placeholder="Nome do artigo" name="artigo_titulo">
-        <input type="submit">
-      </form>
-      <br>
-      <a href="https://wikitech.wikimedia.org/wiki/Portal:Toolforge"><img src="https://tools-static.wmflabs.org/toolforge/banners/Powered-by-Toolforge-button.png" alt="Powered by Wikimedia Toolforge"></a>
-    </pre>
-  </body>
+		</pre> 
+		<br>
+		<form action="/alberobot/siw.php" method="get">
+			<input type="text" placeholder="Nome do artigo" name="artigo_titulo">
+			<input type="submit">
+		</form>
+		<br>
+		<a href="https://wikitech.wikimedia.org/wiki/Portal:Toolforge"><img src="https://tools-static.wmflabs.org/toolforge/banners/Powered-by-Toolforge-button.png" alt="Powered by Wikimedia Toolforge"></a>
+	</body>
 </html>
