@@ -8,7 +8,6 @@ $toadd    = "Gebiede om by te voeg";
 $toremove = "Gebiede om te verwyder";
 $log      = "log";
 $ignorecurados = TRUE;
-$ignoreref = TRUE;
 
 function refparser($ref) {
 	$de = array(
