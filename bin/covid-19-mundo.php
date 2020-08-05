@@ -147,7 +147,7 @@ for ($x = 0; $x < count($pieces); $x++) {
 			if (!isset($ignorecurados)) array_push($parte, "{{formatnum:".$resultado[$key][3]."}}");
 			if (!isset($ignoreref)) 	array_push($parte, preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][4]));
 
-			if ($resultado[$key][0] == "World") {$sep = "\n!";} else {$sep = "\n|";}
+			if ($resultado[$key][0] == "World" AND !isset($ignoretitle)) {$sep = "\n!";} else {$sep = "\n|";}
 			$pieces[$x] = "#(".preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][0]).")-->".implode($sep, $parte)."<!-- ";
 			
 			unset($parte);
