@@ -1,5 +1,11 @@
 <?php
 
+////////////////////////////////////////////////////////////////////////////////////////
+//
+//	A: Seção pré-execução
+//
+////////////////////////////////////////////////////////////////////////////////////////
+
 //Evita que script seja carregado diretamente
 if (!isset($isocode)) die("Não deve ser chamado diretamente.");
 
@@ -14,112 +20,130 @@ function cleandata ($info) {
 	$info = preg_replace('/,/', '', $info);
 	return $info;
 }
-function rate ($key, $data1, $data2) {
-	if ($key == "World") {
+function rate ($território, $data1, $data2) {
+	if ($território == "World") {
 		return "{{color|darkgray|–}}";
 	} else {
 		return "{{#iferror:{{#expr: ( 100 * {{#invoke:String|replace|source=".$data2."|pattern=%D|replace=|plain=false}}) / {{#invoke:String|replace|source=".$data1."|pattern=%D|replace=|plain=false}} round 2}} %|{{color|darkgray|–}}}}";
 	}
 }
-function pop ($key, $popresult, $data2) {
-	if (array_key_exists($key, $popresult)) {
-		$pop = $popresult[$key];
+function pop ($território, $popresult, $data2) {
+	if (array_key_exists($território, $popresult)) {
+		$pop = $popresult[$território];
 	} else {
 		$pop = 0;
 	}
 	return "{{#iferror:{{#expr:({{#invoke:String|replace|source=".$data2."|pattern=%D|replace=|plain=false}} * 1000000) / ".$pop." round 0}}|{{color|darkgray|–}}}}";
 }
 
+////////////////////////////////////////////////////////////////////////////////////////
+//
+//	B: Insere informações da fonte na array $dados
+//
+////////////////////////////////////////////////////////////////////////////////////////
+
 //Recupera dados da fonte
 $url = "https://en.wikipedia.org/w/index.php?title=Template:COVID-19_pandemic_data&action=raw";
 $html = @file_get_contents($url);
 echo "<b>Template:COVID-19 pandemic data</b>\n";
 
-//Separa paises e insere em um array
-$htmle = explode("\n|-", $html);
+//Separa linhas da tabela e insere em um array
+$linhas = explode("\n|-", $html);
 
-//Predefine $resultado e $wikien como uma array
-$resultado = array();
+//Predefine arrays
+$dados = array();
 $wikien = array();
 $wikiXX = array();
 
-//Loop para processar cada item da array
-for ($x = 0; $x < count($htmle); $x++) {
+//Loop para processar cada item da array 
+for ($x = 0; $x < count($linhas); $x++) {
 
-	//Verifica se item possui marcação do arquivo de bandeira ou barco, indicando que a string se refere a um país ou a um cruzeiro
-	if ((strpos($htmle[$x], '[[File:Flag') !== false) OR (strpos($htmle[$x], '[[File:Cruise') !== false) OR (strpos($htmle[$x], '[[File:Sub') !== false) OR (strpos($htmle[$x], '[[File:Flug') !== false)) {
+	//Verifica se a linha possui marcação do ícone de bandeira ou navio, indicando que a string se refere a um território ou a um navio
+	if ((strpos($linhas[$x], '[[File:Flag') !== false) 
+		OR (strpos($linhas[$x], '[[File:Cruise') !== false) 
+		OR (strpos($linhas[$x], '[[File:Sub') !== false) 
+		OR (strpos($linhas[$x], '[[File:Flug') !== false)) {
 
-		//Separa a string em substrings, baseado na marcação de estilo da tabela
-		$result = preg_split('/\n *\|/', $htmle[$x]);
+		//Separa a linha em celulas, baseado na marcação de estilo da tabela
+		$celula = preg_split('/\n *\|/', $linhas[$x]);
 
-		//Separa o nome do país, elimina predefinições como as marcas de rodapé e insere na array de resultado como uma key
+		//Separa o nome do território, elimina quinqilharias (ex: marcas de rodapé) e insere na array de resultado como uma key
 		preg_match_all(
 			'/! ?scope="row" ?(?:data-sort-value="[^"]*" ?)?\| ?\'{0,2}\[\[[^F][^\|]*\|([^\|]*)]]/', 
-			preg_replace('/{{[^}]*}}|<[^>]*>|\'|\([^\)]*\)/', '', $result[0]), 
+			preg_replace('/{{[^}]*}}|<[^>]*>|\'|\([^\)]*\)/', '', $celula[0]), 
 			$array1
 		);
-		echo @$array1[1][0]."...";
-		$array1[1][0] = @trim($array1[1][0]);
+		$território = @trim($array1[1][0]);
+		echo $território."...";
 
-		//Insere nome do país na lista do relatório
-		array_push($wikien, $array1[1][0]);
+		//Insere nome do território na lista do relatório
+		array_push($wikien, $território);
 
-		//Insere o nome do país como um valor na array de resultado
-		$resultado[$array1[1][0]][0] = $array1[1][0];
+		//Insere o nome do território como um valor na array de resultado
+		$dados[$território][0] = $território;
 
-		//Conta o numero de strings dentro da array
-		$numitens = count($result);
+		//Conta o numero de celulas dentro da array
+		$numitens = count($celula);
 
 		//Confere se existe uma diferença entre a quantidade de chaves "}{", o que indica que a fonte está dividida em duas strings
-		$abrechave = substr_count($result[$numitens-1], '{');
-		$fechachave = substr_count($result[$numitens-1], '}');
+		$abrechave = substr_count($celula[$numitens-1], '{');
+		$fechachave = substr_count($celula[$numitens-1], '}');
 		while ($abrechave !== $fechachave) {
 			//Concatena as duas ultimas strings, elimina a última e subtrai 1 na contagem de strings da array
-			$result[$numitens-2] = $result[$numitens-2].'|'.$result[$numitens-1];
-			unset($result[$numitens-1]);
+			$celula[$numitens-2] = $celula[$numitens-2].'|'.$celula[$numitens-1];
+			unset($celula[$numitens-1]);
 			$numitens--;
-			$abrechave = substr_count($result[$numitens-1], '{');
-			$fechachave = substr_count($result[$numitens-1], '}');
+			$abrechave = substr_count($celula[$numitens-1], '{');
+			$fechachave = substr_count($celula[$numitens-1], '}');
 			if ($numitens < -10) {
 				die("Erro de chaves. A página-fonte possui diferenças entre a quantidade de chaves \"}{\" em alguma linha.");
 			}
 		}
 		
 		//Separa dados numéricos e insere na array de resultado
-		$resultado[$array1[1][0]][1] = cleandata($result[$numitens-4]);
-		$resultado[$array1[1][0]][2] = cleandata($result[$numitens-3]);
-		$resultado[$array1[1][0]][3] = cleandata($result[$numitens-2]);
+		$dados[$território][1] = cleandata($celula[$numitens-4]);
+		$dados[$território][2] = cleandata($celula[$numitens-3]);
+		$dados[$território][3] = cleandata($celula[$numitens-2]);
 
 		//Remove duplo formatnum
 		for ($i=1; $i < 4; $i++) { 
-			if(strpos($resultado[$array1[1][0]][$i], "formatnum") !== false){
-			    $resultado[$array1[1][0]][$i] = preg_replace('/{{formatnum:(.*)}}/', '$1', $resultado[$array1[1][0]][$i]);
+			if(strpos($dados[$território][$i], "formatnum") !== false){
+			    $dados[$território][$i] = preg_replace('/{{formatnum:(.*)}}/', '$1', $dados[$território][$i]);
 			} 
 		}
 
 		//Processa a fonte e insere na array de resultado
-		$resultado[$array1[1][0]][4] = refparser(str_replace("\n", "", $result[$numitens-1]));
+		$dados[$território][4] = refparser(str_replace("\n", "", $celula[$numitens-1]));
 
 		//Seção para ser utilizada em debug
-		//var_dump($resultado[$array1[1][0]]);
+		//var_dump($dados[$território]);
 
 		//Aviso de fim de loop
 		echo "OK\n";
 	}
 }
 
-//Proteção contra bagunça na tabela
-if (!$resultado['Brazil'][1] OR !$resultado['Brazil'][2] OR !$resultado['Brazil'][3]) die('Tabela com erro');
+//Proteção contra bagunça na tabela. Nesse caso, Brazil é utilizado como teste
+if (!$dados['Brazil'][1] OR !$dados['Brazil'][2] OR !$dados['Brazil'][3]) die('Tabela com erro');
 
 //Insere dados totais do mundo
 $urltotal = "https://en.wikipedia.org/w/index.php?title=Template:Cases_in_the_COVID-19_pandemic&action=raw";
 preg_match_all('/ \|[cdr][^=]*= ([0-9]*) *\n|({{cite[^}]*}})/', @file_get_contents($urltotal), $total);
 array_push($wikien, 'World');
-$resultado['World'][0] = "World";
-$resultado['World'][1] = $total[1][0];
-$resultado['World'][2] = $total[1][1];
-$resultado['World'][3] = $total[1][2];
-$resultado['World'][4] = "<ref>".$total[2][3]."</ref>";
+$dados['World'][0] = "World";
+$dados['World'][1] = $total[1][0];
+$dados['World'][2] = $total[1][1];
+$dados['World'][3] = $total[1][2];
+$dados['World'][4] = "<ref>".$total[2][3]."</ref>";
+
+//Limpa string para ser utilizada posteriormente
+unset($território);
+
+////////////////////////////////////////////////////////////////////////////////////////
+//
+//	C: Atualiza dados da wiki de destino
+//
+////////////////////////////////////////////////////////////////////////////////////////
 
 //Login
 $wiki = new Wikimate("https://".$isocode.".wikipedia.org/w/api.php");
@@ -135,47 +159,52 @@ $page = $wiki->getPage($template);
 if (!$page->exists()) die('Page not found');
 $wikiCode = $page->getSection(0);
 
-//Separa países e insere em uma array, utilizando a marcação do bot <!-- #bot#(País)-->
-$pieces = explode("#bot", $wikiCode);
+//Separa territórios e insere em uma array, utilizando a marcação do bot <!-- #bot#(Território)-->
+$seções = explode("#bot", $wikiCode);
 
-//Loop para processar cada item da array
-for ($x = 0; $x < count($pieces); $x++) {
+//Loop para processar cada item da seção
+for ($x = 0; $x < count($seções); $x++) {
 
-	//Verifica se item possui "#(", indicando que a string se refere a um país
-	if (substr($pieces[$x], 0, 2) == "#(") {
+	//Verifica se item possui "#(", indicando que a string se refere a um território
+	if (substr($seções[$x], 0, 2) == "#(") {
 
-		//Extrai o nome do país
-		preg_match('/#\(([A-Za-z\ \.\-\&\(Åçãéí\']*)\){1,2}/', $pieces[$x], $keyarray);
+		//Extrai o nome do território
+		preg_match('/#\(([A-Za-z\ \.\-\&\(Åçãéí\']*)\){1,2}/', $seções[$x], $nome);
 
 		//Converte a array em uma string
-		$key = $keyarray[1];
-		echo @$key."\n";
+		$território = $nome[1];
+		echo @$território."\n";
 
-		//Insere nome do país na lista do relatório
-		array_push($wikiXX, @$key);
+		//Insere nome do território na lista do relatório
+		array_push($wikiXX, @$território);
 
-		//Verifica se o valor da string corresponde a um país listado na array de resultado
-		if (array_key_exists($key, $resultado)) {
+		//Verifica se o valor da string corresponde a um território listado na array de dados
+		if (array_key_exists($território, $dados)) {
 
 			//Substitui os dados no item com as informações atualizadas
+			$separador = "\n|";
 			$parte = array();
-			if (!isset($ignoreconf)) 	array_push($parte, "{{formatnum:".$resultado[$key][1]."}}");
-			if (!isset($ignoremortes))	array_push($parte, "{{formatnum:".$resultado[$key][2]."}}");
-			if (!isset($ignorecurados)) array_push($parte, "{{formatnum:".$resultado[$key][3]."}}");
-			if (!isset($ignorerate))    array_push($parte, "{{formatnum:".rate($key, $resultado[$key][1], $resultado[$key][2])."}}");
-			if (!isset($ignorepop))		array_push($parte, "{{formatnum:".pop($key, $popresult, $resultado[$key][2])."}}");
-			if (!isset($ignoreref)) 	array_push($parte, preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][4]));
+			if (!isset($ignoreconf))    array_push($parte, "{{formatnum:".$dados[$território][1]."}}");
+			if (!isset($ignoremortes))  array_push($parte, "{{formatnum:".$dados[$território][2]."}}");
+			if (!isset($ignorecurados)) array_push($parte, "{{formatnum:".$dados[$território][3]."}}");
+			if (!isset($ignorerate))    array_push($parte, "{{formatnum:".rate($território, $dados[$território][1], $dados[$território][2])."}}");
+			if (!isset($ignorepop))     array_push($parte, "{{formatnum:".pop($território, $popresult, $dados[$território][2])."}}");
+			if (!isset($ignoreref))     array_push($parte, preg_replace('/<!--[\s\S]*?-->/', '', $dados[$território][4]));
 
-			if ($key == "World" AND !isset($ignoretitle)) {$sep = "\n!";} else {$sep = "\n|";}
-			$pieces[$x] = "#(".preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][0]).")-->".implode($sep, $parte)."<!-- ";
+			//Define separador distinto para título da tabela
+			if (!isset($ignoretitle) AND $território == "World") $separador = "\n!";
+
+			//Reune partes e refaz seção
+			$seções[$x] = "#(".preg_replace('/<!--[\s\S]*?-->/', '', $dados[$território][0]).")-->".implode($separador, $parte)."<!-- ";
 			
+			//Limpa string para ser utilizada posteriormente
 			unset($parte);
 		}
 	}
 }
 
-//Remonta o texto da predefinição a partir da array
-$wikiCode = implode("#bot", $pieces);
+//Remonta o texto da predefinição a partir da array de seções
+$wikiCode = implode("#bot", $seções);
 
 //Gravar código
 if ($page->setText($wikiCode, 0, true, $sumario." ([[User:AlbeROBOT/".$log."|".$log."]])")) {
@@ -185,14 +214,20 @@ if ($page->setText($wikiCode, 0, true, $sumario." ([[User:AlbeROBOT/".$log."|".$
 	echo "<hr>Error: " . print_r($error, true) . "\n";
 }
 
-//Gera relatório
+////////////////////////////////////////////////////////////////////////////////////////
+//
+//	D: Gera relatório da atualização
+//
+////////////////////////////////////////////////////////////////////////////////////////
+
+//Monta relatório
 $adicionar = array_diff($wikien, $wikiXX);
 asort($adicionar);
 $eliminar = array_diff($wikiXX, $wikien);
 asort($eliminar);
 $report = $toadd.":\n#".implode("\n#", $adicionar)."\n\n".$toremove.":\n#".implode("\n#", $eliminar);
 
-//Grava log
+//Grava relatório
 $log = $wiki->getPage("User:AlbeROBOT/".$log);
 if ($log->setText($report, 0, false, "")) {
 	echo "<hr>Log gravado.\n";
