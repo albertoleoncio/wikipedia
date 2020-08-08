@@ -73,7 +73,7 @@ foreach ($queryResult['results']['bindings'] as $key) {
 
 
 //Rename (Wiki-en name different form Wikidata)
-$popresult['Sint Maarten']          = $popresult['Sint Maarten (Dutch part)'];
+$popresult['Sint Maarten']          = $popresult['Sint Maarten'];
 $popresult['Bahamas']               = $popresult['The Bahamas'];
 $popresult['Donetsk PR']            = $popresult["Donetsk People's Republic"];
 $popresult['Northern Cyprus']       = $popresult['Turkish Republic of Northern Cyprus'];
