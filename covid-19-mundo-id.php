@@ -7,6 +7,8 @@ $sumario  = "bot: Memperbarui statistik";
 $toadd    = "Wilayah yang akan ditambahkan";
 $toremove = "Wilayah yang akan dihapus";
 $log      = "log";
+$ignorerate = TRUE;
+$ignorepop = TRUE;
 
 function refparser($ref) {
 	$de = array(

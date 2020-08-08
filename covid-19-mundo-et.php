@@ -8,6 +8,8 @@ $toadd     = "Aladel lisada";
 $toremove  = "Aladel eemaldada";
 $log       = "log";
 $ignoreref = TRUE;
+$ignorerate = TRUE;
+$ignorepop = TRUE;
 
 function refparser($ref) {
 	$de = array(

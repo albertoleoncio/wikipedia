@@ -7,6 +7,8 @@ $sumario  = "bot: Statistikanı yeniləyir";
 $toadd    = "Əlavə ediləcək ərazilər";
 $toremove = "İstisna ediləcək ərazilər";
 $log      = "log";
+$ignorerate = TRUE;
+$ignorepop = TRUE;
 
 function refparser($ref) {
 	$de = array(

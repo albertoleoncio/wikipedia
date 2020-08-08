@@ -10,6 +10,8 @@ $sumario  = "bot: Aggiornamento delle statistiche";
 $toadd    = "Territori da aggiungere";
 $toremove = "Territori da rimuovere";
 $log      = "log";
+$ignorerate = TRUE;
+$ignorepop = TRUE;
 
 function refparser($ref) {
 	$de = array(

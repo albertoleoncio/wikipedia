@@ -7,6 +7,8 @@ $sumario  = "бот: оновлення статистики";
 $toadd    = "Території, які потрібно додати";
 $toremove = "Території, які потрібно видалити";
 $log      = "лог";
+$ignorerate = TRUE;
+$ignorepop = TRUE;
 
 function refparser($ref) {
 	$de = array(

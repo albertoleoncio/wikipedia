@@ -9,6 +9,8 @@ $toremove = "Gebiede om te verwyder";
 $log      = "log";
 $ignorecurados = TRUE;
 $ignoretitle = TRUE;
+$ignorerate = TRUE;
+$ignorepop = TRUE;
 
 function refparser($ref) {
 	$de = array(

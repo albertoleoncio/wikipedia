@@ -1,17 +1,34 @@
 <?php
 
 //Evita que script seja carregado diretamente
-if (!isset($isocode)) {
-	die("Não deve ser chamado diretamente.");
-}
+if (!isset($isocode)) die("Não deve ser chamado diretamente.");
 
+//Inclui wikidata.php, caso a opção de cálculo de população esteja ativada
+if (!isset($ignorepop))	include_once './bin/wikidata.php';
+
+//Funções
 function cleandata ($info) {
 	$info = str_replace('data-sort-value="-1" |{{Color|grey|No data}}', '{{color|darkgray|–}}', trim($info));
 	$info = str_replace('#invoke:WikidataIB|getValue', 'wdib', $info);
 	$info = preg_replace('/<!--[\s\S]*?-->/', '', $info);
 	$info = preg_replace('/,/', '', $info);
 	return $info;
-} 
+}
+function rate ($key, $data1, $data2) {
+	if ($key == "World") {
+		return "{{color|darkgray|–}}";
+	} else {
+		return "{{#iferror:{{#expr: ( 100 * {{#invoke:String|replace|source=".$data2."|pattern=%D|replace=|plain=false}}) / {{#invoke:String|replace|source=".$data1."|pattern=%D|replace=|plain=false}} round 2}} %|{{color|darkgray|–}}}}";
+	}
+}
+function pop ($key, $popresult, $data2) {
+	if (array_key_exists($key, $popresult)) {
+		$pop = $popresult[$key];
+	} else {
+		$pop = 0;
+	}
+	return "{{#iferror:{{#expr:({{#invoke:String|replace|source=".$data2."|pattern=%D|replace=|plain=false}} * 1000000) / ".$pop." round 0}}|{{color|darkgray|–}}}}";
+}
 
 //Recupera dados da fonte
 $url = "https://en.wikipedia.org/w/index.php?title=Template:COVID-19_pandemic_data&action=raw";
@@ -145,14 +162,16 @@ for ($x = 0; $x < count($pieces); $x++) {
 			if (!isset($ignoreconf)) 	array_push($parte, "{{formatnum:".$resultado[$key][1]."}}");
 			if (!isset($ignoremortes))	array_push($parte, "{{formatnum:".$resultado[$key][2]."}}");
 			if (!isset($ignorecurados)) array_push($parte, "{{formatnum:".$resultado[$key][3]."}}");
+			if (!isset($ignorerate))    array_push($parte, "{{formatnum:".rate($key, $resultado[$key][1], $resultado[$key][2])."}}");
+			if (!isset($ignorepop))		array_push($parte, "{{formatnum:".pop($key, $popresult, $resultado[$key][2])."}}");
 			if (!isset($ignoreref)) 	array_push($parte, preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][4]));
 
-			if ($resultado[$key][0] == "World" AND !isset($ignoretitle)) {$sep = "\n!";} else {$sep = "\n|";}
+			if ($key == "World" AND !isset($ignoretitle)) {$sep = "\n!";} else {$sep = "\n|";}
 			$pieces[$x] = "#(".preg_replace('/<!--[\s\S]*?-->/', '', $resultado[$key][0]).")-->".implode($sep, $parte)."<!-- ";
 			
 			unset($parte);
 		}
-	}	
+	}
 }
 
 //Remonta o texto da predefinição a partir da array
