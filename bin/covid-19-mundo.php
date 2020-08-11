@@ -113,7 +113,7 @@ for ($x = 0; $x < count($linhas); $x++) {
 		}
 
 		//Processa a fonte e insere na array de resultado
-		$dados[$território][4] = refparser(str_replace("\n", "", $celula[$numitens-1]));
+		$dados[$território][4] = str_replace("\n", "", $celula[$numitens-1]);
 
 		//Seção para ser utilizada em debug
 		//var_dump($dados[$território]);
@@ -189,7 +189,7 @@ for ($x = 0; $x < count($seções); $x++) {
 			if (!isset($ignorecurados)) array_push($parte, "{{formatnum:".$dados[$território][3]."}}");
 			if (!isset($ignorerate))    array_push($parte, "{{formatnum:".rate($território, $dados[$território][1], $dados[$território][2])."}}");
 			if (!isset($ignorepop))     array_push($parte, "{{formatnum:".pop($território, $popresult, $dados[$território][2])."}}");
-			if (!isset($ignoreref))     array_push($parte, preg_replace('/<!--[\s\S]*?-->/', '', $dados[$território][4]));
+			if (!isset($ignoreref))     array_push($parte, refparser(preg_replace('/<!--[\s\S]*?-->/', '', $dados[$território][4])));
 
 			//Define separador distinto para título da tabela
 			if (!isset($ignoretitle) AND $território == "World") $separador = "\n!";
