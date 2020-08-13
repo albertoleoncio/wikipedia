@@ -10,14 +10,14 @@ $log      = "log";
 
 function refparser($ref) {
 	$de = array(
-		"</ref><ref>",
+		"><ref",
 		"|url-status=live",
 		"{{cite news|",
 		"script-title=",
 		" March 2020"
 	);
 	$para = array(
-		"</ref>{{,}}<ref>",
+		">{{,}}<ref",
 		"",
 		"{{cite web|",
 		"title=",
