@@ -50,38 +50,62 @@ if ($_GET["user"]) {
 
 	//Contabiliza edições
 	if (count($userquery) == "301") {
-		$count = "300+ (Possui direito ao voto)";
+		$count = "300+<br>(Possui direito ao voto)";
+		$color = "green";
 	} elseif (count($userquery) == "300") {
-		$count = "300 (Possui direito ao voto)";
+		$count = "300<br>(Possui direito ao voto)";
+		$color = "green";
 	}
 	else {
-		$count = count($userquery)." (Não possui direito ao voto)";
+		$count = count($userquery)."<br>(Não possui direito ao voto)";
+		$color = "red";
 	}
 }
 ?><!DOCTYPE html>
 <html lang="pt-BR">
 	<head>
 		<title>Direiro ao voto</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 	</head>
 	<body>
-		<h1>Direito ao voto</h1>
-		<form action="/alberobot/voto.php" method="get">
-			<label>Usuário: </label>
-			<input <?php if (isset($user) OR $user != "") echo "value='".$user."'"; ?> type="text" name="user">
-			<br>
-			<br>
-			<label>Data: </label>
-			<input <?php if (isset($date) OR $date != "") echo "value='".$date."'"; ?> type="date" name="date">
-			<label>Hora: </label>
-			<input <?php if (isset($time) OR $time != "") echo "value='".$time."'"; ?> type="time" step="1" max="23:59:59" name="time">
-			<br>
-			<br>
-			<small>Por favor insira a data e hora do começo da votação como Tempo Universal Coordenado (UTC).</small>
-			<br>
-			<input type="submit" value="Verificar">
-		</form>
+		<div class="w3-container" id="menu">
+			<div class="w3-content" style="max-width:800px">
+				<h5 class="w3-center w3-padding-48"><span class="w3-tag w3-wide">DIREITO AO VOTO</span></h5>
+				<div class="w3-row-padding w3-center w3-margin-top">
+					<div class="w3-half">
+						<form action="/alberobot/voto.php" method="get">
+							<div class="w3-container w3-padding-48 w3-card">
+		      					<p class="w3-center w3-wide">USUÁRIO</p>
+		      					<p class="w3-text-grey"><input class="w3-input w3-padding-16 w3-border" <?php if (isset($user) OR $user != "") echo "value='".$user."'"; ?> type="text" name="user"></p><br>
+		      					<div class="w3-half">
+			      					<p class="w3-center w3-wide">DATA</p>
+			      					<p class="w3-text-grey"><input class="w3-input w3-padding-16 w3-border" <?php if (isset($date) OR $date != "") echo "value='".$date."'"; ?> type="date" name="date"></p><br>
+			      				</div>
+			      				<div class="w3-half">
+			      					<p class="w3-center w3-wide">HORA</p>
+			      					<p class="w3-text-grey"><input class="w3-input w3-padding-16 w3-border" <?php if (isset($time) OR $time != "") echo "value='".$time."'"; ?> type="time" step="1" max="23:59:59" name="time"></p><br>
+		      					</div>
+		      					<small>Por favor insira a data e hora do começo da votação como Tempo Universal Coordenado (UTC).</small>
+			      				<button class="w3-button w3-block w3-black" type="submit">Verificar</button>
+		      				</div>
+		      			</form>
+		      		</div>
+		      		<div class="w3-half">
+		      			<div class="w3-container w3-padding-48 w3-card">
+		      				<?php if ($_GET["user"]) { $percent = floor( ($count * 100) / 300 ); echo 
+		      				"<div class='w3-light-grey'>
+	  							<div class='w3-container w3-".$color." w3-center' style='width:".$percent."%'>".$percent."%</div>
+							</div>
+							<p>Total de edições: ".$count."</p>
+							<p>Usuário: ".$_GET["user"]."<br>Em ".$date." ".$time." UTC</p>
+						";} else echo "Preencha o formulário ao lado";?></div>
+		      		</div>
+		      	</div>
+      		</div>
+      	</div>
 		<hr>
-		<?php if ($_GET["user"]) echo "<pre>Total de edições: ".$count."<br><br><small>Usuário: ".$_GET["user"]."<br>Até ".$date." ".$time." UTC.</small></pre><br>"; ?>
 		<a href="https://wikitech.wikimedia.org/wiki/Portal:Toolforge"><img src="https://tools-static.wmflabs.org/toolforge/banners/Powered-by-Toolforge-button.png" alt="Powered by Wikimedia Toolforge"></a>
 	</body>
 </html>
