@@ -63,7 +63,7 @@ if ($_GET["artigo_titulo"]) {
 	//Coleta edições do artigo, para detectar edições menores
 	if (isset($_GET["menor"])) {
 		$no_minor = array();
-		$revisoes = pos(json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=revisions&titles=Gandu&rvprop=user%7Cflags&rvlimit=max"), true)['query']['pages'])['revisions'];
+		$revisoes = pos(json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=revisions&titles=".urlencode(trim($_GET["artigo_titulo"]))."&rvprop=user%7Cflags&rvlimit=max"), true)['query']['pages'])['revisions'];
 		foreach ($revisoes as $revisao) {
 			if (isset($revisao['anon']) OR isset($revisao['minor'])) continue;
 			$no_minor[$revisao['user']] = true;
