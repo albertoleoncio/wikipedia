@@ -57,10 +57,10 @@ if ($_GET["artigo_titulo"]) {
 			<br><br>
 			<ul class='w3-ul w3-hoverable w3-border'>";
 
-	//Coleta nome dos usuários não-bot que editaram o artigo
+	//Coleta nome dos usuários que editaram o artigo, excluindo os bots
 	$editores_artigo = pos(json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=contributors&titles=".urlencode(trim($_GET["artigo_titulo"]))."&pcexcluderights=bot&pclimit=max"), true)['query']['pages'])['contributors'];
 
-	//Coleta edições do artigo, para detectar edições menores
+	//Coleta revisões do artigo, para detectar revisões menores
 	if (isset($_GET["menor"])) {
 		$no_minor = array();
 		$revisoes = pos(json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=revisions&titles=".urlencode(trim($_GET["artigo_titulo"]))."&rvprop=user%7Cflags&rvlimit=max"), true)['query']['pages'])['revisions'];
@@ -70,22 +70,29 @@ if ($_GET["artigo_titulo"]) {
 		}
 	}
 
+	//Coleta lista de usuários descadastrados
+	$desc = explode("#", file_get_contents("https://pt.wikipedia.org/w/index.php?title=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Descadastro&action=raw&section=1"));
+	unset($desc[0]);
+
 	//Loop de verificação dos usuários
-	foreach ($editores_artigo as $list) {
+	foreach ($editores_artigo as $usuario) {
 
 		//Coleta informações do usuário
-		$user = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=users%7Cusercontribs&usprop=blockinfo&uclimit=1&ususers=".urlencode($list['name'])."&ucuser=".urlencode($list['name'])), true)['query'];
+		$usercontribs = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=users%7Cusercontribs&usprop=blockinfo&uclimit=1&ususers=".urlencode($usuario['name'])."&ucuser=".urlencode($usuario['name'])), true)['query'];
 		
 		//Verifica se usuário está bloqueado e encerra loop em caso positivo
-		if (isset($user['users'][0]['blockid']) AND !isset($user['users'][0]['blockpartial'])) continue;
+		if (isset($usercontribs['users'][0]['blockid']) AND !isset($usercontribs['users'][0]['blockpartial'])) continue;
 
 		//Verifica se há edições não-menores do usuário no artigo e se a opção foi selecionada, encerrando loop em caso positivo
-		if (isset($_GET["menor"]) AND !isset($no_minor[$list['name']])) continue;
+		if (isset($_GET["menor"]) AND !isset($no_minor[$usuario['name']])) continue;
+
+		//Verifica se usuário está na lista de descadastro, encerrando loop em caso positivo
+		if (in_array($usuario['name'], $desc)) continue;
 
 		//Verifica se usuário está inativo e contabiliza os dias após a ultima edição. 
 		//Se a opção de exclusão dos inativos for selecionada, encerra loop de acordo com a opção
-		if ((date("U", strtotime($user['usercontribs'][0]['timestamp'])) + 7776000) < time()) {
-			$dias_inativo = round((time() - date("U", strtotime($user['usercontribs'][0]['timestamp']))) / 86400);
+		if ((date("U", strtotime($usercontribs['usercontribs'][0]['timestamp'])) + 7776000) < time()) {
+			$dias_inativo = round((time() - date("U", strtotime($usercontribs['usercontribs'][0]['timestamp']))) / 86400);
 			if ($_GET["inativo"] == 5 AND $dias_inativo >= 1825) continue;
 			if ($_GET["inativo"] == 4 AND $dias_inativo >= 365) continue;
 			if ($_GET["inativo"] == 3 AND $dias_inativo >= 180) continue;
@@ -93,9 +100,8 @@ if ($_GET["artigo_titulo"]) {
 		} else $dias_inativo = false;
 		
 		//Retorna link para envio de aviso
-		echo "<li class=\"w3-padding-small w3-left-align\" style=\"cursor:pointer;\" onclick=\"window.open('https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($list['name'])."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d=', '_blank')\">".$list['name'];
+		echo "<li class=\"w3-padding-small w3-left-align\" style=\"cursor:pointer;\" onclick=\"window.open('https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($usuario['name'])."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d=', '_blank')\">".$usuario['name'];
 		if ($dias_inativo > 90) echo " <small>(inativo há ".$dias_inativo." dias)</small>";
-
 		echo "</li>";
 	}
 } else echo "Preencha o formulário ao lado";
