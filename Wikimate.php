@@ -1,2 +1,2 @@
 <?php
-include './bin/Wikimate.php';
+include './tpar/Wikimate.php';

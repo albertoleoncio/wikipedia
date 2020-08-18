@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2020 Albertoleoncio and [contributors](https://github.com/albertoleoncio/alberobot/graphs/contributors)
+Copyright (c) 2018 JaniRefsnes
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

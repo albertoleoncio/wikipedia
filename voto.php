@@ -67,7 +67,7 @@ if ($_GET["user"]) {
 		<title>Direiro ao voto</title>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+		<link rel="stylesheet" href="./tpar/w3.css">
 	</head>
 	<body>
 		<div class="w3-container" id="menu">
