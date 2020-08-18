@@ -71,7 +71,7 @@ if ($_GET["artigo_titulo"]) {
 	}
 
 	//Coleta lista de usuários descadastrados
-	$desc = explode("#", file_get_contents("https://pt.wikipedia.org/w/index.php?title=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Descadastro&action=raw&section=1"));
+	$desc = explode("\n#", file_get_contents("https://pt.wikipedia.org/w/index.php?title=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Descadastro&action=raw&section=1"));
 	unset($desc[0]);
 
 	//Loop de verificação dos usuários
