@@ -48,17 +48,22 @@ if ($_GET["user"]) {
 	//Coleta últimas 301 edições do usuário no domínio principal
 	$userquery = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&uclimit=301&format=json&list=usercontribs&ucuser=".urlencode($user)."&ucstart=".urlencode($date)."T".urlencode($time)."Z&ucnamespace=0"), true)['query']['usercontribs'];
 
-	//Contabiliza edições
-	if (count($userquery) == "301") {
-		$count = "300+<br>(Possui direito ao voto)";
-		$color = "green";
+	//Coleta timestamp da primeira edição no domínio principal
+	$timestamp = strtotime(json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=usercontribs&uclimit=1&ucuser=".urlencode($user)."&ucdir=newer&ucnamespace=0&ucprop=timestamp"), true)['query']['usercontribs']['0']['timestamp']);
+	if ($timestamp != FALSE AND $timestamp < strtotime($date."T".$time."Z -90 days")) $idade = TRUE;
+
+	//Define cor do resultado
+	if (count($userquery) >= "300" AND isset($idade)) {$color = "green";} else {$color = "red";}
+
+	//Define resultado
+	if (!isset($idade)) {
+		$count = "Primeira edição recente<br>(Não possui direito ao voto)";
+	} elseif (count($userquery) == "301") {
+		$count = "Total de edições: 300+<br>(Possui direito ao voto)";
 	} elseif (count($userquery) == "300") {
-		$count = "300<br>(Possui direito ao voto)";
-		$color = "green";
-	}
-	else {
-		$count = count($userquery)."<br>(Não possui direito ao voto)";
-		$color = "red";
+		$count = "Total de edições: 300<br>(Possui direito ao voto)";
+	} else {
+		$count = "Total de edições: ".count($userquery)."<br>(Não possui direito ao voto)";
 	}
 }
 ?><!DOCTYPE html>
@@ -94,13 +99,17 @@ if ($_GET["user"]) {
 		      		</div>
 		      		<div class="w3-half">
 		      			<div class="w3-container w3-padding-48 w3-card">
-		      				<?php if ($_GET["user"]) { $percent = floor( ($count * 100) / 300 ); echo 
-		      				"<div class='w3-light-grey'>
-	  							<div class='w3-container w3-".$color." w3-center' style='width:".$percent."%'>".$percent."%</div>
-							</div>
-							<p>Total de edições: ".$count."</p>
-							<p>Usuário: ".$_GET["user"]."<br>Em ".$date." ".$time." UTC</p>
-						";} else echo "Preencha o formulário ao lado";?></div>
+		      				<?php 
+		      				if ($_GET["user"]) {
+	  							if (isset($idade)){
+	  								$percent = floor( (count($userquery) * 100) / 300 );
+	  								echo "<div class='w3-light-grey'><div class='w3-container w3-".$color." w3-center' style='width:".$percent."%'>".$percent."%</div></div>";
+								}
+								echo "<p>".$count."</p>
+								<p>Usuário: ".$_GET["user"]."<br>Em ".$date." ".$time." UTC</p>";
+							} else {
+								echo "Preencha o formulário ao lado";
+							}?></div>
 		      		</div>
 		      	</div>
       		</div>
