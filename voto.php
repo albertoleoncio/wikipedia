@@ -48,8 +48,8 @@ if ($_GET["user"]) {
 	//Coleta últimas 301 edições do usuário no domínio principal
 	$userquery = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&uclimit=301&format=json&list=usercontribs&ucuser=".urlencode($user)."&ucstart=".urlencode($date)."T".urlencode($time)."Z&ucnamespace=0"), true)['query']['usercontribs'];
 
-	//Coleta timestamp da primeira edição no domínio principal
-	$timestamp = strtotime(json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=usercontribs&uclimit=1&ucuser=".urlencode($user)."&ucdir=newer&ucnamespace=0&ucprop=timestamp"), true)['query']['usercontribs']['0']['timestamp']);
+	//Coleta timestamp da primeira edição
+	$timestamp = strtotime(json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=usercontribs&uclimit=1&ucuser=".urlencode($user)."&ucdir=newer&ucprop=timestamp"), true)['query']['usercontribs']['0']['timestamp']);
 	if ($timestamp != FALSE AND $timestamp < strtotime($date."T".$time."Z -90 days")) $idade = TRUE;
 
 	//Define cor do resultado
