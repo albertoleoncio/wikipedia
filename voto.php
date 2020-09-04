@@ -25,18 +25,18 @@ if ($_GET["user"]) {
 		$date = date("o-m-d");
 		$time = date("H:i:s");
 	} elseif (isset($_GET["date"]) AND (!isset($_GET["time"]) OR $_GET["time"] == "")) {
-		$date = $_GET["date"];
+		$date = date("o-m-d", strtotime($_GET["date"]));
 		$time = "23:59:59";
 	} elseif ((!isset($_GET["date"]) OR $_GET["date"] == "") AND isset($_GET["time"])) {
-		$time = $_GET["time"];
+		$time = date("H:i:s", strtotime($_GET["time"]));
 		if ($time < date("H:i:s")) {
 			$date = date("o-m-d");
 		} else {
 			$date = date("o-m-d", strtotime($_GET["date"]." -1 day"));
 		}
 	} elseif (isset($_GET["date"]) AND isset($_GET["time"])) {
-		$date = $_GET["date"];
-		$time = $_GET["time"];
+		$date = date("o-m-d", strtotime($_GET["date"]));
+		$time = date("H:i:s", strtotime($_GET["time"]));
 	} else {
 		$date = date("o-m-d");
 		$time = date("H:i:s");
