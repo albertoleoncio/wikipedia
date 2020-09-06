@@ -69,7 +69,7 @@ if ($_GET["user"]) {
 ?><!DOCTYPE html>
 <html lang="pt-BR">
 	<head>
-		<title>Direiro ao voto</title>
+		<title>Direiro a voto</title>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="stylesheet" href="./tpar/w3.css">
@@ -77,7 +77,7 @@ if ($_GET["user"]) {
 	<body>
 		<div class="w3-container" id="menu">
 			<div class="w3-content" style="max-width:800px">
-				<h5 class="w3-center w3-padding-48"><span class="w3-tag w3-wide">DIREITO AO VOTO</span></h5>
+				<h5 class="w3-center w3-padding-48"><span class="w3-tag w3-wide">DIREITO A VOTO</span></h5>
 				<div class="w3-row-padding w3-center w3-margin-top">
 					<div class="w3-half">
 						<form action="/alberobot/voto.php" method="get">
