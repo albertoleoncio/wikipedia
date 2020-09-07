@@ -10,7 +10,7 @@ Bot: https://pt.wikipedia.org/wiki/User:AlbeROBOT
 
 Framework: https://github.com/hamstar/Wikimate
 
-## Scripts
+## Scripts COVID-19
 
 covid-19-brasil-uf.php - Atualiza os dados dos casos por unidade federativa brasileira. Utiliza os dados das secretarias de saúde das unidades federativas com a curadoria de Álvaro Justen e outros colaboradores. Link: https://brasil.io/dataset/covid19/caso.
 
@@ -18,9 +18,15 @@ covid-19-brasil.php - Atualiza os dados dos casos por unidade federativa brasile
 
 covid-19-mundo-??.php - Atualiza predefinição da tabela de casos por país. Utiliza diversas fontes de acordo com cada país com a curadoria da comunidade da Wikipédia Anglófona e liberado sob a licença CC BY-SA 3.0. Link: https://en.wikipedia.org/wiki/Template:2019–20_coronavirus_pandemic_data.
 
+## Utilitários
+
+apurador.php - Contabilizador de votos.
+
 sabiaque.php - Realiza procedimentos de atualização da seção "Sabia que" na página principal. Bot: https://pt.wikipedia.org/wiki/User:SabiaQueBot
 
 siw.php - Pequeno script para auxiliar o envio de mensagens para o https://pt.wikipedia.org/wiki/WP:ESR-SIW
+
+voto.php - Verifica se usuário possui direito a voto de acordo com as regras vigentes da Wikipédia lusófona.
 
 ## Little disclaimer
 
