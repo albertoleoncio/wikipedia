@@ -22,6 +22,8 @@ covid-19-mundo-??.php - Atualiza predefinição da tabela de casos por país. Ut
 
 apurador.php - Contabilizador de votos.
 
+blockrequest.php - Fechador de pedidos de bloqueios onde o usuário já está bloqueado.
+
 sabiaque.php - Realiza procedimentos de atualização da seção "Sabia que" na página principal. Bot: https://pt.wikipedia.org/wiki/User:SabiaQueBot
 
 siw.php - Pequeno script para auxiliar o envio de mensagens para o https://pt.wikipedia.org/wiki/WP:ESR-SIW
