@@ -10,144 +10,85 @@ else {
 	echo "<b>Wikimate error</b>: ".$error['login'];
 }
 
-////////////////////////////////////////////////////////////////////////////////////////
-//
-//	Notificações de vandalismo
-//
-////////////////////////////////////////////////////////////////////////////////////////
-
-//Verifica se página existe
-$page1 = $wiki->getPage('Wikipédia:Pedidos/Notificações de vandalismo');
-if (!$page1->exists()) die('Page not found');
-
-//Recupera códig-fonte da página, dividida por seções
-$sections = $page1->getAllSections(true);
-
-//Conta quantidade de seções
-$count = count($sections);
-
-//Loop para análise de cada seção
-for ($i=0; $i < $count; $i++) { 
-
-	//Reseta varíavel de regex
-	unset($regex);
-
-	//Verifica se pedido ainda está aberto
-	preg_match_all('/<!--\n{{Respondido/', $sections[$i], $regex);
-
-	//Caso não esteja aberto, interrompe loop e segue para a próxima seção
-	if (!isset($regex['0']['0'])) continue;
-
-	//Divide seção por linhas
-	$lines = explode("\n", $sections[$i]);
-
-	//Recupera nome de usuário
-	$user = trim($lines['0'], "= ");
+function blockrequest ($wiki, $pagina) {
 	
-	//Coleta informações do usuário
-	$usercontribs = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=users&usprop=blockinfo&uclimit=1&ususers=".urlencode($user)), true)['query']['users'][0];
+	//Verifica se página existe
+	$page = $wiki->getPage($pagina);
+	if (!$page->exists()) die('Page not found');
 
-	//Caso não esteja bloqueado, interrompe loop e segue para a próxima seção
-	if (!isset($usercontribs['blockid'])) continue;
+	//Recupera códig-fonte da página, dividida por seções
+	$sections = $page->getAllSections(true);
 
-	//Caso bloqueio seja menor que 24 horas, interrompe loop e segue para a próxima seção
-	if ($usercontribs['blockexpiry'] != "infinite" AND (strtotime($usercontribs['blockexpiry']) - strtotime($usercontribs['blockedtimestamp']) < 90000)) continue;
+	//Conta quantidade de seções
+	$count = count($sections);
 
-	//Define tempo de bloqueio
-	if ($usercontribs['blockexpiry'] == "infinite") {
-		$tempo = "tempo indeterminado";
-	} else {
-		$interval = date_diff(date_create($usercontribs['blockedtimestamp']), date_create($usercontribs['blockexpiry']));
-		if ($interval->format('%h') % 24 == 0) {
-			$tempo = $interval->format('%a dia(s)');
+	//Loop para análise de cada seção
+	for ($i=0; $i < $count; $i++) { 
+
+		//Reseta varíavel de regex
+		unset($regex);
+
+		//Verifica se pedido ainda está aberto
+		preg_match_all("/<!--\n?{{Respondido/", $sections[$i], $regex);
+
+		//Caso não esteja aberto, interrompe loop e segue para a próxima seção
+		if (!isset($regex['0']['0'])) continue;
+
+		//Divide seção por linhas
+		$lines = explode("\n", $sections[$i]);
+
+		//Recupera nome de usuário
+		$user = trim($lines['0'], "= ");
+
+		//Coleta informações do usuário
+		$info = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=blocks&bkusers=".urlencode($user)), true)['query']['blocks'];
+
+		//Caso não esteja bloqueado, interrompe loop e segue para a próxima seção
+		if (!isset($info[0])) {
+			continue;
 		} else {
-			$tempo = $interval->format('%h hora(s)');
+			$blockinfo = $info[0];
 		}
-	}
 
-	//Substitui seção inicial
-	$sections[$i] = preg_replace('/<!--\n{{Respondido2[^>]*>/', '{{Respondido2|feito|texto=', $sections[$i]);
+		//Caso bloqueio seja menor que 24 horas, interrompe loop e segue para a próxima seção
+		if ($blockinfo['expiry'] != "infinity" AND (strtotime($blockinfo['expiry']) - strtotime($blockinfo['timestamp']) < 90000)) continue;
 
-	//Substitui seção final
-	$sections[$i] = preg_replace(
-		'/<!--\n:{{subst:Bloqueio feito[^>]*>/', 
-		":{{subst:Bloqueio feito|por=".$usercontribs['blockedby']."|".$tempo."}}. ~~~~}}", 
-		$sections[$i]
-	);
+		//Define tempo de bloqueio
+		if ($blockinfo['expiry'] == "infinity") {
+			$tempo = "tempo indeterminado";
+		} else {
+			$interval = date_diff(date_create($blockinfo['timestamp']), date_create($blockinfo['expiry']));
+			if ($interval->format('%h') % 24 == 0) {
+				$tempo = $interval->format('%a dia(s)');
+			} else {
+				$tempo = $interval->format('%h hora(s)');
+			}
+		}
 
-	//Grava seção
-	if ($page1->setText($sections[$i], $i, true, "bot: Fechando pedido cumprido")) {
-		echo "Gravando ".$user."<br>";
-	} else {
-		$error = $page1->getError();
-		echo "<hr>Error: ".print_r($error, true)."\n";
-	}
-}
+		//Substitui seção inicial
+		$sections[$i] = preg_replace('/<!--\n?{{Respondido2[^>]*>/', '{{Respondido2|feito|texto=', $sections[$i]);
 
-//Reseta varíavel de seções
-unset($sections);
+		//Substitui seção final
+		$sections[$i] = preg_replace(
+			'/<!--\n?:{{subst:(Bloqueio )?[Ff]eito[^>]*>/', 
+			":{{subst:Bloqueio feito|por=".$blockinfo['by']."|".$tempo."}}. [[User:AlbeROBOT|AlbeROBOT]] ~~~~~}}", 
+			$sections[$i]
+		);
 
-////////////////////////////////////////////////////////////////////////////////////////
-//
-//	Wikipédia:Pedidos/Revisão de nomes de usuário
-//
-////////////////////////////////////////////////////////////////////////////////////////
+		//Grava seção
+		if ($page->setText($sections[$i], $i, true, "bot: Fechando pedido cumprido")) {
+			echo "Gravando ".$user."<br>";
+		} else {
+			$error = $page->getError();
+			echo "<hr>Error: ".print_r($error, true)."\n";
+		}
 
-//Verifica se página existe
-$page2 = $wiki->getPage('Wikipédia:Pedidos/Revisão de nomes de usuário');
-if (!$page2->exists()) die('Page not found');
-
-//Recupera códig-fonte da página, dividida por seções
-$sections = $page2->getAllSections(true);
-
-//Conta quantidade de seções
-$count = count($sections);
-
-//Loop para análise de cada seção
-for ($i=0; $i < $count; $i++) { 
-
-	//Reseta varíavel de regex
-	unset($regex);
-
-	//Verifica se pedido ainda está aberto
-	preg_match_all('/<!--{{Respondido2/', $sections[$i], $regex);
-
-	//Caso não esteja aberto, interrompe loop e segue para a próxima seção
-	if (!isset($regex['0']['0'])) continue;
-
-	//Divide seção por linhas
-	$lines = explode("\n", $sections[$i]);
-
-	//Recupera nome de usuário
-	$user = trim($lines['0'], "= ");
-	
-	//Coleta informações do usuário
-	$usercontribs = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=users&usprop=blockinfo&uclimit=1&ususers=".urlencode($user)), true)['query']['users'][0];
-
-	//Caso não esteja bloqueado, interrompe loop e segue para a próxima seção
-	if (!isset($usercontribs['blockid'])) continue;
-
-	//Caso bloqueio seja menor que 24 horas, interrompe loop e segue para a próxima seção
-	if ($usercontribs['blockexpiry'] != "infinite" AND (strtotime($usercontribs['blockexpiry']) - strtotime($usercontribs['blockedtimestamp']) < 90000)) continue;
-
-	//Define se tempo de bloqueio é infinito. Caso contrário, interrompe loop e segue para a próxima seção
-	if ($usercontribs['blockexpiry'] != "infinite") continue;
-
-	//Substitui seção inicial
-	$sections[$i] = preg_replace('/<!--{{Respondido2[^>]*>/', '{{Respondido2|feito|texto=', $sections[$i]);
-
-	//Substitui seção final
-	$sections[$i] = preg_replace(
-		'/<!--\:{{subst\:Feito[^>]*>/', 
-		":{{subst:Bloqueio feito|por=".$usercontribs['blockedby']."|tempo indeterminado}}. [[User:AlbeROBOT|AlbeROBOT]] ~~~~~}}", 
-		$sections[$i]
-	);
-
-	//Grava seção
-	if ($page2->setText($sections[$i], $i, true, "bot: Fechando pedido cumprido")) {
-		echo "Gravando ".$user."<br>";
-	} else {
-		$error = $page2->getError();
-		echo "<hr>Error: ".print_r($error, true)."\n";
+		//Reseta varíaveis
+		unset($sections);
+		unset($page);
 	}
 }
+
+//Executa função em páginas
+blockrequest($wiki, 'Wikipédia:Pedidos/Notificações de vandalismo');
+blockrequest($wiki, 'Wikipédia:Pedidos/Revisão de nomes de usuário');
