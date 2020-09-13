@@ -29,7 +29,7 @@ else {
 //		[1]: texto da proposição
 //		[2]: título do artigo-chave da proposição
 //		[3]: nome de usuário do proponente
-//		[4]: texto da proposição para arquivamento
+//		[4]: texto da proposição mais antiga para arquivamento
 //		[5]: discussão da proposição para arquivamento
 //
 //	      A: página de propostas aprovadas
@@ -38,6 +38,7 @@ else {
 //	      D: página de discussão do usuário
 //	      E: proposições recentes
 //	      F: arquivo de discussão da proposição
+//		  G: envio da proposição ao Facebook
 //
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -316,6 +317,30 @@ if ($pageA->setText($htmlA, NULL, FALSE, "bot: (6/6) Arquivando proposição pub
 	echo "<hr>Error: ".print_r($error, true)."\n";
 }
 
+
+////////////////////////////////////////////////////////////////////////////////////////
+//
+//	G
+//
+////////////////////////////////////////////////////////////////////////////////////////
+
+//Monta array para envio ao Facebook
+$fb['message'] = "Você sabia que...\n\n…".$dados[1]."\n\nLeia mais na Wikipédia: https://pt.wikipedia.org/wiki/".urlencode($dados[2]);
+$fb['access_token'] = $fb_token;
+$fb['link'] = "https://pt.wikipedia.org/wiki/".urlencode($dados[2]);
+$fb['caption'] = "Sabia que...";
+
+//Executa cURL
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, 'https://graph.facebook.com/460984407268496/feed');
+curl_setopt($ch, CURLOPT_POST, 1);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $fb);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+$return = curl_exec($ch);
+curl_close($ch);
+
+//Retorna resutado
+print_r($return);
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
