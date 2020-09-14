@@ -9,7 +9,7 @@ $ultimo = file_get_contents("https://pt.wikipedia.org/w/index.php?title=Usu%C3%A
 if ($ultimo === FALSE) die("Nao foi possível recuperar os dados.");
 
 //Encerra script caso o último artigo publicado seja o artigo atual
-//if ($atual == $ultimo) die("Nada a alterar!");
+if ($atual == $ultimo) die("Nada a alterar!");
 
 //Login
 include './bin/globals.php';
@@ -33,8 +33,23 @@ if ($page->setText($atual, 0, true, "bot: Atualizando EAD")) {
 	echo "\nError: " . print_r($error, true) . "\n";
 }
 
+//Monta status para envio ao Twitter
+$twitter_status = $atual." é um artigo de destaque na Wikipédia!\n\nIsso significa que ele foi identificado como um dos melhores artigos produzidos pela comunidade da Wikipédia.\n\nO que achou? Ainda tem como melhorar?\nhttps://pt.wikipedia.org/wiki/".rawurlencode($atual);
+
+//Envia Tweet
+require "tpar/twitteroauth/autoload.php";
+use Abraham\TwitterOAuth\TwitterOAuth;
+define('CONSUMER_KEY', $twitter_consumer_key);
+define('CONSUMER_SECRET', $twitter_consumer_secret);
+$twitter_conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, $twitter_access_token, $twitter_access_token_secret);
+$post_tweets = $twitter_conn->post("statuses/update", ["status" => $twitter_status]);
+
+//Retorna resultado
+print_r($post_tweets)['created_at'];
+print_r($post_tweets)['id'];
+
 //Monta array para envio ao Facebook
-$fb['message'] = $atual." é um artigo de destaque na Wikipédia!\n\nIsso significa que ele foi identificado como um dos melhores artigos produzidos pela comunidade da Wikipédia.\n\nEste artigo figurará na Página principal da Wikipédia lusófona como Artigo destacado a partir de hoje.\n\nO que achou? Ainda tem como melhorar?\nhttps://pt.wikipedia.org/wiki/".rawurlencode($atual);
+/*$fb['message'] = $atual." é um artigo de destaque na Wikipédia!\n\nIsso significa que ele foi identificado como um dos melhores artigos produzidos pela comunidade da Wikipédia.\n\nEste artigo figurará na Página principal da Wikipédia lusófona como Artigo destacado a partir de hoje.\n\nO que achou? Ainda tem como melhorar?\nhttps://pt.wikipedia.org/wiki/".rawurlencode($atual);
 $fb['access_token'] = $fb_token;
 $fb['link'] = "https://pt.wikipedia.org/wiki/".rawurlencode($atual);
 $fb['caption'] = "Artigo destacado";
@@ -49,19 +64,4 @@ $return = curl_exec($ch);
 curl_close($ch);
 
 //Retorna resutado
-print_r($return);
-
-//Monta status para envio ao Twitter
-/*$twitter_status = $atual." é um artigo de destaque na Wikipédia!\n\nIsso significa que ele foi identificado como um dos melhores artigos produzidos pela comunidade da Wikipédia.\n\nO que achou? Ainda tem como melhorar?\nhttps://pt.wikipedia.org/wiki/".rawurlencode($atual);
-
-//Envia Tweet
-require "tpar/twitteroauth/autoload.php";
-use Abraham\TwitterOAuth\TwitterOAuth;
-define('CONSUMER_KEY', $twitter_consumer_key);
-define('CONSUMER_SECRET', $twitter_consumer_secret);
-$twitter_conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, $twitter_access_token, $twitter_access_token_secret);
-$post_tweets = $twitter_conn->post("statuses/update", ["status" => $twitter_status]);
-
-//Retorna resultado
-print_r($post_tweets)['created_at'];
-print_r($post_tweets)['id'];*/
+print_r($return);*/
