@@ -324,10 +324,25 @@ if ($pageA->setText($htmlA, NULL, FALSE, "bot: (6/6) Arquivando proposição pub
 //
 ////////////////////////////////////////////////////////////////////////////////////////
 
+//Monta status para envio ao Twitter
+$twitter_status = "Você sabia que...\n\n…".$dados[1]."\n\nLeia mais na Wikipédia: https://pt.wikipedia.org/wiki/".rawurlencode($dados[2]);
+
+//Envia Tweet
+require "tpar/twitteroauth/autoload.php";
+use Abraham\TwitterOAuth\TwitterOAuth;
+define('CONSUMER_KEY', $twitter_consumer_key);
+define('CONSUMER_SECRET', $twitter_consumer_secret);
+$twitter_conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, $twitter_access_token, $twitter_access_token_secret);
+$post_tweets = $twitter_conn->post("statuses/update", ["status" => $twitter_status]);
+
+//Retorna resultado
+print_r($post_tweets)['created_at'];
+print_r($post_tweets)['id'];
+
 //Monta array para envio ao Facebook
-$fb['message'] = "Você sabia que...\n\n…".$dados[1]."\n\nLeia mais na Wikipédia: https://pt.wikipedia.org/wiki/".urlencode($dados[2]);
+/*$fb['message'] = "Você sabia que...\n\n…".$dados[1]."\n\nLeia mais na Wikipédia: https://pt.wikipedia.org/wiki/".rawurlencode($dados[2]);
 $fb['access_token'] = $fb_token;
-$fb['link'] = "https://pt.wikipedia.org/wiki/".urlencode($dados[2]);
+$fb['link'] = "https://pt.wikipedia.org/wiki/".rawurlencode($dados[2]);
 $fb['caption'] = "Sabia que...";
 
 //Executa cURL
@@ -340,23 +355,7 @@ $return = curl_exec($ch);
 curl_close($ch);
 
 //Retorna resutado
-print_r($return);
-
-//Monta status para envio ao Twitter
-$twitter_status = "Você sabia que...\n\n…".$dados[1]."\n\nLeia mais na Wikipédia: https://pt.wikipedia.org/wiki/".urlencode($dados[2]);
-
-//Envia Tweet
-use Abraham\TwitterOAuth\TwitterOAuth;
-define('CONSUMER_KEY', $twitter_consumer_key);
-define('CONSUMER_SECRET', $twitter_consumer_secret);
-define('ACCESS_TOKEN', $twitter_access_token);
-define('ACCESS_TOKEN_SECRET', $twitter_access_token_secret);
-$twitter_conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET);
-$post_tweets = $twitter_conn->post("statuses/update", ["status" => $twitter_status]);
-
-//Retorna resultado
-print_r($post_tweets)['created_at'];
-print_r($post_tweets)['id'];
+print_r($return);*/
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
