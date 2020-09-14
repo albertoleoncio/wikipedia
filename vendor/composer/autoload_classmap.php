@@ -6,4 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'WikiFile' => $baseDir . '/Wikimate.php',
+    'WikiPage' => $baseDir . '/Wikimate.php',
+    'Wikimate' => $baseDir . '/Wikimate.php',
 );
