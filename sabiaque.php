@@ -38,7 +38,7 @@ else {
 //	      D: página de discussão do usuário
 //	      E: proposições recentes
 //	      F: arquivo de discussão da proposição
-//		  G: envio da proposição ao Facebook
+//		  G: envio da proposição ao Facebook e ao Twitter
 //
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -341,6 +341,23 @@ curl_close($ch);
 
 //Retorna resutado
 print_r($return);
+
+//Monta status para envio ao Twitter
+$twitter_status = "Você sabia que...\n\n…".$dados[1]."\n\nLeia mais na Wikipédia: https://pt.wikipedia.org/wiki/".urlencode($dados[2]);
+
+//Envia Tweet
+use Abraham\TwitterOAuth\TwitterOAuth;
+define('CONSUMER_KEY', $twitter_consumer_key);
+define('CONSUMER_SECRET', $twitter_consumer_secret);
+define('ACCESS_TOKEN', $twitter_access_token);
+define('ACCESS_TOKEN_SECRET', $twitter_access_token_secret);
+$twitter_conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET);
+$post_tweets = $twitter_conn->post("statuses/update", ["status" => $twitter_status]);
+
+//Retorna resultado
+print_r($post_tweets)['created_at'];
+print_r($post_tweets)['id'];
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
