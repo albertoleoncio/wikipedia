@@ -21,6 +21,7 @@
         ]
     },
     "require": {
-        "rmccue/requests": "1.*"
+        "rmccue/requests": "1.*",
+        "abraham/twitteroauth": "^1.1"
     }
 }
