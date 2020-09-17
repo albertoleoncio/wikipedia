@@ -325,7 +325,7 @@ if ($pageA->setText($htmlA, NULL, FALSE, "bot: (6/6) Arquivando proposição pub
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Monta status para envio ao Twitter
-$twitter_status = "Você sabia que...\n\n…".$dados[1]."\n\nLeia mais na Wikipédia: https://pt.wikipedia.org/wiki/".rawurlencode($dados[2]);
+$twitter_status = "Você sabia que...\n\n…".preg_replace('/[\[\]\']/', '', preg_replace('/\[\[[^\|\]]*\|([^\]]*)\]\]/', '$1', $dados[1]))."\n\nLeia mais na Wikipédia: https://pt.wikipedia.org/wiki/".rawurlencode($dados[2]);
 
 //Envia Tweet
 require "tpar/twitteroauth/autoload.php";
