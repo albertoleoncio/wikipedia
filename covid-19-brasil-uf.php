@@ -20,8 +20,16 @@ preg_match_all('/confirmados\|([0-9]*)/', $wikiCode, $output_anterior);
 $anterior = $output_anterior[1][0];
 
 //Recupera dados da fonte e transforma em uma array
-$urlfonte = "https://brasil.io/api/dataset/covid19/caso/data?is_last=True&place_type=state";
-$ref = @file_get_contents($urlfonte);
+$headers = array(
+	'user-agent: Mozilla/5.0 (compatible, wikimediacloud.org) https://pt.wikipedia.org/wiki/User:AlbeROBOT'
+);
+$curl = curl_init();
+curl_setopt_array($curl, [
+    CURLOPT_RETURNTRANSFER => 1,
+    CURLOPT_URL => 'https://brasil.io/api/dataset/covid19/caso/data/?format=json&is_last=True&place_type=state',
+    CURLOPT_HTTPHEADER => $headers
+]);
+$ref = curl_exec($curl);
 $dados = json_decode($ref, true)['results'];
 
 //Reordena de acordo com as UFs
