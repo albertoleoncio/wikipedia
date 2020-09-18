@@ -58,11 +58,14 @@ function blockrequest ($wiki, $pagina) {
 			$tempo = "tempo indeterminado";
 		} else {
 			$interval = date_diff(date_create($blockinfo['timestamp']), date_create($blockinfo['expiry']));
-			if ($interval->format('%h') % 24 == 0) {
-				$tempo = $interval->format('%a dia(s)');
-			} else {
-				$tempo = $interval->format('%h hora(s)');
-			}
+			$tempo = "";
+			if ($interval->format('%y') != 0) $tempo = $tempo.$interval->format('%y')." ano(s), ";
+			if ($interval->format('%m') != 0) $tempo = $tempo.$interval->format('%m')." mese(s), ";
+			if ($interval->format('%d') != 0) $tempo = $tempo.$interval->format('%d')." dia(s), ";
+			if ($interval->format('%h') != 0) $tempo = $tempo.$interval->format('%h')." hora(s), ";
+			if ($interval->format('%i') != 0) $tempo = $tempo.$interval->format('%i')." minuto(s), ";
+			if ($interval->format('%s') != 0) $tempo = $tempo.$interval->format('%s')." segundo(s), ";
+			$tempo = trim($tempo, ", ");
 		}
 
 		//Substitui seção inicial
