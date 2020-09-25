@@ -187,8 +187,7 @@ function block($csrftoken, $user_block) {
 		"format" => "json"
 	];
 
-	var_dump($params4);
-	/*$ch = curl_init();
+	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_URL, $endPoint);
 	curl_setopt($ch, CURLOPT_POST, true);
 	curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params4));
@@ -197,5 +196,5 @@ function block($csrftoken, $user_block) {
 	curl_setopt($ch, CURLOPT_COOKIEFILE, "./cookie.txt");
 	$output = curl_exec($ch);
 	curl_close($ch);
-	echo ($output);*/
+	echo ($output);
 }
