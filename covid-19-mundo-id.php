@@ -2,7 +2,7 @@
 echo "<pre>";
 
 $isocode  = "id";
-$template = "Templat:Data pandemi koronavirus 2019–2020";
+$template = "Templat:Data pandemi COVID-19";
 $sumario  = "bot: Memperbarui statistik";
 $toadd    = "Wilayah yang akan ditambahkan";
 $toremove = "Wilayah yang akan dihapus";
