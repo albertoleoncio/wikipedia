@@ -1,12 +1,12 @@
-# AlbeROBOT
+# albertoleoncio/wikipedia
 
-Script para atualização dos dados do COVID-19 nas páginas da Wikipédia, dentre outras coisas.
+Scripts para alguns bots da Wikipédia, dentre outras coisas.
 
 ## Usuários
 
-Operador do bot: https://pt.wikipedia.org/wiki/Usuário:Albertoleoncio
+Operador dos bots: https://pt.wikipedia.org/wiki/Usuário:Albertoleoncio
 
-Bot: https://pt.wikipedia.org/wiki/User:AlbeROBOT
+Bots: https://pt.wikipedia.org/wiki/User:AlbeROBOT, https://pt.wikipedia.org/wiki/User:SabiaQueBot, https://pt.wikipedia.org/wiki/User:BloqBot
 
 Framework: https://github.com/hamstar/Wikimate
 
@@ -22,9 +22,11 @@ covid-19-mundo-??.php - Atualiza predefinição da tabela de casos por país. Ut
 
 apurador.php - Contabilizador de votos.
 
-blockrequest.php - Fechador de pedidos de bloqueios onde o usuário já está bloqueado.
+blockrequest.php - Fechador de pedidos de bloqueios onde a conta já está bloqueada.
 
-sabiaque.php - Realiza procedimentos de atualização da seção "Sabia que" na página principal. Bot: https://pt.wikipedia.org/wiki/User:SabiaQueBot
+ead.php - Atualizador das redes sociais da Wikipédia em português com atualições da "Escolha do Artigo em Destaque".
+
+sabiaque.php - Realiza procedimentos de atualização da seção "Sabia que".
 
 siw.php - Pequeno script para auxiliar o envio de mensagens para o https://pt.wikipedia.org/wiki/WP:ESR-SIW
 
