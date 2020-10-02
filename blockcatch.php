@@ -11,31 +11,33 @@ loginRequest(getLoginToken(), $usernameBQ, $passwordBQ);
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
-//	Abuselog
+//	Recentchanges
 //
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Define parâmetros para consulta do log do filtro
-$params_abuselog = [
-	"action" => "query",
-	"format" => "json",
-	"list" => "abuselog",
-	"aflfilter" => "180",
-	"afllimit" => "20",
-	"aflend" => "2020-10-04T12:00:00.000Z",
-	"aflprop" => "user"
+$params_recentchanges = [
+    "action" => "query",
+    "format" => "json",
+    "list" => "recentchanges",
+	"rcnamespace" => "0|2|4|6|10|14|100|104|710|828",
+	"rcprop" => "user|timestamp",
+	"rctype" => "edit|new",
+	"rcshow" => "anon",
+	"rclimit" => "20",
+    "rcend" => "2020-10-04T12:00:00.000Z"
 ];
 
 //Executa cURL e retorna array
-$ch_abuselog = curl_init($endPoint."?".http_build_query($params_abuselog));
-curl_setopt($ch_abuselog, CURLOPT_RETURNTRANSFER, true);
-$output_abuselog = curl_exec($ch_abuselog);
-curl_close($ch_abuselog);
-$result_abuselog = json_decode( $output_abuselog, true );
+$ch_recentchanges = curl_init($endPoint."?".http_build_query($params_recentchanges));
+curl_setopt($ch_recentchanges, CURLOPT_RETURNTRANSFER, true);
+$output_recentchanges = curl_exec($ch_recentchanges);
+curl_close($ch_recentchanges);
+$result_recentchanges = json_decode( $output_recentchanges, true );
 
 //Loop para gerar faixas de IP
 $lista = array();
-foreach ($result_abuselog["query"]["abuselog"] as $k => $v) {
+foreach ($result_recentchanges["query"]["recentchanges"] as $k => $v) {
 
 	//IPv4
 	if (preg_match("/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/", $v["user"])) {
