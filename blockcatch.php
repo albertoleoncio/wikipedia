@@ -6,7 +6,7 @@
 */
 
 $endPoint = "https://pt.wikipedia.org/w/api.php";
-require __DIR__.'/../../credenciais.php';
+require '../credenciais.php';
 loginRequest(getLoginToken(), $usernameBQ, $passwordBQ);
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -17,15 +17,15 @@ loginRequest(getLoginToken(), $usernameBQ, $passwordBQ);
 
 //Define parâmetros para consulta do log do filtro
 $params_recentchanges = [
-    "action" => "query",
-    "format" => "json",
-    "list" => "recentchanges",
+	"action" => "query",
+	"format" => "json",
+	"list" => "recentchanges",
 	"rcnamespace" => "0|2|4|6|10|14|100|104|710|828",
 	"rcprop" => "user|timestamp",
 	"rctype" => "edit|new",
 	"rcshow" => "anon",
 	"rclimit" => "20",
-    "rcend" => "2020-10-04T12:00:00.000Z"
+    "rcend" => "2020-10-02T12:00:00.000Z" //Alterar antes de colocar a ferramenta em funcionamento
 ];
 
 //Executa cURL e retorna array
@@ -34,6 +34,12 @@ curl_setopt($ch_recentchanges, CURLOPT_RETURNTRANSFER, true);
 $output_recentchanges = curl_exec($ch_recentchanges);
 curl_close($ch_recentchanges);
 $result_recentchanges = json_decode( $output_recentchanges, true );
+
+echo "<b>Mudanças recentes:</b>\n";
+foreach ($result_recentchanges["query"]["recentchanges"] as $s) {
+	echo "Em ".$s['timestamp']." -> ".$s['type']." por ".$s['user']."\n";
+}
+echo "\n<b>Faixas à bloquear:</b>\n";
 
 //Loop para gerar faixas de IP
 $lista = array();
@@ -47,7 +53,7 @@ foreach ($result_recentchanges["query"]["recentchanges"] as $k => $v) {
 	//IPv6
 	} elseif (preg_match("/[0-9A-F]{1,4}(?:\:[0-9A-F]{1,4}){7}/", $v["user"])) {
 		$ipexp = explode(':', $v["user"]);
-		if (count($ipexp['1'] < 4)) {
+		if (strlen($ipexp['1']) < 4) {
 			$x = 0;
 		} else {
 			$x = substr($ipexp['1'], 0, 1);
@@ -189,6 +195,8 @@ function block($csrftoken, $user_block) {
 		"format" => "json"
 	];
 
+	echo $user_block."\n";
+
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_URL, $endPoint);
 	curl_setopt($ch, CURLOPT_POST, true);
@@ -198,5 +206,5 @@ function block($csrftoken, $user_block) {
 	curl_setopt($ch, CURLOPT_COOKIEFILE, "./cookie.txt");
 	$output = curl_exec($ch);
 	curl_close($ch);
-	echo ($output);
+	echo $output."\n\n";
 }
