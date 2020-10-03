@@ -105,7 +105,10 @@ foreach ($lista as $user_block) {
 
 	//Verifica se faixa de IP está bloqueada. Caso não esteja, realiza o bloqueio.
 	if (!isset($result_blocks["query"]["blocks"]['0']['id'])) {
+		echo "Processando ".$user_block."... ";
 		block(getCSRFToken(), $user_block);
+	} else {
+		echo "Pulando ".$user_block.", pois já está bloqueado sob id #".$result_blocks["query"]["blocks"]['0']['id'].".\n\n";
 	};
 }
 
@@ -195,8 +198,6 @@ function block($csrftoken, $user_block) {
 		"format" => "json"
 	];
 
-	echo $user_block."\n";
-
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_URL, $endPoint);
 	curl_setopt($ch, CURLOPT_POST, true);
@@ -206,5 +207,14 @@ function block($csrftoken, $user_block) {
 	curl_setopt($ch, CURLOPT_COOKIEFILE, "./cookie.txt");
 	$output = curl_exec($ch);
 	curl_close($ch);
-	echo $output."\n\n";
+
+	$output = json_decode($output, true);
+
+	if (isset($output["block"])) {
+		echo "Bloqueado sob id #".$output["block"]["id"]."\n";
+	} elseif (isset($output["error"])) {
+		echo "<b>".$output["error"]["code"]."</b>: ".$output["error"]["info"]."\n";
+	} else {
+		echo "<i>Unexpected Behavior</i>\n";
+	}
 }
