@@ -3,7 +3,7 @@ include './bin/globals.php';
 
 //Login
 $wiki = new Wikimate($api_url);
-if ($wiki->login('AlbeROBOT', $password))
+if ($wiki->login($usernameBQ, $passwordBQ))
 	echo 'Login OK<br>' ;
 else {
 	$error = $wiki->getError();
@@ -74,7 +74,7 @@ function blockrequest ($wiki, $pagina) {
 		//Substitui seção final
 		$sections[$i] = preg_replace(
 			'/<!--\n?:{{subst:(Bloqueio )?[Ff]eito[^>]*>/', 
-			":{{subst:Bloqueio feito|por=".$blockinfo['by']."|".$tempo."}}. [[User:AlbeROBOT|AlbeROBOT]] ~~~~~}}", 
+			":{{subst:Bloqueio feito|por=".$blockinfo['by']."|".$tempo."}}. [[User:BloqBot|BloqBot]] ~~~~~}}", 
 			$sections[$i]
 		);
 
