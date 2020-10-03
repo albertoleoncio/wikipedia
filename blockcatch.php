@@ -25,7 +25,7 @@ $params_recentchanges = [
 	"rctype" => "edit|new",
 	"rcshow" => "anon",
 	"rclimit" => "20",
-    "rcend" => "2020-10-02T12:00:00.000Z" //Alterar antes de colocar a ferramenta em funcionamento
+    "rcend" => "2020-10-05T00:00:00.000Z"
 ];
 
 //Executa cURL e retorna array
@@ -191,7 +191,7 @@ function block($csrftoken, $user_block) {
 		"expiry" => "infinite",
 		"reason" => "{{deslogado}}: Para contribuir, faça login ou crie uma conta.",
 		"anononly" => true,
-		"nocreate" => false,
+		"allowusertalk" => true,
 		"partial" => true,
 		"namespacerestrictions" => "0|2|4|6|10|14|100|104|710|828",
 		"token" => $csrftoken,
