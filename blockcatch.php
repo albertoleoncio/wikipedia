@@ -189,7 +189,7 @@ function block($csrftoken, $user_block) {
 		"action" => "block",
 		"user" => $user_block,
 		"expiry" => "infinite",
-		"reason" => "{{deslogado}}: Para contribuir, faça login ou crie uma conta.",
+		"reason" => "{{Deslogado|Para contribuir, faça login ou crie uma conta}}",
 		"anononly" => true,
 		"allowusertalk" => true,
 		"partial" => true,

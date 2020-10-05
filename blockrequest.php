@@ -10,9 +10,10 @@ else {
 	echo "<b>Wikimate error</b>: ".$error['login'];
 }
 
-function blockrequest ($wiki, $pagina) {
+function blockrequest ($pagina) {
 	
 	//Verifica se página existe
+	global $wiki;
 	$page = $wiki->getPage($pagina);
 	if (!$page->exists()) die('Page not found');
 
@@ -27,6 +28,10 @@ function blockrequest ($wiki, $pagina) {
 
 		//Reseta varíavel de regex
 		unset($regex);
+
+		//Proteção contra duplicação de seções
+		preg_match_all('/\n==/', $sections[$i], $dupl_sect);
+		if (isset($dupl_sect['0']['0'])) die;
 
 		//Verifica se pedido ainda está aberto
 		preg_match_all("/<!--\n?{{Respondido/", $sections[$i], $regex);
@@ -93,5 +98,5 @@ function blockrequest ($wiki, $pagina) {
 }
 
 //Executa função em páginas
-blockrequest($wiki, 'Wikipédia:Pedidos/Notificações de vandalismo');
-blockrequest($wiki, 'Wikipédia:Pedidos/Revisão de nomes de usuário');
+blockrequest('Wikipédia:Pedidos/Notificações de vandalismo');
+blockrequest('Wikipédia:Pedidos/Revisão de nomes de usuário');
