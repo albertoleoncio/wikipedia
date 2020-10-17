@@ -1,3 +1,3 @@
 Hi!
 
-GitHub: <a href="https://github.com/albertoleoncio/alberobot/">AlbertoLeoncio/AlberoBot</a>
+GitHub: <a href="https://github.com/albertoleoncio/wikipedia/">AlbertoLeoncio/AlberoBot</a>

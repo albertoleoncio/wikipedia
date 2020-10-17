@@ -12,7 +12,7 @@
 				<h5 class="w3-center w3-padding-48"><span class="w3-tag w3-wide">ESR-SIW</span></h5>
 				<div class="w3-row-padding w3-center w3-margin-top">
 					<div class="w3-half">
-						<form action="/alberobot/siw.php" method="get">
+						<form action="/siw.php" method="get">
 							<div class="w3-container w3-padding-48 w3-card">
 		      					<p class="w3-center w3-wide">ARTIGO</p>
 		      					<p class="w3-text-grey">
