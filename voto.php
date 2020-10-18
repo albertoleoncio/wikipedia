@@ -80,7 +80,7 @@ if ($_GET["user"]) {
 				<h5 class="w3-center w3-padding-48"><span class="w3-tag w3-wide">DIREITO A VOTO</span></h5>
 				<div class="w3-row-padding w3-center w3-margin-top">
 					<div class="w3-half">
-						<form action="/alberobot/voto.php" method="get">
+						<form action="/voto.php" method="get">
 							<div class="w3-container w3-padding-48 w3-card">
 		      					<p class="w3-center w3-wide">USUÁRIO</p>
 		      					<p class="w3-text-grey"><input class="w3-input w3-padding-16 w3-border" <?php if (isset($user) OR $user != "") echo "value='".$user."'"; ?> type="text" name="user"></p><br>
