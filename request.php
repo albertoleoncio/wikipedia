@@ -81,13 +81,28 @@ for ($i=0; $i < $count; $i++) {
 	//Substitui seção inicial
 	$sections[$i] = preg_replace('/<!--\n?{{Respondido[^>]*>/', '{{Respondido2|feito|texto=', $sections[$i]);
 
-	$sub1 = array("[", "edit", "move", "autoconfirmed", "editautoreviewprotected", "sysop");
-	$sub2 = array("\n:*[", "editar", "mover", "autoconfirmado", "autorevisor", "administrador");
+	$sub1 = array(
+		"[", 
+		"edit=", 
+		"move=", 
+		"create=", 
+		"autoconfirmed", 
+		"editautoreviewprotected", 
+		"sysop"
+	);
+	$sub2 = array(
+		"\n:*[", 
+		"Editar: ", 
+		"Mover: ", 
+		"Criar: ", 
+		"[[Ficheiro:Wikipedia_Autoconfirmed.svg|20px]] [[Wikipédia:Autoconfirmados|Autoconfirmado]]", 
+		"[[Ficheiro:Wikipedia_Autopatrolled.svg|20px]] [[Wikipédia:Autorrevisores|Autorrevisor]]", 
+		"[[Ficheiro:Wikipedia_Administrator.svg|20px]] [[Wikipédia:Administradores|Administrador]]");
 
 	//Substitui seção final
 	$sections[$i] = preg_replace(
 		'/<!--:{{proteção[^>]*>/', 
-		":{{subst:feito|Feito}}. Proteção realizada em ".strftime('%Hh%Mmin de %d de %B de %Y', strtotime($protectinfo['timestamp']))." (UTC) por [[User:".$protectinfo['user']."|".$protectinfo['user']."]] com o(s) seguinte(s) parâmetro(s):".str_replace($sub1, $sub2, $protectinfo['params']['description'])."\n:--[[User:BloqBot|BloqBot]] ~~~~~}}", 
+		":{{subst:feito|Feito}}. Proteção realizada em <span class='plainlinks'>[https://pt.wikipedia.org/w/index.php?type=protect&title=Especial:Registo&page=".urlencode($alvo)."&user=".urlencode($protectinfo['user'])." ".strftime('%Hh%Mmin de %d de %B de %Y', strtotime($protectinfo['timestamp']))." (UTC)]</span> por [[User:".$protectinfo['user']."|".$protectinfo['user']."]] com o(s) seguinte(s) parâmetro(s):".str_replace($sub1, $sub2, $protectinfo['params']['description'])."\n:--[[User:BloqBot|BloqBot]] <small>~~~~~</small>}}", 
 		$sections[$i]
 	);
 

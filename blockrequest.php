@@ -90,11 +90,11 @@ function blockrequest ($pagina) {
 			$error = $page->getError();
 			echo "<hr>Error: ".print_r($error, true)."\n";
 		}
-
-		//Reseta varíaveis
-		unset($sections);
-		unset($page);
 	}
+
+	//Reseta varíaveis
+	unset($sections);
+	unset($page);
 }
 
 //Executa função em páginas
