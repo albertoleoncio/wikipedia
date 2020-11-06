@@ -2,7 +2,7 @@
 echo "<pre>";
 
 $isocode  = "fr";
-$template = "Modèle:Données de la pandémie de maladie à coronavirus de 2019-2020";
+$template = "Modèle:Données de la pandémie de Covid-19";
 $sumario  = "bot: Mise à jour des statistiques";
 $toadd    = "Territoires à ajouter";
 $toremove = "Territoires à supprimer";

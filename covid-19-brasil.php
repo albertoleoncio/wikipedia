@@ -15,11 +15,20 @@ $headers = array(
 $curl = curl_init();
 curl_setopt_array($curl, [
     CURLOPT_RETURNTRANSFER => 1,
-    CURLOPT_URL => 'https://xx9p7hp1p7.execute-api.us-east-1.amazonaws.com/prod/PortalSintese',
+    CURLOPT_URL => 'https://xx9p7hp1p7.execute-api.us-east-1.amazonaws.com/prod/PortalSinteseSep',
     CURLOPT_HTTPHEADER => $headers
 ]);
 $result = curl_exec($curl);
 $PortalSintese = json_decode($result, true);
+
+$curl2 = curl_init();
+curl_setopt_array($curl2, [
+    CURLOPT_RETURNTRANSFER => 1,
+    CURLOPT_URL => 'https://xx9p7hp1p7.execute-api.us-east-1.amazonaws.com/prod/PortalEstado',
+    CURLOPT_HTTPHEADER => $headers
+]);
+$results = curl_exec($curl2);
+$PortalEstado = json_decode($results, true);
 
 //Formação dos campos de dados gerais
 $confirmado = str_replace(".", "", $PortalSintese[0]['casosAcumuladoN']);
@@ -37,24 +46,15 @@ $saida =  "\n-->{{#ifeq:{{{1}}}|confirmados|".$confirmado."|}}<!--\n".
 			"-->{{#ifeq:{{{1}}}|data|{{DataExt|".date("d|m|Y",$timestamp)."}}|}}<!--\n".
 			"-->{{#ifeq:{{{1}}}|hora|".date("H:i",$timestamp)."|}}<!--\n";
 
-//Merge das arrays das regiões brasileiras
-$SinteseUFs = array_merge(
-	$PortalSintese[1]['listaMunicipios'], 
-	$PortalSintese[2]['listaMunicipios'], 
-	$PortalSintese[3]['listaMunicipios'], 
-	$PortalSintese[4]['listaMunicipios'], 
-	$PortalSintese[5]['listaMunicipios']
-);
-
 //Ordenar unidades federativas por ordem alfabética
-usort($SinteseUFs, function ($a, $b) {
+usort($PortalEstado, function ($a, $b) {
 	return $a['_id'] <=> $b['_id'];
 });
 
 //Loop para montar a array das UFs
 $UFs = array();
 $x = 0;
-foreach ($SinteseUFs as $linha) {
+foreach ($PortalEstado as $linha) {
 	$UFs[1][$x] = $linha['_id'];
 	$UFs[2][$x] = $linha['casosAcumulado'];
 	$UFs[3][$x] = $linha['obitosAcumulado'];
