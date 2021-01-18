@@ -11,6 +11,7 @@ $log      = "log";
 function refparser($ref) {
 	$de = array(
 		"|url-status=live",
+		" January 2020",
 		" March 2020",
 		" April 2020",
 		" May 2020",
@@ -24,6 +25,7 @@ function refparser($ref) {
 	);
 	$para = array(
 		"",
+		"-01-2020",
 		"-03-2020",
 		"-04-2020",
 		"-05-2020",

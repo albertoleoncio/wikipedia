@@ -2,7 +2,7 @@
 echo "<pre>";
 
 $isocode   = "et";
-$template  = "Mall:2020 aasta koroonaviirushaigus riigiti";
+$template  = "Mall:Koroonapandeemia riigiti";
 $sumario   = "bot: Statistika värskendamine";
 $toadd     = "Aladel lisada";
 $toremove  = "Aladel eemaldada";
