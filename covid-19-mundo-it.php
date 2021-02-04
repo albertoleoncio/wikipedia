@@ -5,7 +5,7 @@ echo "<pre>";
 if ((strftime("%H") >= 22) OR (rtrim(strftime("%H"), "0") < 6)) die("Horário não permitido: ".strftime("%H"));
 
 $isocode  = "it";
-$template = "Template:Dati della pandemia di COVID-19 del 2019-2021";
+$template = "Template:Dati della pandemia di COVID-19";
 $sumario  = "bot: Aggiornamento delle statistiche";
 $toadd    = "Territori da aggiungere";
 $toremove = "Territori da rimuovere";
