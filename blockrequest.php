@@ -31,7 +31,7 @@ function blockrequest ($pagina) {
 
 		//Proteção contra duplicação de seções
 		preg_match_all('/\n==/', $sections[$i], $dupl_sect);
-		if (isset($dupl_sect['0']['0'])) die;
+		if (isset($dupl_sect['0']['0'])) die(var_dump($dupl_sect['0']['0']));
 
 		//Verifica se pedido ainda está aberto
 		preg_match_all("/<!--\n?{{Respondido/", $sections[$i], $regex);
