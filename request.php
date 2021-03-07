@@ -102,7 +102,7 @@ for ($i=0; $i < $count; $i++) {
 	//Substitui seção final
 	$sections[$i] = preg_replace(
 		'/<!--:{{proteção[^>]*>/', 
-		":{{subst:feito|Feito}}. Proteção realizada em <span class='plainlinks'>[https://pt.wikipedia.org/w/index.php?type=protect&title=Especial:Registo&page=".urlencode($alvo)."&user=".urlencode($protectinfo['user'])." ".strftime('%Hh%Mmin de %d de %B de %Y', strtotime($protectinfo['timestamp']))." (UTC)]</span> por [[User:".$protectinfo['user']."|".$protectinfo['user']."]] com o(s) seguinte(s) parâmetro(s):".str_replace($sub1, $sub2, $protectinfo['params']['description'])."\n:--[[User:BloqBot|BloqBot]] <small>~~~~~</small>}}", 
+		":{{subst:feito|Feito}}. Proteção realizada em <span class='plainlinks'>[https://pt.wikipedia.org/w/index.php?type=protect&title=Especial:Registo&page=".urlencode($alvo)."&user=".urlencode($protectinfo['user'])." ".utf8_encode(strftime('%Hh%Mmin de %d de %B de %Y', strtotime($protectinfo['timestamp'])))." (UTC)]</span> por [[User:".$protectinfo['user']."|".$protectinfo['user']."]] com o(s) seguinte(s) parâmetro(s):".str_replace($sub1, $sub2, $protectinfo['params']['description'])."\n:--[[User:BloqBot|BloqBot]] <small>~~~~~</small>}}", 
 		$sections[$i]
 	);
 
