@@ -50,8 +50,10 @@ else {
 //
 ////////////////////////////////////////////////////////////////////////////////////////
 
-//Define página
-$pageTime = $wiki->getPage("Wikipédia:Sabia que/Frequência");
+//Recupera página do contador
+if (!get_headers("https://pt.wikipedia.org/w/api.php?action=purge&format=none&forcerecursivelinkupdate=1&titles=Wikip%C3%A9dia%3ASabia%20que%2FFrequ%C3%AAncia")) die ("Erro durante purge.");
+$htmlTime = file_get_contents("https://pt.wikipedia.org/w/index.php?title=Wikip%C3%A9dia:Sabia_que/Frequ%C3%AAncia&action=raw&templates=expand");
+if ($htmlTime === FALSE) die("Nao foi possível recuperar os dados do contador.");
 
 //Recupera codigo-fonte da página
 $htmlTime = $pageTime->getText();
@@ -142,7 +144,7 @@ $htmlB = $pageB->getText();
 $htmlBe = explode("\n…", $htmlB);
 
 //Insere nova proposta com marcação de data, renumerando as demais
-array_splice($htmlBe, 1, 0, " ".rtrim($dados[1])."<!--".strtolower(strftime('%B de %Y', $today))."-->\n");
+array_splice($htmlBe, 1, 0, " ".rtrim($dados[1])."<!--".strtolower(utf8_encode(strftime('%B de %Y', $today)))."-->\n");
 
 //Explode último item da array, separando ultima proposição do rodapé da página
 $ultima = explode("<!-- FIM", $htmlBe[count($htmlBe)-1]);
@@ -192,7 +194,7 @@ $htmlC = $pageC->getSection(0);
 
 //Verifica se a predefinição já existe. Se sim, insere nova predefinição no final da seção. Se não...
 if (strpos($htmlC, "SabiaQueDiscussão") == false) {
-	$htmlC = $htmlC."\n\n{{SabiaQueDiscussão\n|data1    = ".strftime('%d de %B de %Y', $today)."\n|entrada1 = … ".$dados[1]."\n}}";
+	$htmlC = $htmlC."\n\n{{SabiaQueDiscussão\n|data1    = ".utf8_encode(strftime('%d de %B de %Y', $today))."\n|entrada1 = … ".$dados[1]."\n}}";
 } else {
 
 	//A partir do número máximo (10), verifica qual o maior número encontrado.
@@ -203,7 +205,7 @@ if (strpos($htmlC, "SabiaQueDiscussão") == false) {
 	if ($n == 0) {$n = 2;} else {$n++;}
 
 	//Efetua inserção
-	$htmlC = str_replace("{{SabiaQueDiscussão", "{{SabiaQueDiscussão\n|data".$n."    = ".strftime('%d de %B de %Y', $today)."\n|entrada".$n." = … ".$dados[1], $htmlC);
+	$htmlC = str_replace("{{SabiaQueDiscussão", "{{SabiaQueDiscussão\n|data".$n."    = ".utf8_encode(strftime('%d de %B de %Y', $today))."\n|entrada".$n." = … ".$dados[1], $htmlC);
 }
 
 //Grava página
@@ -229,7 +231,7 @@ $pageD = $wiki->getPage("Usuário Discussão:".$dados[3]);
 $htmlD = $pageD->getText();
 
 //Monta código da ParabénsSQ
-$htmlD = $htmlD."{{subst:ParabénsSQ|artigo=''[[".$dados[2]."]]''|data=".strftime('%d de %B de %Y', $today)."|curiosidade=…".$dados[1]."|arquivo=".strftime('%Y/%m', $today)."}} --~~~~";
+$htmlD = $htmlD."{{subst:ParabénsSQ|artigo=''[[".$dados[2]."]]''|data=".utf8_encode(strftime('%d de %B de %Y', $today))."|curiosidade=…".$dados[1]."|arquivo=".utf8_encode(strftime('%Y/%m', $today))."}} --~~~~";
 
 //Grava página
 if ($pageD->setText($htmlD, NULL, FALSE, "bot: (3/6) Inserindo ParabénsSQ")) {
@@ -285,13 +287,13 @@ if ($pageE->setText($htmlE, $section, FALSE, "bot: (4/6) Inserindo Arquivo/Recen
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Define página
-$pageF = $wiki->getPage("Wikipédia:Sabia que/Propostas/Arquivo/".strftime('%Y/%m', $today));
+$pageF = $wiki->getPage("Wikipédia:Sabia que/Propostas/Arquivo/".utf8_encode(strftime('%Y/%m', $today)));
 
 //Recupera codigo-fonte da página
 $htmlF = $pageF->getText();
 
 //Monta código da ParabénsSQ
-$htmlF = $htmlF."\n\n==".$dados[5]."{{ADC|sim|".strftime('%d de %B de %Y', $today)."|~~~}}";
+$htmlF = $htmlF."\n\n==".$dados[5]."{{ADC|sim|".utf8_encode(strftime('%d de %B de %Y', $today))."|~~~}}";
 
 //Grava página
 if ($pageF->setText($htmlF, NULL, FALSE, "bot: (5/6) Inserindo Propostas/Arquivo")) {
@@ -336,8 +338,8 @@ $twitter_conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, $twitter_access_
 $post_tweets = $twitter_conn->post("statuses/update", ["status" => $twitter_status]);
 
 //Retorna resultado
-print_r($post_tweets)['created_at'];
-print_r($post_tweets)['id'];
+print_r($post_tweets['created_at']);
+print_r($post_tweets['id']);
 
 //Monta array para envio ao Facebook
 /*$fb['message'] = "Você sabia que...\n\n…".$dados[1]."\n\nLeia mais na Wikipédia: https://pt.wikipedia.org/wiki/".rawurlencode($dados[2]);
@@ -375,7 +377,6 @@ echo '<hr><a href="https://pt.wikipedia.org/wiki/Usu%C3%A1rio_Discuss%C3%A3o:'.$
 	<textarea rows="4" cols="50">'.$htmlD.'</textarea>';
 echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Wikipédia:Sabia que/Arquivo/Recentes&action=edit&section='.$section.'">LINK</a>
 	<textarea rows="4" cols="50">'.$htmlE.'</textarea>';
-echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Wikipédia:Sabia que/Propostas/Arquivo/'.strftime('%Y/%m', $today).'&action=edit&section=new">LINK</a>
-	<textarea rows="4" cols="50">'.$htmlF.'</textarea>';*
+echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Wikipédia:Sabia que/Propostas/Arquivo/'.utf8_encode(strftime('%Y/%m', $today)).'&action=edit&section=new">LINK</a>
+	<textarea rows="4" cols="50">'.$htmlF.'</textarea>';*/
 ?>
-/
