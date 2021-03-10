@@ -55,9 +55,6 @@ if (!get_headers("https://pt.wikipedia.org/w/api.php?action=purge&format=none&fo
 $htmlTime = file_get_contents("https://pt.wikipedia.org/w/index.php?title=Wikip%C3%A9dia:Sabia_que/Frequ%C3%AAncia&action=raw&templates=expand");
 if ($htmlTime === FALSE) die("Nao foi possível recuperar os dados do contador.");
 
-//Recupera codigo-fonte da página
-$htmlTime = $pageTime->getText();
-
 //Limite de segurança
 if (is_numeric($htmlTime) === FALSE OR $htmlTime < 43200) {
 	die("'Wikipédia:Sabia que/Frequência' possui valor não numérico ou menor que 43200. Bloqueio de segurança.");
@@ -338,8 +335,8 @@ $twitter_conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, $twitter_access_
 $post_tweets = $twitter_conn->post("statuses/update", ["status" => $twitter_status]);
 
 //Retorna resultado
-print_r($post_tweets['created_at']);
-print_r($post_tweets['id']);
+/*print_r($post_tweets['created_at']);
+print_r($post_tweets['id']);*/
 
 //Monta array para envio ao Facebook
 /*$fb['message'] = "Você sabia que...\n\n…".$dados[1]."\n\nLeia mais na Wikipédia: https://pt.wikipedia.org/wiki/".rawurlencode($dados[2]);
