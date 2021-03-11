@@ -21,12 +21,13 @@ $anterior = $output_anterior[1][0];
 
 //Recupera dados da fonte e transforma em uma array
 $headers = array(
-	'user-agent: Mozilla/5.0 (compatible, wikimediacloud.org) https://pt.wikipedia.org/wiki/User:AlbeROBOT'
+	'User-agent: Mozilla/5.0 (compatible, wikimediacloud.org) https://pt.wikipedia.org/wiki/User:AlbeROBOT',
+	'Authorization: Token '.$BrasilIOToken
 );
 $curl = curl_init();
 curl_setopt_array($curl, [
     CURLOPT_RETURNTRANSFER => 1,
-    CURLOPT_URL => 'https://brasil.io/api/dataset/covid19/caso/data/?format=json&is_last=True&place_type=state',
+    CURLOPT_URL => 'https://api.brasil.io/v1/dataset/covid19/caso/data/?format=json&is_last=True&place_type=state',
     CURLOPT_HTTPHEADER => $headers
 ]);
 $ref = curl_exec($curl);
