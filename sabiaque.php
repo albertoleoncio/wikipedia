@@ -217,31 +217,6 @@ if ($pageC->setText($htmlC, 0, FALSE, "bot: (2/6) Inserindo SabiaQueDiscussão")
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
-//	D
-//
-////////////////////////////////////////////////////////////////////////////////////////
-
-//Define página
-$pageD = $wiki->getPage("Usuário Discussão:".$dados[3]);
-
-//Recupera codigo-fonte da página
-$htmlD = $pageD->getText();
-
-//Monta código da ParabénsSQ
-$htmlD = $htmlD."{{subst:ParabénsSQ|artigo=''[[".$dados[2]."]]''|data=".utf8_encode(strftime('%d de %B de %Y', $today))."|curiosidade=…".$dados[1]."|arquivo=".utf8_encode(strftime('%Y/%m', $today))."}} --~~~~";
-
-//Grava página
-if ($pageD->setText($htmlD, NULL, FALSE, "bot: (3/6) Inserindo ParabénsSQ")) {
-	echo "<hr>Inserindo ParabénsSQ\n";
-} else {
-	$error = $pageD->getError();
-	echo "<hr>Error: ".print_r($error, true)."\n";
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////
-//
 //	E
 //
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -268,7 +243,7 @@ if (array_key_exists($recente[1], $sections)) {
 }
 
 //Grava página
-if ($pageE->setText($htmlE, $section, FALSE, "bot: (4/6) Inserindo Arquivo/Recentes")) {
+if ($pageE->setText($htmlE, $section, FALSE, "bot: (3/6) Inserindo Arquivo/Recentes")) {
 	echo "<hr>Inserindo Arquivo/Recentes\n";
 } else {
 	$error = $pageE->getError();
@@ -293,7 +268,7 @@ $htmlF = $pageF->getText();
 $htmlF = $htmlF."\n\n==".$dados[5]."{{ADC|sim|".utf8_encode(strftime('%d de %B de %Y', $today))."|~~~}}";
 
 //Grava página
-if ($pageF->setText($htmlF, NULL, FALSE, "bot: (5/6) Inserindo Propostas/Arquivo")) {
+if ($pageF->setText($htmlF, NULL, FALSE, "bot: (4/6) Inserindo Propostas/Arquivo")) {
 	echo "<hr>Inserindo Propostas/Arquivo\n";
 } else {
 	$error = $pageF->getError();
@@ -309,13 +284,36 @@ if ($pageF->setText($htmlF, NULL, FALSE, "bot: (5/6) Inserindo Propostas/Arquivo
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Grava página
-if ($pageA->setText($htmlA, NULL, FALSE, "bot: (6/6) Arquivando proposição publicada")) {
+if ($pageA->setText($htmlA, NULL, FALSE, "bot: (5/6) Arquivando proposição publicada")) {
 	echo "<hr>Arquivando proposição publicada\n";
 } else {
 	$error = $pageA->getError();
 	echo "<hr>Error: ".print_r($error, true)."\n";
 }
 
+
+////////////////////////////////////////////////////////////////////////////////////////
+//
+//	D
+//
+////////////////////////////////////////////////////////////////////////////////////////
+
+//Define página
+$pageD = $wiki->getPage("Usuário Discussão:".$dados[3]);
+
+//Recupera codigo-fonte da página
+$htmlD = $pageD->getText();
+
+//Monta código da ParabénsSQ
+$htmlD = $htmlD."{{subst:ParabénsSQ|artigo=''[[".$dados[2]."]]''|data=".utf8_encode(strftime('%d de %B de %Y', $today))."|curiosidade=…".$dados[1]."|arquivo=".utf8_encode(strftime('%Y/%m', $today))."}} --~~~~";
+
+//Grava página
+if ($pageD->setText($htmlD, NULL, FALSE, "bot: (6/6) Inserindo ParabénsSQ")) {
+	echo "<hr>Inserindo ParabénsSQ\n";
+} else {
+	$error = $pageD->getError();
+	echo "<hr>Error: ".print_r($error, true)."\n";
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
