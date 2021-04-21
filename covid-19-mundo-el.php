@@ -8,7 +8,6 @@ $toadd    = "Περιοχή - προσθήκη";
 $toremove = "Περιοχή - για να αφαιρέσετε";
 $log      = "log";
 $ignorerate = TRUE;
-$ignorepop = TRUE;
 
 function refparser($ref) {
 	$de = array(
