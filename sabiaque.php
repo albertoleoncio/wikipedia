@@ -52,7 +52,7 @@ else {
 
 //Recupera página do contador
 if (!get_headers("https://pt.wikipedia.org/w/api.php?action=purge&format=none&forcerecursivelinkupdate=1&titles=Wikip%C3%A9dia%3ASabia%20que%2FFrequ%C3%AAncia")) die ("Erro durante purge.");
-$htmlTime = file_get_contents("https://pt.wikipedia.org/w/index.php?title=Wikip%C3%A9dia:Sabia_que/Frequ%C3%AAncia&action=raw&templates=expand");
+$htmlTime = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=expandtemplates&format=json&prop=wikitext&text=%7B%7BWikip%C3%A9dia%3ASabia_que%2FFrequ%C3%AAncia%7D%7D"), true)["expandtemplates"]["wikitext"];
 if ($htmlTime === FALSE) die("Nao foi possível recuperar os dados do contador.");
 
 //Limite de segurança
