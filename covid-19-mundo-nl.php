@@ -9,6 +9,7 @@ $toremove = "Te verwijderen gebieden";
 $log      = "log";
 $ignorerate = TRUE;
 $ignorepop = TRUE;
+$ignoretitle = TRUE;
 
 function refparser($ref) {
 	$de = array(

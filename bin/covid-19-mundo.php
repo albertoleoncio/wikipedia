@@ -169,7 +169,7 @@ for ($x = 0; $x < count($seções); $x++) {
 	if (substr($seções[$x], 0, 2) == "#(") {
 
 		//Extrai o nome do território
-		preg_match('/#\(([A-Za-z\ \.\-\&\(Åçãéí\']*)\){1,2}/', $seções[$x], $nome);
+		preg_match('/#\(([A-Za-z\ \.\,\-\&\(Åçãéí\']*)\){1,2}/', $seções[$x], $nome);
 
 		//Converte a array em uma string
 		$território = $nome[1];
