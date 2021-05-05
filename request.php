@@ -87,6 +87,7 @@ for ($i=0; $i < $count; $i++) {
 		"move=", 
 		"create=", 
 		"autoconfirmed", 
+		"extendedconfirmed", 
 		"editautoreviewprotected", 
 		"sysop"
 	);
@@ -96,6 +97,7 @@ for ($i=0; $i < $count; $i++) {
 		"Mover: ", 
 		"Criar: ", 
 		"[[Ficheiro:Wikipedia_Autoconfirmed.svg|20px]] [[Wikipédia:Autoconfirmados|Autoconfirmado]]", 
+		"[[Ficheiro:Usuario_Autoverificado.svg|20px]] [[Wikipédia:Autoconfirmados estendidos|Autoconfirmados estendidos]]", 
 		"[[Ficheiro:Wikipedia_Autopatrolled.svg|20px]] [[Wikipédia:Autorrevisores|Autorrevisor]]", 
 		"[[Ficheiro:Wikipedia_Administrator.svg|20px]] [[Wikipédia:Administradores|Administrador]]");
 
