@@ -135,9 +135,10 @@ if (isset($query['continue']['cmcontinue'])) {
 
 	//Coleta quantidade de arquivos em Salvador via PetScan
 	$ssa_count = count(json_decode(file_get_contents("https://petscan.wmflabs.org/?&since_rev0=&project=wikimedia&cb_labels_any_l=1&negcats=People%20of%20Salvador,%20Bahia&edits%5Bflagged%5D=both&categories=Salvador,%20Bahia&search_max_results=500&cb_labels_yes_l=1&edits%5Bbots%5D=both&cb_labels_no_l=1&depth=50&interface_language=en&language=commons&edits%5Banons%5D=both&ns%5B6%5D=1&minlinks=&format=json&doit="), true)["*"]['0']['a']["*"]);
+	if ($ssa_count == 0) $ssa_count = "{{H:title|O PetScan não soube informar a quantidade de arquivos. Verifique a versão anterior para referência aproximada.|?}}";
 
 	//Monta wikicódigo
-	$wikiCode = "{| class=\"wikitable sortable\"\n|-\n! Cidade\n! Arquivos\n! Criadores\n|-\n| [[:c:Category:Salvador, Bahia|Salvador, Bahia]]\n| ".$ssa_count."\n| ?\n";
+	$wikiCode = "{| class=\"wikitable sortable\"\n|-\n! Cidade\n! Arquivos\n! Criadores\n|-\n| [[:c:Category:Salvador, Bahia|Salvador, Bahia]]\n| ".$ssa_count."\n| {{H:title|Devido ao volume de arquivos, não é possível determinar esse valor.|?}}\n";
 	while ($row = mysqli_fetch_assoc($fetch)) $wikiCode = $wikiCode."|-\n| [[:c:Category:".$row["cidade"]."|".$row["cidade"]."]]\n| ".$row["qnde"]."\n| ".$row["creators"]."\n";
 	$wikiCode = $wikiCode."|}\n";
 
