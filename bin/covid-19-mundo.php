@@ -133,8 +133,8 @@ array_push($wikien, 'World');
 $dados['World'][0] = "World";
 $dados['World'][1] = $total[1][0];
 $dados['World'][2] = $total[1][1];
-$dados['World'][3] = $total[1][2];
-$dados['World'][4] = "<ref>".$total[2][3]."</ref>";
+$dados['World'][3] = "{{color|darkgray|–}}";
+$dados['World'][4] = "<ref>".$total[2][2]."</ref>";
 
 //Limpa string para ser utilizada posteriormente
 unset($território);
