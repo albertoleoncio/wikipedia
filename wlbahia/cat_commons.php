@@ -58,7 +58,7 @@ foreach ($category_state as $city) {
 		//Pula itens que não são desejáveis
 		if (
 			$item['pageid'] == '3604337'     //Category:Guerra de Canutos
-			OR preg_match("/bandeira|flag|bras[ãa]o|arms|\.svg/i", $item['title']) //Bandeiras, mapas e brasões
+			OR preg_match("/bandeira|flag|bras(?:a|ã)o|arms|\.svg/i", $item['title']) //Bandeiras, mapas e brasões
 		) continue; 
 
 		//Procedimento caso item seja um arquivo
