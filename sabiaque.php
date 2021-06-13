@@ -13,7 +13,7 @@ $dados = array();
 //Login
 $wiki = new Wikimate($api_url);
 echo "<pre>";
-if ($wiki->login('SabiaQueBot', $passwordSQ)) {
+if ($wiki->login($usernameSQ, $passwordSQ)) {
 	echo "Wikimate connected.\n";
 }
 else {

@@ -4,7 +4,7 @@
 $api_url = 'https://pt.wikipedia.org/w/api.php';
 include 'globals.php';
 $wiki = new Wikimate($api_url);
-if ($wiki->login('AlbeROBOT', $password))
+if ($wiki->login($username, $password))
 	echo '<pre>Login OK<br>' ;
 else {
 	$error = $wiki->getError();

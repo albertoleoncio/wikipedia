@@ -146,7 +146,7 @@ if (isset($query['continue']['cmcontinue'])) {
 	require __DIR__.'/../vendor/autoload.php';
 	require __DIR__.'/../../credenciais.php';
 	$wiki = new Wikimate('https://pt.wikipedia.org/w/api.php');
-	if ($wiki->login('AlbeROBOT', $password))
+	if ($wiki->login($username, $password))
 		echo '<br>Login OK<br>' ;
 	else {
 		$error = $wiki->getError();

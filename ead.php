@@ -14,7 +14,7 @@ if ($atual == $ultimo) die("Nada a alterar!");
 //Login
 include './bin/globals.php';
 $wiki = new Wikimate($api_url);
-if ($wiki->login('AlbeROBOT', $password))
+if ($wiki->login($username, $password))
 	echo 'Login OK<br>' ;
 else {
 	$error = $wiki->getError();

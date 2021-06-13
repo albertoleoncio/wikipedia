@@ -30,7 +30,7 @@ include 'globals.php';
 echo "<pre>";
 
 $wiki = new Wikimate($api_url);
-if ($wiki->login('AlbeROBOT', $password))
+if ($wiki->login($username, $password))
 	echo 'Login OK<hr>' ;
 else {
 	$error = $wiki->getError();

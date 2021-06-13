@@ -147,7 +147,7 @@ unset($território);
 
 //Login
 $wiki = new Wikimate("https://".$isocode.".wikipedia.org/w/api.php");
-if ($wiki->login('AlbeROBOT', $password))
+if ($wiki->login($username, $password))
 	echo "<hr><b>".$template."</b>\n" ;
 else {
 	$error = $wiki->getError();

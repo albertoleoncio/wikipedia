@@ -37,7 +37,7 @@ $wikiCode = $portugueseParser->parse($cases);
 
 //Login
 $wiki = new Wikimate($api_url);
-if ($wiki->login('AlbeROBOT', $password))
+if ($wiki->login($username, $password))
 	echo '<pre>Login OK<br>' ;
 else {
 	$error = $wiki->getError();
