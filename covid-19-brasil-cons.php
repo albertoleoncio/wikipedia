@@ -3,18 +3,12 @@ echo "<pre>";
 include './bin/globals.php';
 
 //Login
-$wiki = new Wikimate($api_url);
-if ($wiki->login($username, $password))
-	echo 'Login OK<br>' ;
-else {
-	$error = $wiki->getError();
-	echo "<b>Wikimate error</b>: ".$error['login'];
-}
+include './bin/api.php';
+loginAPI($username, $password);
 
 //Recupera dados da predefinição
-$page = $wiki->getPage('Predefinição:Números de casos de COVID-19 por Unidade Federativa no Brasil/Consórcio');
-if (!$page->exists()) die('Page not found');
-$wikiCode = $page->getText();
+$page = 'Predefinição:Números de casos de COVID-19 por Unidade Federativa no Brasil/Consórcio';
+$wikiCode = getAPI($page);
 
 //Regex - captura total anterior
 preg_match_all('/confirmados\|([0-9]*)/', $wikiCode, $output_anterior);
@@ -93,9 +87,4 @@ $pieces[1] = $saida;
 $wikiCode = implode("%", $pieces);
 
 //Gravar código
-if ($page->setText($wikiCode, 0, true, "bot: Atualizando estatísticas")) {
-	echo "\nEdição realizada.\n";
-} else {
-	$error = $page->getError();
-	echo "\nError: " . print_r($error, true) . "\n";
-}
+editAPI($wikiCode, 0, true, "bot: Atualizando estatísticas", $page);

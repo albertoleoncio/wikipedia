@@ -68,18 +68,12 @@ foreach ($PortalEstado as $linha) {
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Login
-$wiki = new Wikimate($api_url);
-if ($wiki->login($username, $password))
-	echo 'Login OK<br>' ;
-else {
-	$error = $wiki->getError();
-	echo "<b>Wikimate error</b>: ".$error['login'];
-}
+include './bin/api.php';
+loginAPI($username, $password);
 
 //Recupera dados da predefinição
-$page = $wiki->getPage('Predefinição:Números de casos de COVID-19 por Unidade Federativa no Brasil/Ministério da Saúde');
-if (!$page->exists()) die('Page not found');
-$wikiCode = $page->getText();
+$page = 'Predefinição:Números de casos de COVID-19 por Unidade Federativa no Brasil/Ministério da Saúde';
+$wikiCode = getAPI($page);
 
 //Loop para construção do wikitexto das UFs
 for ($y = 0; $y < $x; $y++) {
@@ -93,12 +87,7 @@ $pieces[1] = $saida;
 $wikiCode = implode("%", $pieces);
 
 //Gravar código
-if ($page->setText($wikiCode, 0, true, "bot: Atualizando estatísticas")) {
-	echo "\nEdição em predefinição realizada.\n";
-} else {
-	$error = $page->getError();
-	echo "\nError: " . print_r($error, true) . "\n";
-}
+editAPI($wikiCode, 0, true, "bot: Atualizando estatísticas", $page);
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -113,11 +102,10 @@ $dia_atualização = date("d-m-Y",$timestamp);
 $nova_linha = $dia_atualização.";".$obitos.";".$recuperados.";".$confirmado."";
 
 //Recupera dados da predefinição
-$page2 = $wiki->getPage('Predefinição:Dados da pandemia de COVID-19/Gráfico de casos médicos no Brasil');
-if (!$page2->exists()) die('Page not found');
+$page2 = 'Predefinição:Dados da pandemia de COVID-19/Gráfico de casos médicos no Brasil';
 
 //Converte página em array, separando por linhas
-$código = explode("\n", $page2->getText());
+$código = explode("\n", getAPI($page2));
 
 //Procura linha que consta após lista de dias na predefinição
 $key = array_search("|caption='''Fontes:'''", $código);
@@ -138,11 +126,6 @@ if ($dia_atualização != $ultima_atualização) {
 $código = implode("\n", $código);
 
 //Gravar código
-if ($page2->setText($código, 0, true, "bot: Atualizando estatísticas")) {
-	echo "\nGráfico atualizado.\n";
-} else {
-	$error = $page2->getError();
-	echo "\nError: " . print_r($error, true) . "\n";
-}
+editAPI($código, 0, true, "bot: Atualizando estatísticas", $page2);
 
 ?>
