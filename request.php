@@ -3,20 +3,12 @@ include './bin/globals.php';
 date_default_timezone_set('UTC');
 
 //Login
-$wiki = new Wikimate($api_url);
-if ($wiki->login($usernameBQ, $passwordBQ))
-	echo 'Login OK<br>' ;
-else {
-	$error = $wiki->getError();
-	echo "<b>Wikimate error</b>: ".$error['login'];
-}
-
-//Verifica se página existe
-$page = $wiki->getPage("Wikipédia:Pedidos/Proteção");
-if (!$page->exists()) die('Page not found');
+include './bin/api.php';
+loginAPI($usernameBQ, $passwordBQ);
 
 //Recupera códig-fonte da página, dividida por seções
-$sections = $page->getAllSections(true);
+$page = 'Wikipédia:Pedidos/Proteção';
+$sections = getsectionsAPI($page);
 
 //Conta quantidade de seções
 $count = count($sections);
@@ -108,11 +100,6 @@ for ($i=0; $i < $count; $i++) {
 		$sections[$i]
 	);
 
-	//Grava seção
-	if ($page->setText($sections[$i], $i, true, "bot: Fechando pedido cumprido")) {
-		echo "Gravando ".$alvo."<br>";
-	} else {
-		$error = $page->getError();
-		echo "<hr>Error: ".print_r($error, true)."\n";
-	}	
+	//Gravar seção
+	editAPI($sections[$i], $i, true, "bot: Fechando pedido cumprido", $page, $usernameBQ);
 }

@@ -3,13 +3,8 @@ include './bin/globals.php';
 date_default_timezone_set('UTC');
 
 //Login
-$wiki = new Wikimate($api_url);
-if ($wiki->login($username, $password))
-	echo 'Login OK<br>' ;
-else {
-	$error = $wiki->getError();
-	echo "<b>Wikimate error</b>: ".$error['login'];
-}
+include './bin/api.php';
+loginAPI($username, $password);
 
 /*
 	get_subcategories.php
@@ -57,19 +52,13 @@ foreach( $result_cat["query"]["categorymembers"] as $file ) {
 	if ($timestamp < 1306540800) {
 
 		//Recupera conteúdo do arquivo
-		echo "<br>Arquivo ".$file["title"]." detectado!<br>";
-		$page = $wiki->getPage($file["title"]);
-		if (!$page->exists()) die('Page not found');
+		$page = $file["title"];
+		$wikiCode = getAPI($page);
 
 		//Insere: modificado = sim
-		$wikiCode = str_replace("nformação","nformação\n| modificado = sim", $page);
+		$wikiCode = str_replace("nformação","nformação\n| modificado = sim", $wikiCode);
 
 		//Gravar código
-		if ($page->setText($wikiCode, 0, true, "bot: Inserindo parâmetro \"modificado\" para evitar eliminação ([[Predefinição Discussão:Informação#Pergunta_técnica_II|detalhes]])")) {
-			echo "\nEdição realizada.\n";
-		} else {
-			$error = $page->getError();
-			echo "\nError: " . print_r($error, true) . "\n";
-		}
+		editAPI($wikiCode, 0, true, "bot: Inserindo parâmetro \"modificado\" para evitar eliminação ([[Predefinição Discussão:Informação#Pergunta_técnica_II|detalhes]])", $page, $username);
 	}
 }

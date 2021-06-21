@@ -70,4 +70,4 @@ $pieces[1] = $saida;
 $wikiCode = implode("%", $pieces);
 
 //Gravar código
-editAPI($wikiCode, 0, true, "bot: Atualizando estatísticas", $page);
+editAPI($wikiCode, 0, true, "bot: Atualizando estatísticas", $page, $username);

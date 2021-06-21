@@ -87,7 +87,7 @@ $pieces[1] = $saida;
 $wikiCode = implode("%", $pieces);
 
 //Gravar código
-editAPI($wikiCode, 0, true, "bot: Atualizando estatísticas", $page);
+editAPI($wikiCode, 0, true, "bot: Atualizando estatísticas", $page, $username);
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -126,6 +126,6 @@ if ($dia_atualização != $ultima_atualização) {
 $código = implode("\n", $código);
 
 //Gravar código
-editAPI($código, 0, true, "bot: Atualizando estatísticas", $page2);
+editAPI($código, 0, true, "bot: Atualizando estatísticas", $page2, $username);
 
 ?>

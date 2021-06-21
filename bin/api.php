@@ -15,6 +15,7 @@ Comandos:
 loginAPI($userAPI, $passAPI);
 editAPI($text, $section, $minor, $summary, $page);
 getAPI($page);
+getsectionsAPI($page);
 
 */
 
@@ -34,8 +35,8 @@ function loginAPI( $userAPI , $passAPI ) {
 
 	$ch1 = curl_init( $url );
 	curl_setopt( $ch1, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch1, CURLOPT_COOKIEJAR, "cookie.txt" );
-	curl_setopt( $ch1, CURLOPT_COOKIEFILE, "cookie.txt" );
+	curl_setopt( $ch1, CURLOPT_COOKIEJAR, $userAPI."_cookie.txt" );
+	curl_setopt( $ch1, CURLOPT_COOKIEFILE, $userAPI."_cookie.txt" );
 
 	$output1 = curl_exec( $ch1 );
 	curl_close( $ch1 );
@@ -57,15 +58,15 @@ function loginAPI( $userAPI , $passAPI ) {
 	curl_setopt( $ch, CURLOPT_POST, true );
 	curl_setopt( $ch, CURLOPT_POSTFIELDS, http_build_query( $params2 ) );
 	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch, CURLOPT_COOKIEJAR, "cookie.txt" );
-	curl_setopt( $ch, CURLOPT_COOKIEFILE, "cookie.txt" );
+	curl_setopt( $ch, CURLOPT_COOKIEJAR, $userAPI."_cookie.txt" );
+	curl_setopt( $ch, CURLOPT_COOKIEFILE, $userAPI."_cookie.txt" );
 
 	$output = curl_exec( $ch );
 	curl_close( $ch );
 
 }
 
-function editAPI( $text , $section , $minor , $summary , $page) {
+function editAPI( $text , $section , $minor , $summary , $page, $userAPI) {
 	global $endPoint;
 
 	$params3 = [
@@ -79,8 +80,8 @@ function editAPI( $text , $section , $minor , $summary , $page) {
 	$ch1 = curl_init( $url );
 
 	curl_setopt( $ch1, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch1, CURLOPT_COOKIEJAR, "cookie.txt" );
-	curl_setopt( $ch1, CURLOPT_COOKIEFILE, "cookie.txt" );
+	curl_setopt( $ch1, CURLOPT_COOKIEJAR, $userAPI."_cookie.txt" );
+	curl_setopt( $ch1, CURLOPT_COOKIEFILE, $userAPI."_cookie.txt" );
 
 	$output1 = curl_exec( $ch1 );
 	curl_close( $ch1 );
@@ -94,11 +95,13 @@ function editAPI( $text , $section , $minor , $summary , $page) {
 		"title" 		=> $page,
 		"token" 		=> $csrftoken,
 		"text"			=> $text,
-		"section"		=> $section,
-		"minor"			=> $minor,
 		"summary"		=> $summary,
+		"nocreate"		=> true,
 		"format" 		=> "json"
 	];
+
+	if (!is_null($section))	$params4["section"]	= $section;
+	if ($minor)				$params4["minor"]	= $minor;
 
 	$ch = curl_init();
 
@@ -106,8 +109,8 @@ function editAPI( $text , $section , $minor , $summary , $page) {
 	curl_setopt( $ch, CURLOPT_POST, true );
 	curl_setopt( $ch, CURLOPT_POSTFIELDS, http_build_query( $params4 ) );
 	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch, CURLOPT_COOKIEJAR, "cookie.txt" );
-	curl_setopt( $ch, CURLOPT_COOKIEFILE, "cookie.txt" );
+	curl_setopt( $ch, CURLOPT_COOKIEJAR, $userAPI."_cookie.txt" );
+	curl_setopt( $ch, CURLOPT_COOKIEFILE, $userAPI."_cookie.txt" );
 
 	$output = curl_exec( $ch );
 	curl_close( $ch );
@@ -140,4 +143,47 @@ function getAPI( $page ) {
 	$result = json_decode( $output, true );
 
 	return $result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"]["content"];
+}
+
+function getsectionsAPI( $page ) {
+	global $endPoint;
+
+	$section = 0;
+	$validsection = true;
+	$allsections = array();
+
+	while ($validsection) {
+
+		$params = [
+		    "action" 		=> "query",
+		    "prop" 			=> "revisions",
+		    "titles" 		=> $page,
+		    "rvprop" 		=> "content",
+		    "rvslots" 		=> "main",
+		    "formatversion" => "2",
+		    "rvsection"		=> $section,
+		    "format" 		=> "json"
+		];
+
+		$url = $endPoint . "?" . http_build_query( $params );
+
+		$ch = curl_init( $url );
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		$output = curl_exec( $ch );
+		curl_close( $ch );
+
+		$result = json_decode( $output, true );
+
+		$main = $result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"];
+
+		if (isset($main["nosuchsection"])) {
+			$validsection = false;
+		} else {
+			$allsections[$section] = $main["content"];
+			$section++;
+		}
+	}
+
+	return $allsections;
+
 }
