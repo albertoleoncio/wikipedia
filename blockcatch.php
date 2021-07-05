@@ -113,7 +113,7 @@ foreach ($lista as $user_block) {
 }
 
 //Apaga cookie
-unlink("./cookie.txt");
+unlink("./cookie.inc");
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -133,8 +133,8 @@ function getLoginToken() {
 
 	$ch = curl_init($endPoint."?".http_build_query($params1));
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($ch, CURLOPT_COOKIEJAR, "./cookie.txt");
-	curl_setopt($ch, CURLOPT_COOKIEFILE, "./cookie.txt");
+	curl_setopt($ch, CURLOPT_COOKIEJAR, "./cookie.inc");
+	curl_setopt($ch, CURLOPT_COOKIEFILE, "./cookie.inc");
 	$output = curl_exec($ch);
 	curl_close($ch);
 
@@ -157,8 +157,8 @@ function loginRequest($logintoken, $bot_user, $bot_pass) {
 	curl_setopt($ch, CURLOPT_POST, true);
 	curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params2));
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($ch, CURLOPT_COOKIEJAR, "./cookie.txt");
-	curl_setopt($ch, CURLOPT_COOKIEFILE, "./cookie.txt");
+	curl_setopt($ch, CURLOPT_COOKIEJAR, "./cookie.inc");
+	curl_setopt($ch, CURLOPT_COOKIEFILE, "./cookie.inc");
 	$output = curl_exec($ch);
 	curl_close($ch);
 }
@@ -174,8 +174,8 @@ function getCSRFToken() {
 
 	$ch = curl_init($endPoint."?".http_build_query($params3));
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($ch, CURLOPT_COOKIEJAR, "./cookie.txt");
-	curl_setopt($ch, CURLOPT_COOKIEFILE, "./cookie.txt");
+	curl_setopt($ch, CURLOPT_COOKIEJAR, "./cookie.inc");
+	curl_setopt($ch, CURLOPT_COOKIEFILE, "./cookie.inc");
 	$output = curl_exec($ch);
 	curl_close($ch);
 
@@ -203,8 +203,8 @@ function block($csrftoken, $user_block) {
 	curl_setopt($ch, CURLOPT_POST, true);
 	curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params4));
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($ch, CURLOPT_COOKIEJAR, "./cookie.txt");
-	curl_setopt($ch, CURLOPT_COOKIEFILE, "./cookie.txt");
+	curl_setopt($ch, CURLOPT_COOKIEJAR, "./cookie.inc");
+	curl_setopt($ch, CURLOPT_COOKIEFILE, "./cookie.inc");
 	$output = curl_exec($ch);
 	curl_close($ch);
 

@@ -59,6 +59,6 @@ foreach( $result_cat["query"]["categorymembers"] as $file ) {
 		$wikiCode = str_replace("nformação","nformação\n| modificado = sim", $wikiCode);
 
 		//Gravar código
-		editAPI($wikiCode, 0, true, "bot: Inserindo parâmetro \"modificado\" para evitar eliminação ([[Predefinição Discussão:Informação#Pergunta_técnica_II|detalhes]])", $page, $username);
+		editAPI($wikiCode, NULL, true, "bot: Inserindo parâmetro \"modificado\" para evitar eliminação ([[Predefinição Discussão:Informação#Pergunta_técnica_II|detalhes]])", $page, $username);
 	}
 }
