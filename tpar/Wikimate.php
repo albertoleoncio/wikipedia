@@ -1,38 +1,108 @@
+
 <?php
-/// =============================================================================
-/// Wikimate is a wrapper for the MediaWiki API that aims to be very easy to use.
-///
-/// @version    0.12.0
-/// @copyright  SPDX-License-Identifier: MIT
-/// =============================================================================
+/**
+ * =============================================================================
+ * Wikimate is a wrapper for the MediaWiki API that aims to be very easy to use.
+ *
+ * @package    Wikimate
+ * @version    0.13.0
+ * @copyright  SPDX-License-Identifier: MIT
+ * =============================================================================
+ */
 
 /**
- * Provides an interface over wiki API objects such as pages.
+ * Provides an interface over wiki API objects such as pages and files.
  *
- * @author  Robert McLeod
+ * @author  Robert McLeod & Frans P. de Vries
  * @since   December 2010
  */
 class Wikimate
 {
 	/**
-	 * @var  string  The current version number (conforms to http://semver.org/).
+	 * The current version number (conforms to Semantic Versioning)
+	 *
+	 * @var string
+	 * @link https://semver.org/
 	 */
-	const VERSION = '0.12.0';
+	const VERSION = '0.13.0';
 
+	/**
+	 * Identifier for CSRF token
+	 *
+	 * @var string
+	 * @link https://www.mediawiki.org/wiki/Special:MyLanguage/API:Tokens
+	 */
+	const TOKEN_DEFAULT = 'csrf';
+
+	/**
+	 * Identifier for Login token
+	 *
+	 * @var string
+	 * @link https://www.mediawiki.org/wiki/Special:MyLanguage/API:Tokens
+	 */
+	const TOKEN_LOGIN = 'login';
+
+	/**
+	 * Base URL for API requests
+	 *
+	 * @var string
+	 * @link https://www.mediawiki.org/wiki/Special:MyLanguage/API:Main_page#Endpoint
+	 */
 	protected $api;
+
+	/**
+	 * Username for API requests
+	 *
+	 * @var string
+	 * @link https://www.mediawiki.org/wiki/Special:MyLanguage/API:Login#Method_1._login
+	 */
 	protected $username;
+
+	/**
+	 * Password for API requests
+	 *
+	 * @var string
+	 * @link https://www.mediawiki.org/wiki/Special:MyLanguage/API:Login#Method_1._login
+	 */
 	protected $password;
 
-	/** @var  Requests_Session */
+	/**
+	 * Session object for HTTP requests
+	 *
+	 * @var Requests_Session
+	 * @link https://requests.ryanmccue.info/
+	 */
 	protected $session;
+
+	/**
+	 * User agent string for Requests_Session
+	 *
+	 * @var string
+	 * @link https://requests.ryanmccue.info/docs/usage-advanced.html#session-handling
+	 */
 	protected $useragent;
 
-	protected $error     = null;
+	/**
+	 * Error array with API and Wikimate errors
+	 *
+	 * @var array|null
+	 */
+	protected $error = null;
+
+	/**
+	 * Whether to output debug logging
+	 *
+	 * @var boolean
+	 */
 	protected $debugMode = false;
 
 	/**
-	 * Create a new Wikimate object.
+	 * Creates a new Wikimate object.
 	 *
+	 * @param   string    $api      Base URL for the API
+	 * @param   array     $headers  Default headers for API requests
+	 * @param   array     $data     Default data for API requests
+	 * @param   array     $options  Default options for API requests
 	 * @return  Wikimate
 	 */
 	public function __construct($api, $headers = array(), $data = array(), $options = array())
@@ -46,7 +116,7 @@ class Wikimate
 	}
 
 	/**
-	 * Set up a Requests_Session with appropriate user agent.
+	 * Sets up a Requests_Session with appropriate user agent.
 	 *
 	 * @return  void
 	 */
@@ -59,21 +129,84 @@ class Wikimate
 	}
 
 	/**
+	 * Obtains a wiki token for logging in or data-modifying actions.
+	 * For now this method, in Wikimate tradition, is kept simple and supports
+	 * only the two token types needed elsewhere in the library.  It also
+	 * doesn't support the option to request multiple tokens at once.
+	 * See https://www.mediawiki.org/wiki/Special:MyLanguage/API:Tokens
+	 * for more information.
+	 *
+	 * @param   string  $type  The token type
+	 * @return  string         The requested token
+	 */
+	protected function token($type = self::TOKEN_DEFAULT)
+	{
+		// Check for supported token types
+		if ($type != self::TOKEN_DEFAULT && $type != self::TOKEN_LOGIN) {
+			$this->error = array();
+			$this->error['token'] = 'The API does not support the token type';
+			return false;
+		}
+
+		$details = array(
+			'action' => 'query',
+			'meta' => 'tokens',
+			'type' => $type,
+			'format' => 'json'
+		);
+
+		// Send the token request
+		$response = $this->session->post($this->api, array(), $details);
+		// Check if we got an API result or the API doc page (invalid request)
+		if (strpos($response->body, "This is an auto-generated MediaWiki API documentation page") !== false) {
+			$this->error = array();
+			$this->error['token'] = 'The API could not understand the token request';
+			return false;
+		}
+
+		$tokenResult = json_decode($response->body, true);
+		// Check if we got a JSON result
+		if ($tokenResult === null) {
+			$this->error = array();
+			$this->error['token'] = 'The API did not return the token response';
+			return false;
+		}
+
+		if ($this->debugMode) {
+			echo "Token request:\n";
+			print_r($details);
+			echo "Token response:\n";
+			print_r($tokenResult);
+		}
+
+		if ($type == self::TOKEN_LOGIN) {
+			return $tokenResult['query']['tokens']['logintoken'];
+		} else {
+			return $tokenResult['query']['tokens']['csrftoken'];
+		}
+	}
+
+	/**
 	 * Logs in to the wiki.
 	 *
 	 * @param   string   $username  The user name
 	 * @param   string   $password  The user password
 	 * @param   string   $domain    The domain (optional)
 	 * @return  boolean             True if logged in
+	 * @link https://www.mediawiki.org/wiki/Special:MyLanguage/API:Login#Method_1._login
 	 */
 	public function login($username, $password, $domain = null)
 	{
-		//Logger::log("Logging in");
+		// Obtain login token first
+		if (($logintoken = $this->token(self::TOKEN_LOGIN)) === false) {
+			return false;
+		}
 
 		$details = array(
 			'action' => 'login',
 			'lgname' => $username,
 			'lgpassword' => $password,
+			'lgtoken' => $logintoken,
 			'format' => 'json'
 		);
 
@@ -87,59 +220,68 @@ class Wikimate
 		// Check if we got an API result or the API doc page (invalid request)
 		if (strpos($response->body, "This is an auto-generated MediaWiki API documentation page") !== false) {
 			$this->error = array();
-			$this->error['login'] = 'The API could not understand the first login request';
+			$this->error['login'] = 'The API could not understand the login request';
 			return false;
 		}
 
-		$loginResult = json_decode($response->body);
+		$loginResult = json_decode($response->body, true);
+		// Check if we got a JSON result
+		if ($loginResult === null) {
+			$this->error = array();
+			$this->error['login'] = 'The API did not return the login response';
+			return false;
+		}
 
 		if ($this->debugMode) {
 			echo "Login request:\n";
 			print_r($details);
-			echo "Login request response:\n";
+			echo "Login response:\n";
 			print_r($loginResult);
 		}
 
-		if (isset($loginResult->login->result) && $loginResult->login->result == 'NeedToken') {
-			//Logger::log("Sending token {$loginResult->login->token}");
-			$details['lgtoken'] = strtolower(trim($loginResult->login->token));
-
-			// Send the confirm token request
-			$loginResult = $this->session->post($this->api, array(), $details)->body;
-
-			// Check if we got an API result or the API doc page (invalid request)
-			if (strpos($loginResult, "This is an auto-generated MediaWiki API documentation page") !== false) {
-				$this->error = array();
-				$this->error['login'] = 'The API could not understand the confirm token request';
-				return false;
+		if (isset($loginResult['login']['result']) && $loginResult['login']['result'] != 'Success') {
+			// Some more comprehensive error checking
+			$this->error = array();
+			switch ($loginResult['login']['result']) {
+				case 'Failed':
+					$this->error['login'] = 'Incorrect username or password';
+					break;
+				default:
+					$this->error['login'] = 'The API result was: ' . $loginResult['login']['result'];
+					break;
 			}
-
-			$loginResult = json_decode($loginResult);
-
-			if ($this->debugMode) {
-				echo "Confirm token request:\n";
-				print_r($details);
-				echo "Confirm token response:\n";
-				print_r($loginResult);
-			}
-
-			if ($loginResult->login->result != 'Success') {
-				// Some more comprehensive error checking
-				$this->error = array();
-				switch ($loginResult->login->result) {
-					case 'NotExists':
-						$this->error['login'] = 'The username does not exist';
-						break;
-					default:
-						$this->error['login'] = 'The API result was: ' . $loginResult->login->result;
-						break;
-				}
-				return false;
-			}
+			return false;
 		}
 
-		//Logger::log("Logged in");
 		return true;
+	}
+
+	/**
+	 * Gets the user agent for API requests.
+	 *
+	 * @return  string  The default user agent, or the current one defined
+	 *                  by {@link Wikimate::setUserAgent()}
+	 */
+	public function getUserAgent()
+	{
+		return $this->useragent;
+	}
+
+	/**
+	 * Sets the user agent for API requests.
+	 *
+	 * In order to use a custom user agent for all requests in the session,
+	 * call this method before invoking {@link Wikimate::login()}.
+	 *
+	 * @param   string   $ua  The new user agent
+	 * @return  Wikimate      This object
+	 */
+	public function setUserAgent($ua)
+	{
+		$this->useragent = (string)$ua;
+		// Update the session
+		$this->session->useragent = $this->useragent;
+		return $this;
 	}
 
 	/**
@@ -171,7 +313,7 @@ class Wikimate
 	}
 
 	/**
-	 * Get or print the Requests configuration.
+	 * Gets or prints the Requests configuration.
 	 *
 	 * @param   boolean  $echo  Whether to echo the options
 	 * @return  array           Options if $echo is false
@@ -216,72 +358,120 @@ class Wikimate
 	 * Performs a query to the wiki API with the given details.
 	 *
 	 * @param   array  $array  Array of details to be passed in the query
-	 * @return  array          Unserialized php output from the wiki API
+	 * @return  array          Decoded JSON output from the wiki API
+	 * @link https://www.mediawiki.org/wiki/Special:MyLanguage/API:Query
 	 */
 	public function query($array)
 	{
 		$array['action'] = 'query';
-		$array['format'] = 'php';
+		$array['format'] = 'json';
 
+		if ($this->debugMode) {
+			echo "query GET parameters:\n";
+			echo http_build_query($array) . "\n";
+		}
 		$apiResult = $this->session->get($this->api.'?'.http_build_query($array));
 
-		return unserialize($apiResult->body);
+		if ($this->debugMode) {
+			echo "query GET response:\n";
+			print_r(json_decode($apiResult->body, true));
+		}
+		return json_decode($apiResult->body, true);
 	}
 
 	/**
 	 * Performs a parse query to the wiki API.
 	 *
 	 * @param   array  $array  Array of details to be passed in the query
-	 * @return  array          Unserialized php output from the wiki API
+	 * @return  array          Decoded JSON output from the wiki API
+	 * @link https://www.mediawiki.org/wiki/Special:MyLanguage/API:Parsing_wikitext
 	 */
 	public function parse($array)
 	{
 		$array['action'] = 'parse';
-		$array['format'] = 'php';
+		$array['format'] = 'json';
 
+		if ($this->debugMode) {
+			echo "parse GET parameters:\n";
+			echo http_build_query($array) . "\n";
+		}
 		$apiResult = $this->session->get($this->api.'?'.http_build_query($array));
 
-		return unserialize($apiResult->body);
+		if ($this->debugMode) {
+			echo "parse GET response:\n";
+			print_r(json_decode($apiResult->body, true));
+		}
+		return json_decode($apiResult->body, true);
 	}
 
 	/**
 	 * Perfoms an edit query to the wiki API.
 	 *
 	 * @param   array  $array  Array of details to be passed in the query
-	 * @return  array          Unserialized php output from the wiki API
+	 * @return  array          Decoded JSON output from the wiki API
+	 * @link https://www.mediawiki.org/wiki/Special:MyLanguage/API:Edit
 	 */
 	public function edit($array)
 	{
+		// Obtain default token first
+		if (($edittoken = $this->token()) === false) {
+			return false;
+		}
+
 		$headers = array(
 			'Content-Type' => "application/x-www-form-urlencoded"
 		);
 
 		$array['action'] = 'edit';
-		$array['format'] = 'php';
+		$array['format'] = 'json';
+		$array['token'] = $edittoken;
 
+		if ($this->debugMode) {
+			echo "edit POST parameters:\n";
+			print_r($array);
+		}
 		$apiResult = $this->session->post($this->api, $headers, $array);
-		
-		return unserialize($apiResult->body);
+
+		if ($this->debugMode) {
+			echo "edit POST response:\n";
+			print_r(json_decode($apiResult->body, true));
+		}
+		return json_decode($apiResult->body, true);
 	}
 
 	/**
 	 * Perfoms a delete query to the wiki API.
 	 *
 	 * @param   array  $array  Array of details to be passed in the query
-	 * @return  array          Unserialized php output from the wiki API
+	 * @return  array          Decoded JSON output from the wiki API
+	 * @link https://www.mediawiki.org/wiki/Special:MyLanguage/API:Delete
 	 */
 	public function delete($array)
 	{
+		// Obtain default token first
+		if (($deletetoken = $this->token()) === false) {
+			return false;
+		}
+
 		$headers = array(
 			'Content-Type' => "application/x-www-form-urlencoded"
 		);
 
 		$array['action'] = 'delete';
-		$array['format'] = 'php';
+		$array['format'] = 'json';
+		$array['token'] = $deletetoken;
 
+		if ($this->debugMode) {
+			echo "delete POST parameters:\n";
+			print_r($array);
+		}
 		$apiResult = $this->session->post($this->api, $headers, $array);
 
-		return unserialize($apiResult->body);
+		if ($this->debugMode) {
+			echo "delete POST response:\n";
+			print_r(json_decode($apiResult->body, true));
+		}
+		return json_decode($apiResult->body, true);
 	}
 
 	/**
@@ -295,6 +485,10 @@ class Wikimate
 		$getResult = $this->session->get($url);
 
 		if (!$getResult->success) {
+			if ($this->debugMode) {
+				echo "download GET response:\n";
+				print_r($getResult);
+			}
 			$this->error = array();
 			$this->error['file'] = 'Download error (HTTP status: ' . $getResult->status_code . ')';
 			$this->error['http'] = $getResult->status_code;
@@ -307,14 +501,23 @@ class Wikimate
 	 * Uploads a file to the wiki API.
 	 *
 	 * @param   array    $array  Array of details to be used in the upload
-	 * @return  array            Unserialized php output from the wiki API
+	 * @return  array            Decoded JSON output from the wiki API
+	 * @link https://www.mediawiki.org/wiki/Special:MyLanguage/API:Upload
 	 */
 	public function upload($array)
 	{
-		$array['action'] = 'upload';
-		$array['format'] = 'php';
+		// Obtain default token first
+		if (($uploadtoken = $this->token()) === false) {
+			return false;
+		}
 
-		// Construct multipart body: https://www.mediawiki.org/wiki/API:Upload#Sample_Raw_Upload
+		$array['action'] = 'upload';
+		$array['format'] = 'json';
+		$array['token'] = $uploadtoken;
+
+		// Construct multipart body:
+		// https://www.mediawiki.org/w/index.php?title=API:Upload&oldid=2293685#Sample_Raw_Upload
+		// https://www.mediawiki.org/w/index.php?title=API:Upload&oldid=2339771#Sample_Raw_POST_of_a_single_chunk
 		$boundary = '---Wikimate-' . md5(microtime());
 		$body = '';
 		foreach ($array as $fieldName => $fieldData) {
@@ -343,7 +546,11 @@ class Wikimate
 
 		$apiResult = $this->session->post($this->api, $headers, $body);
 
-		return unserialize($apiResult->body);
+		if ($this->debugMode) {
+			echo "upload POST response:\n";
+			print_r(json_decode($apiResult->body, true));
+		}
+		return json_decode($apiResult->body, true);
 	}
 
 	/**
@@ -361,24 +568,80 @@ class Wikimate
 /**
  * Models a wiki article page that can have its text altered and retrieved.
  *
- * @author  Robert McLeod
+ * @author  Robert McLeod & Frans P. de Vries
  * @since   December 2010
  */
 class WikiPage
 {
+	/**
+	 * Use section indexes as keys in return array of {@link WikiPage::getAllSections()}
+	 *
+	 * @var integer
+	 */
 	const SECTIONLIST_BY_INDEX = 1;
-	const SECTIONLIST_BY_NAME = 2;
-	const SECTIONLIST_BY_NUMBER = 3;
 
-	protected $title          = null;
-	protected $wikimate       = null;
-	protected $exists         = false;
-	protected $invalid        = false;
-	protected $error          = null;
-	protected $edittoken      = null;
+	/**
+	 * Use section names as keys in return array of {@link WikiPage::getAllSections()}
+	 *
+	 * @var integer
+	 */
+	const SECTIONLIST_BY_NAME = 2;
+
+	/**
+	 * The title of the page
+	 *
+	 * @var string|null
+	 */
+	protected $title = null;
+
+	/**
+	 * Wikimate object for API requests
+	 *
+	 * @var Wikimate|null
+	 */
+	protected $wikimate = null;
+
+	/**
+	 * Whether the page exists
+	 *
+	 * @var boolean
+	 */
+	protected $exists = false;
+
+	/**
+	 * Whether the page is invalid
+	 *
+	 * @var boolean
+	 */
+	protected $invalid = false;
+
+	/**
+	 * Error array with API and WikiPage errors
+	 *
+	 * @var array|null
+	 */
+	protected $error = null;
+
+	/**
+	 * Stores the timestamp for detection of edit conflicts
+	 *
+	 * @var integer|null
+	 */
 	protected $starttimestamp = null;
-	protected $text           = null;
-	protected $sections       = null;
+
+	/**
+	 * The complete text of the page
+	 *
+	 * @var string|null
+	 */
+	protected $text = null;
+
+	/**
+	 * The sections object for the page
+	 *
+	 * @var stdClass|null
+	 */
+	protected $sections = null;
 
 	/*
 	 *
@@ -405,7 +668,7 @@ class WikiPage
 	}
 
 	/**
-	 * Forget all object properties.
+	 * Forgets all object properties.
 	 *
 	 * @return  <type>  Destructor
 	 */
@@ -416,7 +679,6 @@ class WikiPage
 		$this->exists         = false;
 		$this->invalid        = false;
 		$this->error          = null;
-		$this->edittoken      = null;
 		$this->starttimestamp = null;
 		$this->text           = null;
 		$this->sections       = null;
@@ -506,7 +768,7 @@ class WikiPage
 	/**
 	 * Returns the sections offsets and lengths.
 	 *
-	 * @return  StdClass  Section class
+	 * @return  stdClass  Section class
 	 */
 	public function getSectionOffsets()
 	{
@@ -534,7 +796,7 @@ class WikiPage
 				'titles' => $this->title,
 				'prop' => 'info|revisions',
 				'rvprop' => 'content', // Need to get page text
-				'intoken' => 'edit',
+				'curtimestamp' => 1,
 			);
 
 			$r = $this->wikimate->query($data); // Run the query
@@ -549,7 +811,6 @@ class WikiPage
 
 			// Get the page (there should only be one)
 			$page = array_pop($r['query']['pages']);
-			unset($r, $data);
 
 			// Abort if invalid page title
 			if (isset($page['invalid'])) {
@@ -557,8 +818,8 @@ class WikiPage
 				return null;
 			}
 
-			$this->edittoken      = $page['edittoken'];
-			$this->starttimestamp = $page['starttimestamp'];
+			$this->starttimestamp = $r['curtimestamp'];
+			unset($r, $data);
 
 			if (!isset($page['missing'])) {
 				// Update the existence if the page is there
@@ -708,7 +969,7 @@ class WikiPage
 	}
 
 	/**
-	 * Return all the sections of the page in an array - the key names can be
+	 * Returns all the sections of the page in an array - the key names can be
 	 * set to name or index by using the following for the second param:
 	 * - self::SECTIONLIST_BY_NAME
 	 * - self::SECTIONLIST_BY_INDEX
@@ -771,7 +1032,6 @@ class WikiPage
 			'text' => $text,
 			'md5' => md5($text),
 			'bot' => "true",
-			'token' => $this->edittoken,
 			'starttimestamp' => $this->starttimestamp,
 		);
 
@@ -811,16 +1071,20 @@ class WikiPage
 			$data = array(
 				'titles' => $this->title,
 				'prop' => 'info',
-				'intoken' => 'edit',
+				'curtimestamp' => 1,
 			);
 
 			$r = $this->wikimate->query($data);
 
-			$page = array_pop($r['query']['pages']); // Get the page
+			// Check for errors
+			if (isset($r['error'])) {
+				$this->error = $r['error']; // Set the error if there was one
+				return null;
+			} else {
+				$this->error = null; // Reset the error status
+			}
 
-			$this->starttimestamp = $page['starttimestamp']; // Update the starttimestamp
-
-			$this->error = null; // Reset the error status
+			$this->starttimestamp = $r['curtimestamp']; // Update the starttimestamp
 			return true;
 		}
 
@@ -870,7 +1134,7 @@ class WikiPage
 	}
 
 	/**
-	 * Delete the page.
+	 * Deletes the page.
 	 *
 	 * @param   string   $reason  Reason for the deletion
 	 * @return  boolean           True if page was deleted successfully
@@ -879,7 +1143,6 @@ class WikiPage
 	{
 		$data = array(
 			'title' => $this->title,
-			'token' => $this->edittoken,
 		);
 
 		// Set options from arguments
@@ -908,7 +1171,7 @@ class WikiPage
 	 */
 
 	/**
-	 * Find a section's index by name.
+	 * Finds a section's index by name.
 	 * If a section index or 'new' is passed, it is returned directly.
 	 *
 	 * @param   mixed  $section  The section name or index to find
@@ -948,14 +1211,56 @@ class WikiPage
  */
 class WikiFile
 {
-	protected $filename  = null;
-	protected $wikimate  = null;
-	protected $exists    = false;
-	protected $invalid   = false;
-	protected $error     = null;
-	protected $edittoken = null;
-	protected $info      = null;
-	protected $history   = null;
+	/**
+	 * The name of the file
+	 *
+	 * @var string|null
+	 */
+	protected $filename = null;
+
+	/**
+	 * Wikimate object for API requests
+	 *
+	 * @var Wikimate|null
+	 */
+	protected $wikimate = null;
+
+	/**
+	 * Whether the file exists
+	 *
+	 * @var boolean
+	 */
+	protected $exists = false;
+
+	/**
+	 * Whether the file is invalid
+	 *
+	 * @var boolean
+	 */
+	protected $invalid = false;
+
+	/**
+	 * Error array with API and WikiFile errors
+	 *
+	 * @var array|null
+	 */
+	protected $error = null;
+
+	/**
+	 * Image info for the current file revision
+	 *
+	 * @var array|null
+	 * @link https://www.mediawiki.org/wiki/Special:MyLanguage/API:Imageinfo
+	 */
+	protected $info = null;
+
+	/**
+	 * Image info for all file revisions
+	 *
+	 * @var array|null
+	 * @link https://www.mediawiki.org/wiki/Special:MyLanguage/API:Imageinfo
+	 */
+	protected $history = null;
 
 	/*
 	 *
@@ -982,20 +1287,19 @@ class WikiFile
 	}
 
 	/**
-	 * Forget all object properties.
+	 * Forgets all object properties.
 	 *
 	 * @return  <type>  Destructor
 	 */
 	public function __destruct()
 	{
-		$this->filename   = null;
-		$this->wikimate   = null;
-		$this->exists     = false;
-		$this->invalid    = false;
-		$this->error      = null;
-		$this->edittoken  = null;
-		$this->info       = null;
-		$this->history    = null;
+		$this->filename = null;
+		$this->wikimate = null;
+		$this->exists   = false;
+		$this->invalid  = false;
+		$this->error    = null;
+		$this->info     = null;
+		$this->history  = null;
 		return null;
 	}
 
@@ -1067,7 +1371,6 @@ class WikiFile
 				'iiprop' => 'bitdepth|canonicaltitle|comment|parsedcomment|'
 				          . 'commonmetadata|metadata|extmetadata|mediatype|'
 				          . 'mime|thumbmime|sha1|size|timestamp|url|user|userid',
-				'intoken' => 'edit',
 			);
 			// Add optional history parameters
 			if (is_array($history)) {
@@ -1097,8 +1400,6 @@ class WikiFile
 				$this->invalid = true;
 				return null;
 			}
-
-			$this->edittoken = $page['edittoken'];
 
 			// Check that file is present and has info
 			if (!isset($page['missing']) && isset($page['imageinfo'])) {
@@ -1728,7 +2029,7 @@ class WikiFile
 	}
 
 	/**
-	 * Delete the file, or only an older revision of it.
+	 * Deletes the file, or only an older revision of it.
 	 *
 	 * @param   string   $reason       Reason for the deletion
 	 * @param   string   $archivename  The archive name of the older revision
@@ -1738,7 +2039,6 @@ class WikiFile
 	{
 		$data = array(
 			'title' => 'File:' . $this->filename,
-			'token' => $this->edittoken,
 		);
 
 		// Set options from arguments
@@ -1838,7 +2138,6 @@ class WikiFile
 		$params['filename']       = $this->filename;
 		$params['comment']        = $comment;
 		$params['ignorewarnings'] = $overwrite;
-		$params['token']          = $this->edittoken;
 		if (!is_null($text)) {
 			$params['text']   = $text;
 		}
