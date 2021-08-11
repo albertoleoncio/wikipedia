@@ -11,15 +11,8 @@ $today = strtotime('today');
 $dados = array();
 
 //Login
-$wiki = new Wikimate($api_url);
-echo "<pre>";
-if ($wiki->login($usernameSQ, $passwordSQ)) {
-	echo "Wikimate connected.\n";
-}
-else {
-	$error = $wiki->getError();
-	die("<b>Wikimate error</b>: ".$error['login']);
-}
+include './bin/api.php';
+loginAPI($usernameSQ, $passwordSQ);
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -91,21 +84,17 @@ if ($dif < 0) {
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Define página
-$pageA = $wiki->getPage("Wikipédia:Sabia que/Propostas/Aprovadas");
-
-//Recupera número de seções e encerra script caso só exista uma ou nenhuma proposição
-if ($pageA->getNumSections() <= 2) {
-	die("Não existem propostas para publicação.");
-}
-
-//Recupera codigo-fonte da página
-$htmlA = $pageA->getText();
+$pageA = "Wikipédia:Sabia que/Propostas/Aprovadas";
+$htmlA = getAPI($pageA);
 
 //Explode código, dividindo por tópicos
-$htmlAe = explode("\n==", $htmlA);
+$htmlA_exploded = explode("\n==", $htmlA);
+
+//Recupera número de seções e encerra script caso só exista uma ou nenhuma proposição
+if (count($htmlA_exploded) <= 2) die("Não existem propostas para publicação.");
 
 //Coleta proposição
-preg_match_all('/\|texto = ([^\n]*)/', $htmlAe[1], $output1);
+preg_match_all('/\|texto = ([^\n]*)/', $htmlA_exploded[1], $output1);
 $dados[1] = ltrim($output1[1][0],"… ");
 
 //Coleta artigo-chave da proposição
@@ -113,15 +102,15 @@ preg_match_all('/\'\'\'\[\[([^\]\|\#]*)|\[\[([^\|]*)\|\'\'\'/', $output1[1][0], 
 $dados[2] = $output2[2][0].$output2[1][0];
 
 //Coleta nome de proponente
-preg_match_all('/\* \'\'\'Proponente\'\'\' – [^\[]*\[\[[^:]*:([^|]*)/', $htmlAe[1], $output3);
+preg_match_all('/\* \'\'\'Proponente\'\'\' – [^\[]*\[\[[^:]*:([^|]*)/', $htmlA_exploded[1], $output3);
 $dados[3] = $output3[1][0];
 
 //Coleta discussão da proposição e elimina proposição a publicar
-$dados[5] = $htmlAe[1];
-unset($htmlAe[1]);
+$dados[5] = $htmlA_exploded[1];
+unset($htmlA_exploded[1]);
 
 //Remonta código da página
-$htmlA = implode("\n==",$htmlAe);
+$htmlA = implode("\n==", $htmlA_exploded);
 
 
 
@@ -132,10 +121,10 @@ $htmlA = implode("\n==",$htmlAe);
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Define página
-$pageB = $wiki->getPage("Predefinição:Sabia que");
+$pageB = "Predefinição:Sabia que";
 
 //Recupera codigo-fonte da página
-$htmlB = $pageB->getText();
+$htmlB = getAPI($pageB);
 
 //Explode código, dividindo por tópicos
 $htmlBe = explode("\n…", $htmlB);
@@ -162,13 +151,7 @@ array_pop($htmlBe);
 $htmlB = implode("\n…",$htmlBe);
 
 //Grava página
-if ($pageB->setText($htmlB, NULL, FALSE, "bot: (1/6) Inserindo SabiaQueDiscussão")) {
-	echo "<hr>Inserindo SabiaQueDiscussão\n";
-} else {
-	$error = $pageB->getError();
-	echo "<hr>Error: ".print_r($error, true)."\n";
-}
-
+editAPI($htmlB, NULL, FALSE, "bot: (1/6) Inserindo SabiaQue", $pageB, $usernameSQ);
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -184,10 +167,10 @@ if (isset($APIQuery["query"]["redirects"])) {
 }
 
 //Define página
-$pageC = $wiki->getPage("Discussão:".$dados[2]);
+$pageC = "Discussão:".$dados[2];
 
 //Recupera dados da seção inicial da página de discussão do artigo-chave
-$htmlC = $pageC->getSection(0);
+$htmlC = getsectionsAPI($pageC)['0'];
 
 //Verifica se a predefinição já existe. Se sim, insere nova predefinição no final da seção. Se não...
 if (strpos($htmlC, "SabiaQueDiscussão") == false) {
@@ -206,14 +189,7 @@ if (strpos($htmlC, "SabiaQueDiscussão") == false) {
 }
 
 //Grava página
-if ($pageC->setText($htmlC, 0, FALSE, "bot: (2/6) Inserindo SabiaQueDiscussão")) {
-	echo "<hr>Inserindo SabiaQueDiscussão\n";
-} else {
-	$error = $pageC->getError();
-	echo "<hr>Error: ".print_r($error, true)."\n";
-}
-
-
+editAPI($htmlC, 0, FALSE, "bot: (2/6) Inserindo SabiaQueDiscussão", $pageC, $usernameSQ);
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -221,11 +197,16 @@ if ($pageC->setText($htmlC, 0, FALSE, "bot: (2/6) Inserindo SabiaQueDiscussão")
 //
 ////////////////////////////////////////////////////////////////////////////////////////
 
-//Define página
-$pageE = $wiki->getPage("Wikipédia:Sabia que/Arquivo/Recentes");
+//Define página e recupera seções da página
+$pageE = "Wikipédia:Sabia que/Arquivo/Recentes";
+$htmlE = getsectionsAPI($pageE);
 
-//Recupera seções da página
-$sections = $pageE->getAllSections(false, WikiPage::SECTIONLIST_BY_NAME);
+//Cria mapa das seções, para que o nome do mês indique qual seção seja editada
+$htmlE_map = array();
+for ($i=0; $i < count($htmlE); $i++) { 
+	preg_match_all('/=* ?([^= ]*?) =*\n/', $htmlE[$i], $month_name);
+	if (isset($month_name['1']['0'])) $htmlE_map[$month_name['1']['0']] = $i;
+}
 
 //Explode proposição para arquivar, separando-o da data de duplicação
 $recente = explode("<!--", $dados[4]);
@@ -234,21 +215,16 @@ $recente = explode("<!--", $dados[4]);
 $recente[1] = ucfirst(explode(' ',trim($recente[1]))[0]);
 
 //Verifica se a seção com o nome do mês já existe. A partir disso, monta código da seção
-if (array_key_exists($recente[1], $sections)) {
-	$htmlE = "==== ".$recente[1]." ====\n*… ".$recente[0]."\n".trim($pageE->getSection($recente[1]));
+if (array_key_exists($recente[1], $htmlE_map)) {
+	$htmlE[1] = preg_replace('/==\n/', "==\n*… ".$recente[0]."\n", $htmlE[1]);
 	$section = 1;
 } else {
-	$htmlE = $pageE->getSection(0)."==== ".$recente[1]." ====\n*… ".$recente[0]."\n";
+	$htmlE[0] = $htmlE[0]."==== ".$recente[1]." ====\n*… ".$recente[0]."\n";
 	$section = 0;
 }
 
 //Grava página
-if ($pageE->setText($htmlE, $section, FALSE, "bot: (3/6) Inserindo Arquivo/Recentes")) {
-	echo "<hr>Inserindo Arquivo/Recentes\n";
-} else {
-	$error = $pageE->getError();
-	echo "<hr>Error: ".print_r($error, true)."\n";
-}
+editAPI($htmlE[$section], $section, FALSE, "bot: (3/6) Inserindo Arquivo/Recentes", $pageE, $usernameSQ);
 
 
 
@@ -259,21 +235,16 @@ if ($pageE->setText($htmlE, $section, FALSE, "bot: (3/6) Inserindo Arquivo/Recen
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Define página
-$pageF = $wiki->getPage("Wikipédia:Sabia que/Propostas/Arquivo/".utf8_encode(strftime('%Y/%m', $today)));
+$pageF = "Wikipédia:Sabia que/Propostas/Arquivo/".utf8_encode(strftime('%Y/%m', $today));
 
 //Recupera codigo-fonte da página
-$htmlF = $pageF->getText();
+$htmlF = getAPI($pageF);
 
-//Monta código da ParabénsSQ
+//Monta código do arquivo
 $htmlF = $htmlF."\n\n==".$dados[5]."{{ADC|sim|".utf8_encode(strftime('%d de %B de %Y', $today))."|~~~}}";
 
 //Grava página
-if ($pageF->setText($htmlF, NULL, FALSE, "bot: (4/6) Inserindo Propostas/Arquivo")) {
-	echo "<hr>Inserindo Propostas/Arquivo\n";
-} else {
-	$error = $pageF->getError();
-	echo "<hr>Error: ".print_r($error, true)."\n";
-}
+editAPI($htmlF, NULL, FALSE, "bot: (4/6) Inserindo Propostas/Arquivo", $pageF, $usernameSQ);
 	
 
 
@@ -284,12 +255,7 @@ if ($pageF->setText($htmlF, NULL, FALSE, "bot: (4/6) Inserindo Propostas/Arquivo
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Grava página
-if ($pageA->setText($htmlA, NULL, FALSE, "bot: (5/6) Arquivando proposição publicada")) {
-	echo "<hr>Arquivando proposição publicada\n";
-} else {
-	$error = $pageA->getError();
-	echo "<hr>Error: ".print_r($error, true)."\n";
-}
+editAPI($htmlA, NULL, FALSE, "bot: (5/6) Arquivando proposição publicada", $pageA, $usernameSQ);
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -299,21 +265,16 @@ if ($pageA->setText($htmlA, NULL, FALSE, "bot: (5/6) Arquivando proposição pub
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Define página
-$pageD = $wiki->getPage("Usuário Discussão:".$dados[3]);
+$pageD = "Usuário Discussão:".$dados[3];
 
 //Recupera codigo-fonte da página
-$htmlD = $pageD->getText();
+$htmlD = getAPI($pageD);
 
 //Monta código da ParabénsSQ
 $htmlD = $htmlD."{{subst:ParabénsSQ|artigo=''[[".$dados[2]."]]''|data=".utf8_encode(strftime('%d de %B de %Y', $today))."|curiosidade=…".$dados[1]."|arquivo=".utf8_encode(strftime('%Y/%m', $today))."}} --~~~~";
 
 //Grava página
-if ($pageD->setText($htmlD, NULL, FALSE, "bot: (6/6) Inserindo ParabénsSQ")) {
-	echo "<hr>Inserindo ParabénsSQ\n";
-} else {
-	$error = $pageD->getError();
-	echo "<hr>Error: ".print_r($error, true)."\n";
-}
+editAPI($htmlD, NULL, FALSE, "bot: (6/6) Inserindo ParabénsSQ", $pageD, $usernameSQ);
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -362,16 +323,17 @@ print_r($return);*/
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //print_r($dados);
-/*echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Wikip%C3%A9dia:Sabia_que/Propostas&action=edit">LINK</a>
-	<textarea rows="4" cols="50">'.$htmlA.'</textarea>';
+/*echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Wikip%C3%A9dia:Sabia_que/Propostas/Aprovadas&action=edit">LINK</a>
+	<textarea rows="4" cols="50">'.htmlentities($htmlA).'</textarea>';
 echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Predefini%C3%A7%C3%A3o:Sabia_que&action=edit">LINK</a>
-	<textarea rows="4" cols="50">'.$htmlB.'</textarea>';
+	<textarea rows="4" cols="50">'.htmlentities($htmlB).'</textarea>';
 echo '<hr><a href="https://pt.wikipedia.org/wiki/Discuss%C3%A3o:'.$dados[2].'?action=edit&section=0">LINK</a>
-	<textarea rows="4" cols="50">'.$htmlC.'</textarea>';
+	<textarea rows="4" cols="50">'.htmlentities($htmlC).'</textarea>';
 echo '<hr><a href="https://pt.wikipedia.org/wiki/Usu%C3%A1rio_Discuss%C3%A3o:'.$dados[3].'?action=edit&section=new">LINK</a>
-	<textarea rows="4" cols="50">'.$htmlD.'</textarea>';
+	<textarea rows="4" cols="50">'.htmlentities($htmlD).'</textarea>';
 echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Wikipédia:Sabia que/Arquivo/Recentes&action=edit&section='.$section.'">LINK</a>
-	<textarea rows="4" cols="50">'.$htmlE.'</textarea>';
+	<textarea rows="4" cols="50">'.htmlentities($htmlE[$section]).'</textarea>';
 echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Wikipédia:Sabia que/Propostas/Arquivo/'.utf8_encode(strftime('%Y/%m', $today)).'&action=edit&section=new">LINK</a>
-	<textarea rows="4" cols="50">'.$htmlF.'</textarea>';*/
+	<textarea rows="4" cols="50">'.htmlentities($htmlF).'</textarea>';*/
 ?>
+

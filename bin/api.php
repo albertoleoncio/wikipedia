@@ -93,10 +93,9 @@ function editAPI( $text , $section , $minor , $summary , $page, $userAPI) {
 		"action" 		=> "edit",
 		"bot" 			=> true,
 		"title" 		=> $page,
-		"token" 		=> $csrftoken,
 		"text"			=> $text,
 		"summary"		=> $summary,
-		"nocreate"		=> true,
+		"token" 		=> $csrftoken,
 		"format" 		=> "json"
 	];
 
