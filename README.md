@@ -8,8 +8,6 @@ Operador dos bots: https://pt.wikipedia.org/wiki/Usuário:Albertoleoncio
 
 Bots: https://pt.wikipedia.org/wiki/User:AlbeROBOT, https://pt.wikipedia.org/wiki/User:SabiaQueBot, https://pt.wikipedia.org/wiki/User:BloqBot
 
-Framework: https://github.com/hamstar/Wikimate
-
 ## Scripts COVID-19
 
 covid-19-brasil-uf.php - Atualiza os dados dos casos por unidade federativa brasileira. Utiliza os dados das secretarias de saúde das unidades federativas com a curadoria de Álvaro Justen e outros colaboradores. Link: https://brasil.io/dataset/covid19/caso.
