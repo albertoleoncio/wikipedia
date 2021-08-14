@@ -19,7 +19,7 @@ getsectionsAPI($page);
 
 */
 
-$endPoint = $api_url;
+if (!isset($endPoint)) $endPoint = $api_url;
 
 function loginAPI( $userAPI , $passAPI ) {
 	global $endPoint;

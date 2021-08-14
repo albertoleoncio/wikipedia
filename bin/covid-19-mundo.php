@@ -146,18 +146,14 @@ unset($território);
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Login
-$wiki = new Wikimate("https://".$isocode.".wikipedia.org/w/api.php");
-if ($wiki->login($username, $password))
-	echo "<hr><b>".$template."</b>\n" ;
-else {
-	$error = $wiki->getError();
-	echo "<b>Wikimate error</b>: ".$error['login'];
-}
+$endPoint = "https://".$isocode.".wikipedia.org/w/api.php";
+include './bin/api.php';
+loginAPI($username, $password);
+echo "<hr><b>".$template."</b>\n";
 
 //Recupera dados da predefinição
-$page = $wiki->getPage($template);
-if (!$page->exists()) die('Page not found');
-$wikiCode = $page->getSection(0);
+$page = $template;
+$wikiCode = getsectionsAPI($page)['0'];
 
 //Separa territórios e insere em uma array, utilizando a marcação do bot <!-- #bot#(Território)-->
 $seções = explode("#bot", $wikiCode);
@@ -207,12 +203,7 @@ for ($x = 0; $x < count($seções); $x++) {
 $wikiCode = implode("#bot", $seções);
 
 //Gravar código
-if ($page->setText($wikiCode, 0, true, $sumario." ([[User:AlbeROBOT/".$log."|".$log."]])")) {
-	echo "<hr>Edição realizada.\n";
-} else {
-	$error = $page->getError();
-	echo "<hr>Error: " . print_r($error, true) . "\n";
-}
+editAPI($wikiCode, 0, true, $sumario." ([[User:AlbeROBOT/".$log."|".$log."]])", $page, $username);
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -228,10 +219,4 @@ asort($eliminar);
 $report = $toadd.":\n#".implode("\n#", $adicionar)."\n\n".$toremove.":\n#".implode("\n#", $eliminar);
 
 //Grava relatório
-$log = $wiki->getPage("User:AlbeROBOT/".$log);
-if ($log->setText($report, 0, false, "")) {
-	echo "<hr>Log gravado.\n";
-} else {
-	$error = $page->getError();
-	echo "<hr>Error: " . print_r($error, true) . "\n";
-}
+editAPI($report, 0, false, "bot: ".$log, "User:AlbeROBOT/".$log, $username);
