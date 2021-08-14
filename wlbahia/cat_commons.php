@@ -143,27 +143,15 @@ if (isset($query['continue']['cmcontinue'])) {
 	$wikiCode = $wikiCode."|}\n";
 
 	//Login
-	require __DIR__.'/../vendor/autoload.php';
-	require __DIR__.'/../../credenciais.php';
-	$wiki = new Wikimate('https://pt.wikipedia.org/w/api.php');
-	if ($wiki->login($username, $password))
-		echo '<br>Login OK<br>' ;
-	else {
-		$error = $wiki->getError();
-		echo "<b>Wikimate error</b>: ".$error['login'];
-	}
+	require __DIR__.'/../bin/globals.php';
+	require __DIR__.'/../bin/api.php';
+	loginAPI($username, $password);
 
-	//Recupera dados da página
-	$page = $wiki->getPage('Wikipédia:Wiki Loves Bahia/Queries/Commons');
-	if (!$page->exists()) die('Page not found');
+	//Define página
+	$page = 'Wikipédia:Wiki Loves Bahia/Queries/Commons';
 
 	//Grava código
-	if ($page->setText($wikiCode, 0, true, "bot: Atualizando query")) {
-		echo "\nEdição realizada.\n";
-	} else {
-		$error = $page->getError();
-		echo "\nError: " . print_r($error, true) . "\n";
-	}
+	editAPI($wikiCode, 0, true, "bot: Atualizando query", $page, $username);
 
 	//Reseta tabela para próxima execução
 	mysqli_query($con, "TRUNCATE `list`;");
