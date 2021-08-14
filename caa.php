@@ -73,22 +73,11 @@ $wikiCode = "<!--
 -->{{#ifeq:{{{1}}}|antigo|".$old."}}";
 
 //Login
-$wiki = new Wikimate($api_url);
-if ($wiki->login($username, $password))
-	echo 'Login OK<br>' ;
-else {
-	$error = $wiki->getError();
-	echo "<b>Wikimate error</b>: ".$error['login'];
-}
+include './bin/api.php';
+loginAPI($username, $password);
 
-//Recupera dados da predefinição
-$page = $wiki->getPage('Predefinição:Painel dos administradores/CAA');
-if (!$page->exists()) die('Page not found');
+//Define endereço da predefinição
+$page = 'Predefinição:Painel dos administradores/CAA';
 
-//Gravar código
-if ($page->setText($wikiCode, 0, true, "bot: Atualizando contador de canditatos a artigo")) {
-	echo "\nEdição realizada.\n";
-} else {
-	$error = $page->getError();
-	echo "\nError: " . print_r($error, true) . "\n";
-}
+//Grava código
+editAPI($wikiCode, 0, true, "bot: Atualizando contador de canditatos a artigo", $page, $username);

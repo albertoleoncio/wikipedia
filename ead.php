@@ -13,25 +13,14 @@ if ($atual == $ultimo) die("Nada a alterar!");
 
 //Login
 include './bin/globals.php';
-$wiki = new Wikimate($api_url);
-if ($wiki->login($username, $password))
-	echo 'Login OK<br>' ;
-else {
-	$error = $wiki->getError();
-	echo "<b>Wikimate error</b>: ".$error['login'];
-}
+include './bin/api.php';
+loginAPI($username, $password);
 
-//Recupera dados da página de usuário
-$page = $wiki->getPage('Usuário(a):AlbeROBOT/EAD');
-if (!$page->exists()) die('Page not found');
+//Define página de usuário
+$page = 'Usuário(a):AlbeROBOT/EAD';
 
 //Gravar código
-if ($page->setText($atual, 0, true, "bot: Atualizando EAD")) {
-	echo "\nEdição em página realizada.\n";
-} else {
-	$error = $page->getError();
-	echo "\nError: " . print_r($error, true) . "\n";
-}
+editAPI($atual, 0, true, "bot: Atualizando EAD", $page, $username);
 
 //Monta status para envio ao Twitter
 $twitter_status = $atual." é um artigo de destaque na Wikipédia!\n\nIsso significa que ele foi identificado como um dos melhores artigos produzidos pela comunidade da Wikipédia.\n\nO que achou? Ainda tem como melhorar?\nhttps://pt.wikipedia.org/wiki/".rawurlencode($atual);
