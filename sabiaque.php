@@ -161,9 +161,9 @@ editAPI($htmlB, NULL, FALSE, "bot: (1/6) Inserindo SabiaQue", $pageB, $usernameS
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Verifica se página é redirect
-$APIQuery = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&titles=".urlencode($dados[2])."&redirects=1"), TRUE);
-if (isset($APIQuery["query"]["redirects"])) {
-	$dados[2] = $APIQuery["query"]["redirects"][0]["to"];
+$Page_renamed = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&titles=".urlencode($dados[2])."&redirects=1"), TRUE);
+if (isset($Page_renamed["query"]["redirects"])) {
+	$dados[2] = $Page_renamed["query"]["redirects"][0]["to"];
 }
 
 //Define página
@@ -266,6 +266,12 @@ editAPI($htmlA, NULL, FALSE, "bot: (5/6) Arquivando proposição publicada", $pa
 
 //Define página
 $pageD = "Usuário Discussão:".$dados[3];
+
+//Verifica se página é redirect
+$User_renamed = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&titles=".urlencode($pageD)."&redirects=1"), TRUE);
+if (isset($User_renamed["query"]["redirects"])) {
+	$pageD = $User_renamed["query"]["redirects"][0]["to"];
+}
 
 //Recupera codigo-fonte da página
 $htmlD = getAPI($pageD);

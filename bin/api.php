@@ -141,7 +141,11 @@ function getAPI( $page ) {
 
 	$result = json_decode( $output, true );
 
-	return $result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"]["content"];
+	if (!isset($result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"]["content"])) {
+		return FALSE;
+	} else {
+		return $result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"]["content"];
+	}
 }
 
 function getsectionsAPI( $page ) {
@@ -173,7 +177,11 @@ function getsectionsAPI( $page ) {
 
 		$result = json_decode( $output, true );
 
-		$main = $result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"];
+		if (!isset($result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"])) {
+			return FALSE;
+		} else {
+			$main = $result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"];
+		}
 
 		if (isset($main["nosuchsection"])) {
 			$validsection = false;
