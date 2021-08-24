@@ -94,8 +94,9 @@ $htmlA_exploded = explode("\n==", $htmlA);
 if (count($htmlA_exploded) <= 2) die("Não existem propostas para publicação.");
 
 //Coleta proposição
-preg_match_all('/\|texto = ([^\n]*)/', $htmlA_exploded[1], $output1);
-$dados[1] = ltrim($output1[1][0],"… ");
+preg_match_all('/\|texto ?= ?([^\n]*)/', $htmlA_exploded[1], $output1);
+if (!isset($output1[1][0])) die("Texto da proposição não encontrado.");
+$dados[1] = ltrim($output1[1][0],"…. ");
 
 //Coleta artigo-chave da proposição
 preg_match_all('/\'\'\'\[\[([^\]\|\#]*)|\[\[([^\|]*)\|\'\'\'/', $output1[1][0], $output2);
