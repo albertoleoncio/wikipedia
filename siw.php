@@ -100,7 +100,7 @@ if ($_GET["artigo_titulo"]) {
 		} else $dias_inativo = false;
 		
 		//Retorna link para envio de aviso
-		echo "<li class=\"w3-padding-small w3-left-align\" style=\"cursor:pointer;\" onclick=\"window.open('https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($usuario['name'])."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d=', '_blank')\">".$usuario['name'];
+		echo "<li class=\"w3-padding-small w3-left-align\" style=\"cursor:pointer;\"><a href=\"https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($usuario['name'])."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d='" target="_blank">.$usuario['name']</a></li>";
 		if ($dias_inativo > 90) echo " <small>(inativo há ".$dias_inativo." dias)</small>";
 		echo "</li>";
 	}
