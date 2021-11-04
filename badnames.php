@@ -88,8 +88,8 @@ foreach ($list2 as $item2) {
 
 	//Verifica se já há pedido de revisão ou renomeação para a conta
 	if (isset($afluentes["linkshere"])) {
-		if (!is_null(array_search("6286011", array_column($afluentes["linkshere"], 'pageid')))) continue;
-		if (!is_null(array_search("2077627", array_column($afluentes["linkshere"], 'pageid')))) continue;
+		if (array_search("6286011", array_column($afluentes["linkshere"], 'pageid')) !== FALSE) continue;
+		if (array_search("2077627", array_column($afluentes["linkshere"], 'pageid')) !== FALSE) continue;
 	}
 
 	//Define página de pedidos e recupera codigo-fonte da página
