@@ -29,7 +29,7 @@ preg_match_all('/href="\/wiki\/Ficheiro:([^"]*)"/', $text, $image);
 $image = $image["1"]["0"];
 
 //Monta status para envio ao Twitter
-$twitter_status = "Imagem do dia em ".$atual.". Veja mais em https://pt.wikipedia.org/wiki/WP:Imagem_em_destaque/".rawurlencode($atual)."\n\n\nhttps://pt.wikipedia.org/wiki/Image:".rawurlencode($image);
+$twitter_status = "Imagem do dia em ".$atual.". Veja mais em https://pt.wikipedia.org/wiki/WP:Imagem_em_destaque/".rawurlencode($atual)."\n\n\nhttps://pt.wikipedia.org/wiki/Image:".$image;
 print_r($twitter_status);
 
 //Envia Tweet
