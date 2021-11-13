@@ -53,7 +53,7 @@ if ($_GET["artigo_titulo"]) {
 	//Introdução da lista
 	echo 	"<p class='w3-center w3-wide'>EDITORES DO ARTIGO</p>
 			<h3 class='w3-center'><b>".trim($_GET["artigo_titulo"])."</b></h3>
-			<small>Ao clicar, uma nova janela será aberta para o envio da mensagem. Em seguida, clique em \"Publicar alterações\".</small>
+			<small>Ao clicar, uma nova janela será aberta para o envio da mensagem. Em seguida, clique em \"Publicar alterações\", ou use o atalho CTRL+SHIFT+ENTER.</small>
 			<br><br>
 			<ul class='w3-ul w3-hoverable w3-border'>";
 
