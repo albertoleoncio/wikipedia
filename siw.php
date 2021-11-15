@@ -112,5 +112,6 @@ if ($_GET["artigo_titulo"]) {
       	</div>
 		<hr>
 		<a href="https://wikitech.wikimedia.org/wiki/Portal:Toolforge"><img src="https://tools-static.wmflabs.org/toolforge/banners/Powered-by-Toolforge-button.png" alt="Powered by Wikimedia Toolforge"></a>
+		<a href="https://github.com/albertoleoncio/wikipedia"><img src="https://inclusaoemfoco.com.br/math2text/wp-content/uploads/2021/04/github.png" alt="Available on GitHub" style="height: 31px;margin-left: 5px;"></a>
 	</body>
 </html>
