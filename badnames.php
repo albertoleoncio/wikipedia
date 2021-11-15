@@ -15,7 +15,7 @@ foreach ($list as $item) {
 	$usertalk = $item["title"];
 
 	//Coleta informações do usuário
-	$info = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=blocks&bkusers=".urlencode(substr($usertalk, 23))), true)['query']['blocks'];
+	$info = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=blocks&bkusers=".urlencode(preg_replace('/.*?:/', '', $usertalk))), true)['query']['blocks'];
 
 	//Verifica se usuário está bloqueado
 	if (!isset($info[0])) {
@@ -65,7 +65,7 @@ foreach ($list2 as $item2) {
 	$usertalk = $item2["title"];
 
 	//Coleta informações do usuário
-	$info2 = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=blocks&bkusers=".urlencode(substr($usertalk, 23))), true)['query']['blocks'];
+	$info2 = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=blocks&bkusers=".urlencode(preg_replace('/.*?:/', '', $usertalk))), true)['query']['blocks'];
 
 	//Verifica se usuário está bloqueado
 	if (isset($info2[0])) {
@@ -97,7 +97,7 @@ foreach ($list2 as $item2) {
 	$html = getAPI($page);
 
 	//Insere pedido no código
-	$html = $html."\n{{subst:Nome de usuário impróprio/BloqBot|".substr($item2["title"], 23)."}}\n";
+	$html = $html."\n{{subst:Nome de usuário impróprio/BloqBot|".preg_replace('/.*?:/', '', $item2["title"])."}}\n";
 
 	//Gravar código
 	editAPI($html, NULL, FALSE, "bot: Inserindo pedido de usuário notificado há 5 dias", $page, $usernameBQ);
