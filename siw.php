@@ -9,7 +9,7 @@
 	<body>
 		<div class="w3-container" id="menu">
 			<div class="w3-content" style="max-width:800px">
-				<h5 class="w3-center w3-padding-48"><span class="w3-tag w3-wide"><a href="https://github.com/albertoleoncio/wikipedia/blob/master/siw.php">ESR-SIW</a></span></h5>
+				<h5 class="w3-center w3-padding-48"><span class="w3-tag w3-wide">ESR-SIW</span></h5>
 				<div class="w3-row-padding w3-center w3-margin-top">
 					<div class="w3-half">
 						<form action="/siw.php" method="get">
@@ -112,5 +112,6 @@ if ($_GET["artigo_titulo"]) {
       	</div>
 		<hr>
 		<a href="https://wikitech.wikimedia.org/wiki/Portal:Toolforge"><img src="https://tools-static.wmflabs.org/toolforge/banners/Powered-by-Toolforge-button.png" alt="Powered by Wikimedia Toolforge"></a>
+		<a href="https://github.com/albertoleoncio/wikipedia"><img src="https://inclusaoemfoco.com.br/math2text/wp-content/uploads/2021/04/github.png" alt="Available on GitHub" style="height: 31px;margin-left: 5px;"></a>
 	</body>
 </html>
