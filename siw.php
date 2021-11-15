@@ -107,10 +107,9 @@ if ($_GET["artigo_titulo"]) {
 	//Botão de abrir todas as páginas de usuários de uma só vez
 	$open = '';
 	foreach ($editores_artigo as $usuario) {
-	    	$open .=
-"window.open('https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($usuario['name'])."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d=', '_blank')";
+	    $open .= "window.open('https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($usuario['name'])."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d=', '_blank');";
 	}
-	echo"<button type=\"button\" onclick=\"{$open}\">Avisar todos</button>";
+	echo "<button type=\"button\" onclick=\"{$open}\">Avisar todos</button>";
 
 } else echo "Preencha o formulário ao lado";
 						?></div>
