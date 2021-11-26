@@ -5,7 +5,7 @@ include './bin/globals.php';
 date_default_timezone_set('UTC');
 
 //Define data atual
-$timestamp_now = strtotime('today');
+$timestamp_now = time();
 
 //Define $dados como uma array
 $dados = array();
@@ -25,13 +25,12 @@ foreach ($htmlA as $key => $section) {
 	if ($key == "0") continue;
 
 	//Coleta informações da seção
-	preg_match_all('/\n: *{{[Cc]oncordo}}/', 							$section, $section_concordo);
-	preg_match_all('/\n: *{{[Dd]iscordo}}/', 							$section, $section_discordo);
-	preg_match_all('/\| *timestamp *= *(\d*)/', 						$section, $section_timestamp);
-	preg_match_all('/\| *bot *= *(\w)/', 								$section, $section_bot);
-	preg_match_all('/\| *texto *= *([^\n]*)/',							$section, $section_texto);
-	preg_match_all('/\'\'\'\[\[([^\]\|\#]*)|\[\[([^\|]*)\|\'\'\'/',		$section_texto["1"]["0"], $section_article);
-	$section_article = $section_article[2][0].$section_article[1][0];
+	preg_match_all('/{{[Cc]oncordo}}/', 		$section, $section_concordo);
+	preg_match_all('/{{[Dd]iscordo}}/', 		$section, $section_discordo);
+	preg_match_all('/\| *timestamp *= *(\d*)/', $section, $section_timestamp);
+	preg_match_all('/\| *bot *= *(\w)/', 		$section, $section_bot);
+	preg_match_all('/\| *texto *= *([^\n]*)/',	$section, $section_texto);
+	preg_match_all('/\| *artigo *= *([^\n]*)/',	$section, $section_article);
 
 	//Pula seção caso marcador de bot esteja desativado
 	if ($section_bot["1"]["0"] != "s") continue;
@@ -41,31 +40,42 @@ foreach ($htmlA as $key => $section) {
 	$section_time_passed = $timestamp_now - $section_timestamp["1"]["0"];
 	$concordo = count($section_concordo["0"]);
 	$discordo = count($section_discordo["0"]);
+	$section_article = $section_article["1"]["0"];
 
 	//Loop para analisar situação da proposta
+	echo("\n".$section_article.": ");
 	if ($section_time_passed < 7200) { 			//Menos de 2 horas
+		echo(">2 ");
 		continue;
 	} elseif ($section_time_passed < 14400) { 	//2 horas
+		echo("2 ");
 		if ($discordo > 0) continue;
 		if ($concordo >= 5) $run = true;
 	} elseif ($section_time_passed < 21600) { 	//4 horas
+		echo("4 ");
 		if ($discordo > 0) continue;
 		if ($concordo >= 3) $run = true;
 	} elseif ($section_time_passed < 28800) { 	//6 horas
+		echo("6 ");
 		if ($discordo > 0) continue;
 		if ($concordo >= 1) $run = true;
 	} else { 									//8 horas
+		echo("8 ");
 		if ($discordo == 0){ 					//8 horas sem discordos
+			echo("+ ");
 			$run = true;
 		} elseif ($concordo == 0) { 			//8 horas com discordos e sem concordos
+			echo("? ");
 			continue;
 		} else {								//8 horas com discordos e concordos
+			echo("- ");
 			if ($concordo / ($concordo + $discordo) >= 0.75) $run = true; 
 		}
 	}
 
 	//Código para ser executado na atualização
 	if ($run) {
+	echo("RUN ");
 
 		///////////////
 		//
@@ -74,10 +84,10 @@ foreach ($htmlA as $key => $section) {
 		///////////////
 
 		//Altera marcador de bot
-		preg_replace('/\| *bot *= *(\w)/', '|bot = p', $section);
+		$section = preg_replace('/\| *bot *= *\w/', '|bot = p', $section);
 
 		//Salva edição
-		$diff = editAPI($section, $key, FALSE, "bot: (1/4) Marcando proposta como publicada", $pageA, $username);
+		editAPI($section, $key, FALSE, "bot: (1/4) Marcando proposta como publicada", $pageA, $username);
 
 
 		///////////////
@@ -106,7 +116,7 @@ foreach ($htmlA as $key => $section) {
 		$htmlB = implode("\n<!-- % -->\n", $htmlB_sections);
 
 		//Salva página
-		editAPI($htmlB, NULL, FALSE, "bot: (2/4) Publicando nova proposta", $pageB, $username);
+		$diff = editAPI($htmlB, NULL, FALSE, "bot: (2/4) Publicando nova proposta", $pageB, $username);
 
 
 		///////////////
@@ -151,5 +161,5 @@ foreach ($htmlA as $key => $section) {
 }
 
 
-echo("\nOK!");
+echo("\n\nExecutado!");
 ?>
