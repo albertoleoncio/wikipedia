@@ -34,6 +34,8 @@ db.php - Script gerador de pedidos de abertura de discussões de bloqueio.
 
 ead.php - Atualizador das redes sociais da Wikipédia em português com atualições da "Escolha do Artigo em Destaque".
 
+eatuais.php - Realiza procedimentos de atualização da seção "Eventos atuais".
+
 potd.php - Atualizador das redes sociais da Wikipédia em português com atualições da "Imagem do Dia".
 
 request.php - Fecha pedidos de proteção de páginas já cumpridos.
