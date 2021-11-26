@@ -34,23 +34,6 @@ $twitter_conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, $twitter_access_
 $post_tweets = $twitter_conn->post("statuses/update", ["status" => $twitter_status]);
 
 //Retorna resultado
-print_r($post_tweets)['created_at'];
-print_r($post_tweets)['id'];
-
-//Monta array para envio ao Facebook
-/*$fb['message'] = $atual." é um artigo de destaque na Wikipédia!\n\nIsso significa que ele foi identificado como um dos melhores artigos produzidos pela comunidade da Wikipédia.\n\nEste artigo figurará na Página principal da Wikipédia lusófona como Artigo destacado a partir de hoje.\n\nO que achou? Ainda tem como melhorar?\nhttps://pt.wikipedia.org/wiki/".rawurlencode($atual);
-$fb['access_token'] = $fb_token;
-$fb['link'] = "https://pt.wikipedia.org/wiki/".rawurlencode($atual);
-$fb['caption'] = "Artigo destacado";
-
-//Executa cURL do Facebook
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, 'https://graph.facebook.com/460984407268496/feed');
-curl_setopt($ch, CURLOPT_POST, 1);
-curl_setopt($ch, CURLOPT_POSTFIELDS, $fb);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-$return = curl_exec($ch);
-curl_close($ch);
-
-//Retorna resutado
-print_r($return);*/
+print_r($post_tweets->created_at);
+print_r($post_tweets->id);
+echo("\nOK!");

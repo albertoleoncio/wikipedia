@@ -51,3 +51,4 @@ unlink($path);
 //Retorna resultado
 print_r($result->created_at);
 print_r($result->id);
+echo("\nOK!");

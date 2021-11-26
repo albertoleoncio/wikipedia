@@ -13,7 +13,7 @@
 Comandos:
 
 loginAPI($userAPI, $passAPI);
-editAPI($text, $section, $minor, $summary, $page);
+editAPI($text, $section, $minor, $summary, $page, $user);
 getAPI($page);
 getsectionsAPI($page);
 
@@ -115,8 +115,10 @@ function editAPI( $text , $section , $minor , $summary , $page, $userAPI) {
 	curl_close( $ch );
 
 	echo ( "<pre style=\"background-color: antiquewhite;\">" );
-	print_r ( json_decode( $output, true )['edit'] );
+	$output = json_decode( $output, true )['edit'];
+	print_r ( $output );
 	echo ( "</pre>" );
+	if (isset($output["newrevid"])) return $output["newrevid"];
 }
 
 function getAPI( $page ) {

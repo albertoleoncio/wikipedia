@@ -300,27 +300,8 @@ define('CONSUMER_SECRET', $twitter_consumer_secret);
 $twitter_conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, $twitter_access_token, $twitter_access_token_secret);
 $post_tweets = $twitter_conn->post("statuses/update", ["status" => $twitter_status]);
 
-//Retorna resultado
-/*print_r($post_tweets['created_at']);
-print_r($post_tweets['id']);*/
-
-//Monta array para envio ao Facebook
-/*$fb['message'] = "Você sabia que...\n\n…".$dados[1]."\n\nLeia mais na Wikipédia: https://pt.wikipedia.org/wiki/".rawurlencode($dados[2]);
-$fb['access_token'] = $fb_token;
-$fb['link'] = "https://pt.wikipedia.org/wiki/".rawurlencode($dados[2]);
-$fb['caption'] = "Sabia que...";
-
-//Executa cURL
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, 'https://graph.facebook.com/460984407268496/feed');
-curl_setopt($ch, CURLOPT_POST, 1);
-curl_setopt($ch, CURLOPT_POSTFIELDS, $fb);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-$return = curl_exec($ch);
-curl_close($ch);
-
-//Retorna resutado
-print_r($return);*/
+//Salva na página
+editAPI($twitter_status, NULL, FALSE, "bot: (log) Registro de última proposição inserida", "User:SabiaQueBot/log", $usernameSQ);
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
