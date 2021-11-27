@@ -103,11 +103,14 @@ if ($_GET["artigo_titulo"]) {
 		echo "<li class=\"w3-padding-small w3-left-align\" style=\"cursor:pointer;\"><a style=\"text-decoration-line:none\" href=\"https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($usuario['name'])."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d=\" target=\"_blank\">".$usuario['name']."</a>";
 		if ($dias_inativo > 90) echo " <small>(inativo há ".$dias_inativo." dias)</small>";
 		echo "</li>";
+
+		//Guarda nome do usuário para criar código do botão de avisar todos
+		$editores_artigo_js[] = $usuario['name'];
 	}
 	//Botão de abrir todas as páginas de usuários de uma só vez
 	$open = '';
-	foreach ($editores_artigo as $usuario) {
-	    $open .= "window.open('https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($usuario['name'])."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d=', '_blank');";
+	foreach ($editores_artigo_js as $usuario_js) {
+	    $open .= "window.open('https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($usuario_js)."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d=', '_blank');";
 	}
 	echo "<button type=\"button\" onclick=\"alert('Lembre-se de habilitar os pop-ups!');{$open}\">Avisar todos</button>";
 
