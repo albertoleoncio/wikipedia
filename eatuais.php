@@ -28,6 +28,7 @@ foreach ($htmlA as $key => $section) {
 	preg_match_all('/{{[Cc]oncordo}}/', 		$section, $section_concordo);
 	preg_match_all('/{{[Dd]iscordo}}/', 		$section, $section_discordo);
 	preg_match_all('/\| *timestamp *= *(\d*)/', $section, $section_timestamp);
+	preg_match_all('/\| *imagem *= *([^\n]*)/', $section, $section_image);
 	preg_match_all('/\| *bot *= *(\w)/', 		$section, $section_bot);
 	preg_match_all('/\| *texto *= *([^\n]*)/',	$section, $section_texto);
 	preg_match_all('/\| *artigo *= *([^\n]*)/',	$section, $section_article);
@@ -36,46 +37,57 @@ foreach ($htmlA as $key => $section) {
 	if ($section_bot["1"]["0"] != "s") continue;
 
 	//Prepara variáveis para condicionais
-	$run = false;
+	$approved = false;
+	$declined = false;
 	$section_time_passed = $timestamp_now - $section_timestamp["1"]["0"];
 	$concordo = count($section_concordo["0"]);
 	$discordo = count($section_discordo["0"]);
 	$section_article = $section_article["1"]["0"];
 
-	//Loop para analisar situação da proposta
+	//Echos
 	echo("\n".$section_article.": ");
+	echo (bcdiv($section_time_passed, 60, 0)." minutos");
+	echo (" / ");
+	echo ($concordo." concordos");
+	echo (" / ");
+	echo ($discordo." discordos");
+	echo (" => ");
+
+	//Loop para analisar situação da proposta
 	if ($section_time_passed < 7200) { 			//Menos de 2 horas
-		echo(">2 ");
+		echo("<b><2</b>");
 		continue;
 	} elseif ($section_time_passed < 14400) { 	//2 horas
-		echo("2 ");
+		echo("<b>2</b>");
 		if ($discordo > 0) continue;
-		if ($concordo >= 5) $run = true;
+		if ($concordo >= 5) $approved = true;
 	} elseif ($section_time_passed < 21600) { 	//4 horas
-		echo("4 ");
+		echo("<b>4</b>");
 		if ($discordo > 0) continue;
-		if ($concordo >= 3) $run = true;
+		if ($concordo >= 3) $approved = true;
 	} elseif ($section_time_passed < 28800) { 	//6 horas
-		echo("6 ");
+		echo("<b>6</b>");
 		if ($discordo > 0) continue;
-		if ($concordo >= 1) $run = true;
+		if ($concordo >= 1) $approved = true;
 	} else { 									//8 horas
-		echo("8 ");
+		echo("<b>8 ");
 		if ($discordo == 0){ 					//8 horas sem discordos
-			echo("+ ");
-			$run = true;
-		} elseif ($concordo == 0) { 			//8 horas com discordos e sem concordos
-			echo("? ");
-			continue;
+			echo("?</b>");
+			$approved = true;
 		} else {								//8 horas com discordos e concordos
-			echo("- ");
-			if ($concordo / ($concordo + $discordo) >= 0.75) $run = true; 
+			if ($concordo / ($concordo + $discordo) >= 0.75) {
+				echo("OOX</b>");
+				$approved = true; 
+			} else {
+				echo("OXX</b>");
+				$declined = true;
+			}
 		}
 	}
 
-	//Código para ser executado na atualização
-	if ($run) {
-	echo("RUN ");
+	//Código para ser executado na atualização em caso de aprovação
+	if ($approved) {
+		echo("APPROVED ");
 
 		///////////////
 		//
@@ -114,6 +126,15 @@ foreach ($htmlA as $key => $section) {
 		//Remonta código
 		$htmlB_sections["1"] = implode("\n", $htmlB_events);
 		$htmlB = implode("\n<!-- % -->\n", $htmlB_sections);
+
+		//Insere imagem
+		$image = file_get_contents("https://commons.wikimedia.org/w/api.php?action=query&format=php&prop=info&titles=".rawurlencode("File:".trim($section_image["1"]["0"])));
+		$image = end(unserialize($image)["query"]["pages"]);
+		if (isset($image["lastrevid"])) $htmlB = preg_replace(
+			'/<imagemap>[^>]*?<\/imagemap>/', 
+			"<imagemap>\nFicheiro:".$section_image["1"]["0"]."|125x175px|borda|direita\ndefault [[".$section_article."]]\n</imagemap>", 
+			$htmlB
+		);
 
 		//Salva página
 		$diff = editAPI($htmlB, NULL, FALSE, "bot: (2/4) Publicando nova proposta", $pageB, $username);
@@ -157,7 +178,24 @@ foreach ($htmlA as $key => $section) {
 
 		//Grava página
 		editAPI($htmlD, 0, FALSE, "bot: (4/4) Inserindo EvRdiscussão", $pageD, $username);
+
+	} elseif ($declined) {
+		echo("DECLINED ");
+
+		///////////////
+		//
+		//	Wikipédia:Eventos atuais/Propostas
+		//
+		///////////////
+
+		//Altera marcador de bot
+		$section = preg_replace('/\| *bot *= *\w/', '|bot = r', $section);
+
+		//Salva edição
+		editAPI($section, $key, FALSE, "bot: Marcando proposta como recusada", $pageA, $username);
+	
 	}
+
 }
 
 
