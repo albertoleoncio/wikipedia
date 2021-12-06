@@ -12,7 +12,7 @@ $dados = array();
 
 //Login
 include './bin/api.php';
-loginAPI($username, $password);
+loginAPI($usernameEA, $passwordEA);
 
 //Define página de propostas
 $pageA = "Wikipédia:Eventos atuais/Propostas";
@@ -96,10 +96,10 @@ foreach ($htmlA as $key => $section) {
 		///////////////
 
 		//Altera marcador de bot
-		$section = preg_replace('/\| *bot *= *\w/', '|bot = p', $section);
+		$section = preg_replace('/\| *bot *= *\w/', '|bot = p |em = '.$timestamp_now, $section);
 
 		//Salva edição
-		editAPI($section, $key, FALSE, "bot: (1/4) Marcando proposta como publicada", $pageA, $username);
+		editAPI($section, $key, FALSE, "bot: (1/4) Marcando proposta como publicada", $pageA, $usernameEA);
 
 
 		///////////////
@@ -112,8 +112,9 @@ foreach ($htmlA as $key => $section) {
 		$pageB = "Predefinição:Eventos atuais";
 		$htmlB = getAPI($pageB);
 
-		//Explode código
+		//Explode código e remove marcador de imagem no texto
 		$htmlB_sections = explode("\n<!-- % -->\n", $htmlB);
+		$htmlB_sections["1"] = preg_replace('/\(\'\'[^\']*?\'\'\) |\'\'\([^\)]*\)\'\' /', '', $htmlB_sections["1"]);
 		$htmlB_events = explode("\n", $htmlB_sections["1"]);
 
 		//Insere novo evento aprovado
@@ -137,7 +138,7 @@ foreach ($htmlA as $key => $section) {
 		);
 
 		//Salva página
-		$diff = editAPI($htmlB, NULL, FALSE, "bot: (2/4) Publicando nova proposta", $pageB, $username);
+		$diff = editAPI($htmlB, NULL, FALSE, "bot: (2/4) Publicando nova proposta", $pageB, $usernameEA);
 
 
 		///////////////
@@ -154,7 +155,7 @@ foreach ($htmlA as $key => $section) {
 		$htmlC = preg_replace('/<\/span><\/div>/', "</span></div>\n".preg_replace('/<!--+ *|(?<=-)-+>/', '', $recente), $htmlC);
 
 		//Salva página
-		editAPI($htmlC, NULL, FALSE, "bot: (3/4) Inserido proposta recente", $pageC, $username);
+		editAPI($htmlC, NULL, FALSE, "bot: (3/4) Inserido proposta recente", $pageC, $usernameEA);
 
 
 		///////////////
@@ -177,7 +178,20 @@ foreach ($htmlA as $key => $section) {
 		$htmlD = $htmlD."\n{{EvRdiscussão|data1=".utf8_encode(strftime('%e de %B de %Y', $timestamp_now))."|oldid1=".$diff."}}";
 
 		//Grava página
-		editAPI($htmlD, 0, FALSE, "bot: (4/4) Inserindo EvRdiscussão", $pageD, $username);
+		editAPI($htmlD, 0, FALSE, "bot: (4/4) Inserindo EvRdiscussão", $pageD, $usernameEA);
+
+		///////////////
+		//
+		//	User:$username/log
+		//
+		///////////////
+
+		//Define página
+		$pageE = "User:EventosAtuaisBot/log";
+
+		//Grava página
+		editAPI($section_texto["1"]["0"], NULL, FALSE, "bot: (log) Registrando último evento aprovado", $pageE, $usernameEA);
+
 
 	} elseif ($declined) {
 		echo("DECLINED ");
@@ -192,7 +206,7 @@ foreach ($htmlA as $key => $section) {
 		$section = preg_replace('/\| *bot *= *\w/', '|bot = r', $section);
 
 		//Salva edição
-		editAPI($section, $key, FALSE, "bot: Marcando proposta como recusada", $pageA, $username);
+		editAPI($section, $key, FALSE, "bot: Marcando proposta como recusada", $pageA, $usernameEA);
 	
 	}
 

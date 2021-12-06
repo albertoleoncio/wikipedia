@@ -115,7 +115,8 @@ function editAPI( $text , $section , $minor , $summary , $page, $userAPI) {
 	curl_close( $ch );
 
 	echo ( "<pre style=\"background-color: antiquewhite;\">" );
-	$output = json_decode( $output, true )['edit'];
+	$output = json_decode( $output, true );
+	if (isset($output['edit'])) $output = $output['edit'];
 	print_r ( $output );
 	echo ( "</pre>" );
 	if (isset($output["newrevid"])) return $output["newrevid"];
