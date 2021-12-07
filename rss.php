@@ -17,7 +17,7 @@ foreach ($ead_api as $article) {
 	$ead[] = array(
 		"title" 		=> $article["slots"]["main"]["*"],
 		"description"	=> $article["slots"]["main"]["*"]." é um artigo de destaque na Wikipédia!\n\nIsso significa que ele foi identificado como um dos melhores artigos produzidos pela comunidade da Wikipédia.\n\nO que achou? Ainda tem como melhorar?",
-		"link" 			=> "https://pt.wikipedia.org/wiki/".rawurlencode($article["slots"]["main"]["*"]), 
+		"link" 			=> "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($article["slots"]["main"]["*"]), 
 		"timestamp" 	=> date('D, d M Y H:i:s O',strtotime($article["timestamp"])),
 		"guid"			=> $article["revid"]
 	);
@@ -39,9 +39,31 @@ foreach ($sq_api as $prop) {
 	$sq[] = array(
 		"title"			=> $title["0"]["0"],
 		"description" 	=> "Você sabia que...\n\n".$content["0"]["0"],
-		"link" 			=> $address["0"]["0"],
+		"link" 			=> str_replace('https://pt.wikipedia.org/wiki/', 'https://pt.wikipedia.org/w/index.php?title=', $address["0"]["0"]),
 		"timestamp"		=> date('D, d M Y H:i:s O',strtotime($prop["timestamp"])),
 		"guid"			=> $prop["revid"]
+	);
+}
+
+
+/////////
+//
+// EVENTOS ATUAIS
+//
+/////////
+
+$ea_api = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&prop=revisions&titles=Usu%C3%A1rio(a)%3AEventosAtuaisBot%2Flog&rvprop=timestamp%7Ccontent%7Cids&rvslots=main&rvlimit=1");
+$ea_api = unserialize($ea_api)["query"]["pages"]["6740244"]["revisions"];
+foreach ($ea_api as $event) {
+	$content = preg_replace('/ *<!--(.*?)--> */', '', $ea_api["0"]["slots"]["main"]["*"]);
+	preg_match_all('/\'\'\'\[\[([^\]\|\#]*)|\[\[([^\|]*)\|\'\'\'/', $content, $title);
+	$text = preg_replace('/\'|\[\[[^\|\]]*\||\]|\[\[/', '', $content);
+	$ea[] = array(
+		"title"			=> $title["1"]["0"],
+		"description" 	=> $text."\n\nEsse é um evento recente ou em curso que está sendo acompanhado por nossas voluntárias e voluntários. Veja mais detalhes no link.",
+		"link" 			=> "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($title["1"]["0"]),
+		"timestamp"		=> date('D, d M Y H:i:s O',strtotime($event["timestamp"])),
+		"guid"			=> $event["revid"]
 	);
 }
 
@@ -55,6 +77,16 @@ foreach ($sq_api as $prop) {
   <title>WikiPT</title>
   <link>https://pt.wikipedia.org/</link>
   <description>Wikipédia em português</description><?php
+
+  foreach ($ea as $ea_item) {
+	echo("\n  <item>");
+	echo("\n    <title>".$ea_item["title"]."</title>");
+	echo("\n    <link>".$ea_item["link"]."</link>");
+	echo("\n    <pubDate>".$ea_item["timestamp"]."</pubDate>");
+	echo("\n    <guid>https://pt.wikipedia.org/w/index.php?diff=".$ea_item["guid"]."</guid>");
+	echo("\n    <description>".$ea_item["description"]."</description>");
+	echo("\n  </item>");
+  }
 
   foreach ($ead as $ead_item) {
 	echo("\n  <item>");

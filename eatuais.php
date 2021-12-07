@@ -13,6 +13,8 @@ $dados = array();
 //Login
 include './bin/api.php';
 loginAPI($usernameEA, $passwordEA);
+require "tpar/twitteroauth/autoload.php";
+use Abraham\TwitterOAuth\TwitterOAuth;
 
 //Define página de propostas
 $pageA = "Wikipédia:Eventos atuais/Propostas";
@@ -192,7 +194,23 @@ foreach ($htmlA as $key => $section) {
 		//Grava página
 		editAPI($section_texto["1"]["0"], NULL, FALSE, "bot: (log) Registrando último evento aprovado", $pageE, $usernameEA);
 
+		///////////////
+		//
+		//	Twitter
+		//
+		///////////////
 
+		//Monta status para envio ao Twitter
+		$twitter_status = preg_replace('/ *<!--(.*?)--> */', '', $section_texto["1"]["0"]);
+		$twitter_status = preg_replace('/\'|\[\[[^\|\]]*\||\]|\[\[/', '', $twitter_status);
+		$twitter_status = $twitter_status."\n\nEsse é um evento recente ou em curso que está sendo acompanhado por nossas voluntárias e voluntários. Veja mais detalhes no link: https://pt.wikipedia.org/w/index.php?title=".rawurlencode($section_article);
+
+		//Envia Tweet
+		define('CONSUMER_KEY', $twitter_consumer_key);
+		define('CONSUMER_SECRET', $twitter_consumer_secret);
+		$twitter_conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, $twitter_access_token, $twitter_access_token_secret);
+		$post_tweets = $twitter_conn->post("statuses/update", ["status" => $twitter_status]);
+	
 	} elseif ($declined) {
 		echo("DECLINED ");
 
@@ -203,11 +221,10 @@ foreach ($htmlA as $key => $section) {
 		///////////////
 
 		//Altera marcador de bot
-		$section = preg_replace('/\| *bot *= *\w/', '|bot = r', $section);
+		$section = preg_replace('/\| *bot *= *\w/', '|bot = r |em = '.$timestamp_now, $section);
 
 		//Salva edição
 		editAPI($section, $key, FALSE, "bot: Marcando proposta como recusada", $pageA, $usernameEA);
-	
 	}
 
 }
