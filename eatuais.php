@@ -30,10 +30,10 @@ foreach ($htmlA as $key => $section) {
 	preg_match_all('/{{[Cc]oncordo}}/', 		$section, $section_concordo);
 	preg_match_all('/{{[Dd]iscordo}}/', 		$section, $section_discordo);
 	preg_match_all('/\| *timestamp *= *(\d*)/', $section, $section_timestamp);
-	preg_match_all('/\| *imagem *= *([^\n]*)/', $section, $section_image);
+	preg_match_all('/\| *imagem *= *([^\n<]*)/',$section, $section_image);
 	preg_match_all('/\| *bot *= *(\w)/', 		$section, $section_bot);
-	preg_match_all('/\| *texto *= *([^\n]*)/',	$section, $section_texto);
-	preg_match_all('/\| *artigo *= *([^\n]*)/',	$section, $section_article);
+	preg_match_all('/\| *texto *= *([^\n<]*)/',	$section, $section_texto);
+	preg_match_all('/\| *artigo *= *([^\n<]*)/',$section, $section_article);
 
 	//Pula seção caso marcador de bot esteja desativado
 	if ($section_bot["1"]["0"] != "s") continue;
