@@ -27,13 +27,14 @@ foreach ($htmlA as $key => $section) {
 	if ($key == "0") continue;
 
 	//Coleta informações da seção
-	preg_match_all('/{{[Cc]oncordo}}/', 		$section, $section_concordo);
-	preg_match_all('/{{[Dd]iscordo}}/', 		$section, $section_discordo);
-	preg_match_all('/\| *timestamp *= *(\d*)/', $section, $section_timestamp);
-	preg_match_all('/\| *imagem *= *([^\n<]*)/',$section, $section_image);
-	preg_match_all('/\| *bot *= *(\w)/', 		$section, $section_bot);
-	preg_match_all('/\| *texto *= *([^\n<]*)/',	$section, $section_texto);
-	preg_match_all('/\| *artigo *= *([^\n<]*)/',$section, $section_article);
+	$section_sanitized = preg_replace('/ *<!--(.*?)-->/', '', $section);
+	preg_match_all('/{{[Cc]oncordo}}/', 		$section_sanitized, $section_concordo);
+	preg_match_all('/{{[Dd]iscordo}}/', 		$section_sanitized, $section_discordo);
+	preg_match_all('/\| *timestamp *= *(\d*)/', $section_sanitized, $section_timestamp);
+	preg_match_all('/\| *imagem *= *([^\n<]*)/',$section_sanitized, $section_image);
+	preg_match_all('/\| *bot *= *(\w)/', 		$section_sanitized, $section_bot);
+	preg_match_all('/\| *texto *= *([^\n<]*)/',	$section_sanitized, $section_texto);
+	preg_match_all('/\| *artigo *= *([^\n<]*)/',$section_sanitized, $section_article);
 
 	//Pula seção caso marcador de bot esteja desativado
 	if ($section_bot["1"]["0"] != "s") continue;
