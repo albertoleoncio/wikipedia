@@ -39,7 +39,7 @@ foreach ($potd_api as $image) {
 <?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 <channel>
-  <atom:link href="https://alberobot.toolforge.org/rss.php" rel="self" type="application/rss+xml" />
+  <atom:link href="https://alberobot.toolforge.org/rsspotd.php" rel="self" type="application/rss+xml" />
   <title>WikiPT - POTD</title>
   <link>https://pt.wikipedia.org/</link>
   <description>Wikipédia em português</description><?php

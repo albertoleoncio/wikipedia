@@ -134,11 +134,19 @@ foreach ($htmlA as $key => $section) {
 		//Insere imagem
 		$image = file_get_contents("https://commons.wikimedia.org/w/api.php?action=query&format=php&prop=info&titles=".rawurlencode("File:".trim($section_image["1"]["0"])));
 		$image = end(unserialize($image)["query"]["pages"]);
-		if (isset($image["lastrevid"])) $htmlB = preg_replace(
-			'/<imagemap>[^>]*?<\/imagemap>/', 
-			"<imagemap>\nFicheiro:".$section_image["1"]["0"]."|125x175px|borda|direita\ndefault [[".$section_article."]]\n</imagemap>", 
-			$htmlB
-		);
+		if (isset($image["lastrevid"])) {
+			$htmlB = preg_replace(
+				'/<imagemap>[^>]*?<\/imagemap>/', 
+				"<imagemap>\nFicheiro:".$section_image["1"]["0"]."|125x175px|borda|direita\ndefault [[".$section_article."]]\n</imagemap>", 
+				$htmlB
+			);
+		} else {
+			$htmlB = preg_replace(
+				'/<imagemap>[^>]*?<\/imagemap>/', 
+				"<imagemap>\nFicheiro:Globe-with-clock-2.svg|125x175px|borda|direita\ndefault [[".$section_article."]]\n</imagemap>", 
+				$htmlB
+			);
+		}
 
 		//Salva página
 		$diff = editAPI($htmlB, NULL, FALSE, "bot: (2/4) Publicando nova proposta", $pageB, $usernameEA);
