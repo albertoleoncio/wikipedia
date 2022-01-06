@@ -43,7 +43,7 @@ foreach ($list as $item) {
 		$html = getAPI($page);
 
 		//Remove categorização
-		$html = preg_replace('/{{#ifeq:[^\|]*\|{{PAGENAME}}.*\]\]}}}}(?=\n)/', '', $html);
+		$html = preg_replace('/{{#ifeq:[^\|]*\|{{PAGENAME}}\|{{#ifexpr:.*\]\]}}}}/', '', $html);
 
 		//Gravar código
 		editAPI($html, NULL, TRUE, "bot: Removendo categoria de nome impróprio", $page, $usernameBQ);
@@ -75,7 +75,7 @@ foreach ($list2 as $item2) {
 		$html = getAPI($page);
 
 		//Remove categorização
-		$html = preg_replace('/{{#ifeq:[^\|]*\|{{PAGENAME}}.*\]\]}}}}(?=\n)/', '', $html);
+		$html = preg_replace('/{{#ifeq:[^\|]*\|{{PAGENAME}}\|{{#ifexpr:.*\]\]}}}}/', '', $html);
 
 		//Gravar código e passa para o próximo usuário
 		editAPI($html, NULL, TRUE, "bot: Removendo categoria de nome impróprio", $page, $usernameBQ);
