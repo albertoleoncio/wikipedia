@@ -5,7 +5,7 @@ include './bin/globals.php';
 include './bin/api.php';
 loginAPI($usernameBQ, $passwordBQ);
 	
-//Recupera código-fonte da página e dividide por seções
+//Recupera código-fonte da página e divide por seções
 $pagina = "Wikipédia:Pedidos/Notificações de vandalismo";
 $content = getAPI($pagina);
 $sections = getsectionsAPI($pagina);
@@ -88,7 +88,7 @@ editAPI($content, NULL, true, "bot: Fechando pedidos cumpridos", $pagina, $usern
 unset($sections);
 unset($pagina);
 
-//Recupera código-fonte da página e dividide por seções
+//Recupera código-fonte da página e divide por seções
 $pagina = 'Wikipédia:Pedidos/Revisão de nomes de usuário';
 $content = getAPI($pagina);
 $sections = getsectionsAPI($pagina);
