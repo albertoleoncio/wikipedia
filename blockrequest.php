@@ -5,19 +5,15 @@ include './bin/globals.php';
 include './bin/api.php';
 loginAPI($usernameBQ, $passwordBQ);
 	
-//Recupera código-fonte da página e divide por seções
+//Recupera código-fonte da página, dividida por seções
 $pagina = "Wikipédia:Pedidos/Notificações de vandalismo";
-$content = getAPI($pagina);
 $sections = getsectionsAPI($pagina);
 
 //Conta quantidade de seções
 $count = count($sections);
 
 //Loop para análise de cada seção
-for ($i=0; $i < $count; $i++) {
-	
-	//Backup do conteúdo original da seção
-	$original = $sections[$i];
+for ($i=0; $i < $count; $i++) { 
 
 	//Reseta varíavel de regex
 	unset($regex);
@@ -75,32 +71,24 @@ for ($i=0; $i < $count; $i++) {
 		":{{subst:Bloqueio feito|por=".$blockinfo['by']."|".$tempo."}}. [[User:BloqBot|BloqBot]] ~~~~~}}", 
 		$sections[$i]
 	);
-	
-	//Substitui a seção antiga pela nova no código-fonte da página
-	$content = str_replace($original, $sections[$i], $content);
-
 }
 
-//Grava a página
-editAPI($content, NULL, true, "bot: Fechando pedidos cumpridos", $pagina, $usernameBQ);
+//Grava página
+editAPI(implode("\n\n", $sections), NULL, true, "bot: Fechando pedidos cumpridos", $pagina, $usernameBQ);
 
 //Reseta varíaveis
 unset($sections);
 unset($pagina);
 
-//Recupera código-fonte da página e divide por seções
+//Recupera código-fonte da página, dividida por seções
 $pagina = 'Wikipédia:Pedidos/Revisão de nomes de usuário';
-$content = getAPI($pagina);
 $sections = getsectionsAPI($pagina);
 
 //Conta quantidade de seções
 $count = count($sections);
 
 //Loop para análise de cada seção
-for ($i=0; $i < $count; $i++) {
-	
-	//Backup do conteúdo original da seção
-	$original = $sections[$i];
+for ($i=0; $i < $count; $i++) { 
 
 	//Reseta varíavel de regex
 	unset($regex);
@@ -158,13 +146,9 @@ for ($i=0; $i < $count; $i++) {
 		":{{subst:Bloqueio feito|por=".$blockinfo['by']."|".$tempo."}}. [[User:BloqBot|BloqBot]] ~~~~~}}", 
 		$sections[$i]
 	);
-	
-	//Substitui a seção antiga pela nova no código-fonte da página
-	$content = str_replace($original, $sections[$i], $content);
-
 }
 
-//Grava a página
-editAPI($content, NULL, true, "bot: Fechando pedidos cumpridos", $pagina, $usernameBQ);
+//Grava página
+editAPI(implode("\n\n", $sections), NULL, true, "bot: Fechando pedidos cumpridos", $pagina, $usernameBQ);
 
 echo "OK!";
