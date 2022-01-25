@@ -63,7 +63,7 @@ for ($i=0; $i < $count; $i++) {
 	}
 
 	//Substitui seção inicial
-	$sections[$i] = preg_replace('/<!--\n?{{Respondido2[^>]*>/', '{{Respondido2|feito|texto=', $sections[$i]);
+	$sections[$i] = preg_replace('/<!--\n?{{Respondido2[^>]*>/', '{{subst:Respondido2|feito|texto=', $sections[$i]);
 
 	//Substitui seção final
 	$sections[$i] = preg_replace(
@@ -138,7 +138,7 @@ for ($i=0; $i < $count; $i++) {
 	}
 
 	//Substitui seção inicial
-	$sections[$i] = preg_replace('/<!--\n?{{Respondido2[^>]*>/', '{{Respondido2|feito|texto=', $sections[$i]);
+	$sections[$i] = preg_replace('/<!--\n?{{Respondido2[^>]*>/', '{{subst:Respondido2|feito|texto=', $sections[$i]);
 
 	//Substitui seção final
 	$sections[$i] = preg_replace(
