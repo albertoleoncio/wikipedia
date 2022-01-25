@@ -98,7 +98,7 @@ foreach ($list2 as $item2) {
 
 	//Insere pedido no código
 	$html = $html."\n{{subst:Nome de usuário impróprio/BloqBot|".preg_replace('/.*?:/', '', $item2["title"])."}}\n";
+}
 
-	//Gravar código
-	editAPI($html, NULL, FALSE, "bot: Inserindo pedido de usuário notificado há 5 dias", $page, $usernameBQ);
-} 
+//Gravar código
+editAPI($html, NULL, FALSE, "bot: Inserindo pedido(s) de usuário(s) notificado(s) há 5 dias", $page, $usernameBQ);
