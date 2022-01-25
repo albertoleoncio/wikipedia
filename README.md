@@ -16,11 +16,11 @@ covid-19-brasil-cons.php - Atualiza os dados dos casos por unidade federativa br
 
 covid-19-brasil.php - Atualiza os dados dos casos por unidade federativa brasileira. Utiliza os dados do Ministério da Saúde. Link: https://covid.saude.gov.br/.
 
-## Utilitários
+## Bots
 
-apurador.php - Contabilizador de votos.
+### BloqBot
 
-badnames.php - Fechador de pedidos de bloqueios por nome impróprio onde a conta já está bloqueada.
+blockbadnames.php - Fechador de pedidos de bloqueios por nome impróprio onde a conta já está bloqueada.
 
 blockcatch.php - Script monitorador de atividade de edições de IP, criado para caso o filtro deixe de funcionar.
 
@@ -28,28 +28,37 @@ blockrequest.php - Fechador de pedidos de bloqueios por vandalismo onde a conta 
 
 blockrollback.php - Notificador de incidentes onde reversores efetuaram bloqueios inadequados.
 
-caa.php - Atualizador de contagem de candidatos a artigo no painel dos administradores.
+blockprotect.php - Fecha pedidos de proteção de páginas já cumpridos.
 
-db.php - Script gerador de pedidos de abertura de discussões de bloqueio.
-
-ead.php - Atualizador das redes sociais da Wikipédia em português com atualições da "Escolha do Artigo em Destaque".
-
-eatuais.php - Realiza procedimentos de atualização da seção "Eventos atuais".
-
-potd.php - Atualizador das redes sociais da Wikipédia em português com atualições da "Imagem do Dia".
-
-request.php - Fecha pedidos de proteção de páginas já cumpridos.
+### SabiaQueBot
 
 sabiaque.php - Realiza procedimentos de atualização da seção "Sabia que".
 
-siw.php - Pequeno script para auxiliar o envio de mensagens para o https://pt.wikipedia.org/wiki/WP:ESR-SIW
+### EventosAtuaisBot
 
-urcold.php - Script para remover arquivos de conteúdo restrito das categorias de eliminação inseridas erroneamente.
+eatuais.php - Realiza procedimentos de atualização da seção "Eventos atuais".
+
+### AlbeROBOT
+
+caa.php - Atualizador de contagem de candidatos a artigo no painel dos administradores.
+
+urcold.php - Script para remover arquivos de conteúdo restrito das categorias de eliminação inseridas erroneamente. (desativado)
+
+## Utilitários
+
+apurador.php - Contabilizador de votos.
+
+db.php - Gerador de pedidos de abertura de discussões de bloqueio.
+
+ead.php - Atualizador das redes sociais da Wikipédia em português com atualições da "Escolha do Artigo em Destaque".
+
+potd.php - Atualizador das redes sociais da Wikipédia em português com atualições da "Imagem do Dia".
+
+siw.php - Script para auxiliar o envio de mensagens para o https://pt.wikipedia.org/wiki/WP:ESR-SIW
 
 voto.php - Verifica se usuário possui direito a voto de acordo com as regras vigentes da Wikipédia lusófona.
 
 wikiportugal - Gera código para atualizar https://pt.wikipedia.org/wiki/Usuário:Vanthorn/Wikipedistas_de_Portugal
-
 
 ## Little disclaimer
 
