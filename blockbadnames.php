@@ -60,7 +60,7 @@ $list2 = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?actio
 
 //Define página de pedidos e recupera codigo-fonte da página
 $page2 = "Wikipédia:Pedidos/Revisão de nomes de usuário";
-$html2 = getAPI($page);
+$html2 = getAPI($page2);
 
 //Loop para cada usuário da categoria
 foreach ($list2 as $item2) {
