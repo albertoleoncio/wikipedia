@@ -42,7 +42,7 @@ eatuais.php - Realiza procedimentos de atualização da seção "Eventos atuais"
 
 caa.php - Atualizador de contagem de candidatos a artigo no painel dos administradores.
 
-urcold.php - Script para remover arquivos de conteúdo restrito das categorias de eliminação inseridas erroneamente. (desativado)
+urcold.php - Script para remover arquivos de conteúdo restrito das categorias de eliminação inseridas erroneamente.
 
 ## Utilitários
 
