@@ -17,20 +17,27 @@ foreach ($potd_api as $image) {
 	preg_match_all('/(?<=<img alt=")[^"]*/', $text, $content);
 
 	//Extrai endereço da imagem
-	preg_match_all('/(?<=src="\/\/)upload\.wikimedia\.org\/wikipedia\/commons\/thumb[^"]*/', $text, $address);
+	preg_match_all('/(?<=<a href="\/wiki\/Ficheiro:)[^"]*/', $text, $address);
 
 	//Extrai dados da imagem
-	$headers = get_headers('https://'.$address["0"]["0"], true);
+	$headers = get_headers('https://pt.wikipedia.org/wiki/Especial:Redirecionar/file/'.$address["0"]["0"].'?width=1000', true);
+
+	//Busca metadados da imagem
+	$meta = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&prop=imageinfo&iiprop=extmetadata&titles=Ficheiro:".$address["0"]["0"]);
+	$meta = unserialize($meta)["query"]["pages"]["-1"]["imageinfo"]["0"]["extmetadata"];
+
+	//Monta resposta para envio ao Twitter
+	$twitter_reply = "Autor: ".strip_tags($meta["Artist"]["value"])." (Licença: ".strip_tags($meta["LicenseShortName"]["value"])." - ".strip_tags($meta["LicenseUrl"]["value"]).")";
 
 	$potd[] = array(
 		"title" 		=> $image["slots"]["main"]["*"],
-		"description" 	=> "Imagem do dia em ".$image["slots"]["main"]["*"].": ".$content["0"]["0"]."\nVeja mais informações, autor e licença de uso no link:",
+		"description" 	=> "Imagem do dia em ".$image["slots"]["main"]["*"].": ".$content["0"]["0"]."\nAutor: ".strip_tags($meta["Artist"]["value"])." (Licença: ".strip_tags($meta["LicenseShortName"]["value"])." - ".strip_tags($meta["LicenseUrl"]["value"]).")\nVeja mais informações no link:",
 		"link" 			=> "https://pt.wikipedia.org/wiki/WP:Imagem_em_destaque/".rawurlencode($image["slots"]["main"]["*"]),
 		"timestamp" 	=> date('D, d M Y H:i:s O',strtotime($image["timestamp"])),
 		"guid"			=> $image["revid"],
-		"image_url" 	=> 'https://'.$address["0"]["0"],
-		"image_lenght" 	=> $headers["Content-Length"],
-		"image_type" 	=> $headers["Content-Type"]
+		"image_url" 	=> $headers["location"],
+		"image_lenght" 	=> end($headers["content-length"]),
+		"image_type" 	=> end($headers["content-type"])
 	);
 }
 
