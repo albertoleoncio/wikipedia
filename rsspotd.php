@@ -36,8 +36,8 @@ foreach ($potd_api as $image) {
 		"timestamp" 	=> date('D, d M Y H:i:s O',strtotime($image["timestamp"])),
 		"guid"			=> $image["revid"],
 		"image_url" 	=> $headers["location"],
-		"image_lenght" 	=> end($headers["content-length"]),
-		"image_type" 	=> end($headers["content-type"])
+		"image_lenght" 	=> $headers["Content-Length"],
+		"image_type" 	=> $headers["Content-Type"]
 	);
 }
 

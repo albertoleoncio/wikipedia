@@ -2,6 +2,36 @@
 
 header('Content-type: application/xml');
 
+function busca_imagem ($article) {
+	//Busca imagem
+	$address = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&prop=pageimages&piprop=name&titles=".$article);
+	$address = end(unserialize($address)["query"]["pages"]);
+
+	//Retorna caso imagem exista imagem principal no artigo
+	if (!isset($address['pageimage'])) return null;
+
+	//Busca metadados da imagem
+	$meta = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&prop=imageinfo&iiprop=extmetadata&titles=Ficheiro:".$address['pageimage']);
+	$meta = unserialize($meta)["query"]["pages"];
+
+	//Retorna caso ID da imagem é diferente de -1, o que indica que se trata de URC
+	if (!isset($meta["-1"])) return null;
+
+	//Isola array de metadados da imagem
+	$meta = $meta["-1"]["imageinfo"]["0"]["extmetadata"];
+
+	//Extrai dados da imagem
+	$headers = get_headers('https://pt.wikipedia.org/wiki/Especial:Redirecionar/file/'.$address['pageimage'].'?width=1000', true);
+
+	//Monta resposta
+	return array(
+		"image_about" => "Para saber mais sobre o tema, basta acessar o link na bio e o artigo estará na nossa página principal!\n\n\n\nSobre a imagem:\nAutor: ".trim(strip_tags($meta["Artist"]["value"])).".\nLicença ".trim(strip_tags($meta["LicenseShortName"]["value"])).".\nPara mais informações sobre essa imagem, entre no endereço da bio e pesquise por Imagem:".$address['pageimage'],
+		"image_url" 	=> $headers["location"],
+		"image_lenght" 	=> $headers["Content-Length"],
+		"image_type" 	=> $headers["Content-Type"]
+	);
+}
+
 /////////
 //
 // EAD
@@ -17,6 +47,7 @@ foreach ($ead_api as $article) {
 	$ead[] = array(
 		"title" 		=> $article["slots"]["main"]["*"],
 		"description"	=> $article["slots"]["main"]["*"]." é um artigo de destaque na Wikipédia!\n\nIsso significa que foi identificado como um dos melhores artigos produzidos pela comunidade da Wikipédia.\n\nO que achou? Ainda tem como melhorar?",
+		"instagram" => busca_imagem(rawurlencode($article["slots"]["main"]["*"])),
 		"link" 			=> "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($article["slots"]["main"]["*"]), 
 		"timestamp" 	=> date('D, d M Y H:i:s O',strtotime($article["timestamp"])),
 		"guid"			=> $article["revid"]
@@ -39,6 +70,7 @@ foreach ($sq_api as $prop) {
 	$sq[] = array(
 		"title"			=> $title["0"]["0"],
 		"description" 	=> "Você sabia que...\n\n".$content["0"]["0"],
+		"instagram" => busca_imagem($title["0"]["0"]),
 		"link" 			=> str_replace('https://pt.wikipedia.org/wiki/', 'https://pt.wikipedia.org/w/index.php?title=', $address["0"]["0"]),
 		"timestamp"		=> date('D, d M Y H:i:s O',strtotime($prop["timestamp"])),
 		"guid"			=> $prop["revid"]
@@ -61,6 +93,7 @@ foreach ($ea_api as $event) {
 	$ea[] = array(
 		"title"			=> $title["1"]["0"],
 		"description" 	=> $text."\n\nEsse é um evento recente ou em curso que está sendo acompanhado por nossas voluntárias e voluntários. Veja mais detalhes no link.",
+		"instagram" => busca_imagem($title["1"]["0"]),
 		"link" 			=> "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($title["1"]["0"]),
 		"timestamp"		=> date('D, d M Y H:i:s O',strtotime($event["timestamp"])),
 		"guid"			=> $event["revid"]
@@ -85,6 +118,10 @@ foreach ($ea_api as $event) {
 	echo("\n    <pubDate>".$ea_item["timestamp"]."</pubDate>");
 	echo("\n    <guid>https://pt.wikipedia.org/w/index.php?diff=".$ea_item["guid"]."</guid>");
 	echo("\n    <description>".$ea_item["description"]."</description>");
+	if (!is_null($ea_item["instagram"])) {
+		echo("\n    <instagram>".$ea_item["instagram"]["image_about"]."</instagram>");
+		echo("\n    <enclosure url=\"".$ea_item["instagram"]["image_url"]."\" length=\"".$ea_item["instagram"]["image_lenght"]."\" type=\"".$ea_item["instagram"]["image_type"]."\" />");
+	}
 	echo("\n  </item>");
   }
 
@@ -95,6 +132,10 @@ foreach ($ea_api as $event) {
 	echo("\n    <pubDate>".$ead_item["timestamp"]."</pubDate>");
 	echo("\n    <guid>https://pt.wikipedia.org/w/index.php?diff=".$ead_item["guid"]."</guid>");
 	echo("\n    <description>".$ead_item["description"]."</description>");
+	if (!is_null($ead_item["instagram"])) {
+		echo("\n    <instagram>".$ead_item["instagram"]["image_about"]."</instagram>");
+		echo("\n    <enclosure url=\"".$ead_item["instagram"]["image_url"]."\" length=\"".$ead_item["instagram"]["image_lenght"]."\" type=\"".$ead_item["instagram"]["image_type"]."\" />");
+	}
 	echo("\n  </item>");
   }
 
@@ -105,6 +146,10 @@ foreach ($ea_api as $event) {
 	echo("\n    <pubDate>".$sq_item["timestamp"]."</pubDate>");
 	echo("\n    <guid>https://pt.wikipedia.org/w/index.php?diff=".$sq_item["guid"]."</guid>");
 	echo("\n    <description>".$sq_item["description"]."</description>");
+	if (!is_null($sq_item["instagram"])) {
+		echo("\n    <instagram>".$sq_item["instagram"]["image_about"]."</instagram>");
+		echo("\n    <enclosure url=\"".$sq_item["instagram"]["image_url"]."\" length=\"".$sq_item["instagram"]["image_lenght"]."\" type=\"".$sq_item["instagram"]["image_type"]."\" />");
+	}
 	echo("\n  </item>");
   }
   ?>
