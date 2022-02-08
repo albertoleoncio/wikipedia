@@ -23,7 +23,7 @@ foreach ($potd_api as $image) {
 	$headers = get_headers('https://pt.wikipedia.org/wiki/Especial:Redirecionar/file/'.$address["0"]["0"].'?width=1000', true);
 
 	//Busca metadados da imagem
-	$meta = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&prop=imageinfo&iiprop=extmetadata&titles=Ficheiro:".$address["0"]["0"]);
+	$meta = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&prop=imageinfo&iiprop=extmetadata&titles=Ficheiro:".rawurlencode($address["0"]["0"]));
 	$meta = unserialize($meta)["query"]["pages"]["-1"]["imageinfo"]["0"]["extmetadata"];
 
 	//Monta resposta para envio ao Twitter
@@ -35,9 +35,7 @@ foreach ($potd_api as $image) {
 		"link" 			=> "https://pt.wikipedia.org/wiki/WP:Imagem_em_destaque/".rawurlencode($image["slots"]["main"]["*"]),
 		"timestamp" 	=> date('D, d M Y H:i:s O',strtotime($image["timestamp"])),
 		"guid"			=> $image["revid"],
-		"image_url" 	=> $headers["location"],
-		"image_lenght" 	=> $headers["Content-Length"],
-		"image_type" 	=> $headers["Content-Type"]
+		"image_url" 	=> $headers["location"]
 	);
 }
 
@@ -58,7 +56,7 @@ foreach ($potd_api as $image) {
 	echo("\n    <pubDate>".$potd_item["timestamp"]."</pubDate>");
 	echo("\n    <guid>https://pt.wikipedia.org/w/index.php?diff=".$potd_item["guid"]."</guid>");
 	echo("\n    <description>".$potd_item["description"]."</description>");
-	echo("\n    <enclosure url=\"".$potd_item["image_url"]."\" length=\"".$potd_item["image_lenght"]."\" type=\"".$potd_item["image_type"]."\" />");
+	echo("\n    <enclosure url=\"".$potd_item["image_url"]."\" />");
 	echo("\n  </item>");
   }
 
