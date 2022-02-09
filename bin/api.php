@@ -91,7 +91,6 @@ function editAPI( $text , $section , $minor , $summary , $page, $userAPI) {
 
 	$params4 = [
 		"action" 		=> "edit",
-		"bot" 			=> true,
 		"title" 		=> $page,
 		"text"			=> $text,
 		"summary"		=> $summary,
@@ -100,7 +99,8 @@ function editAPI( $text , $section , $minor , $summary , $page, $userAPI) {
 	];
 
 	if (!is_null($section))	$params4["section"]	= $section;
-	if ($minor)				$params4["minor"]	= $minor;
+	if ($minor)				$params4["minor"]	= true;
+	if ($minor)				$params4["bot"]		= true;
 
 	$ch = curl_init();
 
