@@ -26,6 +26,8 @@ blockcatch.php - Script monitorador de atividade de edições de IP, criado para
 
 blockrequest.php - Fechador de pedidos de bloqueios por vandalismo onde a conta já está bloqueada.
 
+blockreverts.php - Anotador de usuários autorrevisores que tiveram suas edições revertidas.
+
 blockrollback.php - Notificador de incidentes onde reversores efetuaram bloqueios inadequados.
 
 blockprotect.php - Fecha pedidos de proteção de páginas já cumpridos.

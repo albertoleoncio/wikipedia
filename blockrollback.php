@@ -9,12 +9,12 @@ loginAPI($usernameBQ, $passwordBQ);
 $rollbackers_API = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&list=allusers&augroup=rollbacker&aulimit=500");
 $rollbackers_API = unserialize($rollbackers_API)["query"]["allusers"];
 
-//Inseri ID de reversores em uma array
+//Insere ID de reversores em uma array
 $rollbackers_IDs = array();
 foreach ($rollbackers_API as $user) $rollbackers_IDs[] = $user["userid"];
 
-//Levanta lista de bloqueios ocorridos nos últimos 2 dias
-$blocks_API = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&list=logevents&leprop=userid%7Cdetails%7Cids%7Ctitle%7Cuser%7Ctype%7Ctimestamp&letype=block&lelimit=500&letype=block&ledir=older&leend=".urlencode(gmdate('Y-m-d\TH:i:s\Z', strtotime("-2 days"))));
+//Levanta lista de bloqueios ocorridos nos últimos 30 minutos
+$blocks_API = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&list=logevents&leprop=userid%7Cdetails%7Cids%7Ctitle%7Cuser%7Ctype%7Ctimestamp&letype=block&lelimit=500&letype=block&ledir=older&leend=".urlencode(gmdate('Y-m-d\TH:i:s\Z', strtotime("-30 minutes"))));
 $blocks_API = unserialize($blocks_API)["query"]["logevents"];
 
 //Cria array para armazenar casos para notificação

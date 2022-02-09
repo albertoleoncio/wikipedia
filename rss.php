@@ -16,7 +16,7 @@ function busca_imagem ($article) {
 	if (!isset($address['pageimage'])) return null;
 
 	//Busca metadados da imagem
-	$meta = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&prop=imageinfo&iiprop=extmetadata&titles=Ficheiro:".rawurlencode($address['pageimage']);
+	$meta = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&prop=imageinfo&iiprop=extmetadata&titles=Ficheiro:".rawurlencode($address['pageimage']));
 	$meta = unserialize($meta)["query"]["pages"];
 
 	//Retorna caso ID da imagem é diferente de -1, o que indica que se trata de URC
