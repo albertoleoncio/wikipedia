@@ -26,12 +26,23 @@ function busca_imagem ($article) {
 	$meta = $meta["-1"]["imageinfo"]["0"]["extmetadata"];
 
 	//Extrai dados da imagem
-	$headers = get_headers('https://pt.wikipedia.org/wiki/Especial:Redirecionar/file/'.$address['pageimage'].'?width=1000', true);
+	$ch = curl_init('https://pt.wikipedia.org/wiki/Especial:Redirecionar/file/'.$address['pageimage'].'?width=1000');
+	curl_setopt($ch, CURLOPT_NOBODY, 1);
+	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+	curl_setopt($ch, CURLOPT_AUTOREFERER, 1);
+	curl_setopt($ch, CURLOPT_HEADER, false);
+	$response 	= curl_exec($ch);
+	$location 	= curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+	$size 			= curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+	$type 			= curl_getinfo($ch, CURLINFO_CONTENT_TYPE );
+	curl_close($ch);
 
 	//Monta resposta
 	return array(
-		"image_about" => "Para saber mais sobre o tema, basta acessar o link na bio e o artigo estará na nossa página principal!\n\n\n\nSobre a imagem:\nAutor: ".trim(strip_tags($meta["Artist"]["value"])).".\nLicença ".trim(strip_tags($meta["LicenseShortName"]["value"])).".\nPara mais informações sobre essa imagem, entre no endereço da bio e pesquise por Imagem:".$address['pageimage'],
-		"image_url" 	=> $headers["location"]
+		"image_about" 	=> "Para saber mais sobre o tema, basta acessar o link na bio e o artigo estará na nossa página principal!\n\n\n\nSobre a imagem:\nAutor: ".trim(strip_tags($meta["Artist"]["value"])).".\nLicença ".trim(strip_tags($meta["LicenseShortName"]["value"])).".\nPara mais informações sobre essa imagem, entre no endereço da bio e pesquise por Imagem:".$address['pageimage'],
+		"image_url" 		=> $location,
+		"image_lenght" 	=> $size,
+		"image_type" 		=> $type
 	);
 }
 
@@ -123,7 +134,7 @@ foreach ($ea_api as $event) {
 	echo("\n    <description>".$ea_item["description"]."</description>");
 	if (!is_null($ea_item["instagram"])) {
 		echo("\n    <instagram>".$ea_item["instagram"]["image_about"]."</instagram>");
-		echo("\n    <enclosure url=\"".$ea_item["instagram"]["image_url"]."\" />");
+		echo("\n    <enclosure url=\"".$ea_item["instagram"]["image_url"]."\" length=\"".$ea_item["instagram"]["image_lenght"]."\" type=\"".$ea_item["instagram"]["image_type"]."\" />");
 	}
 	echo("\n  </item>");
   }
@@ -137,7 +148,7 @@ foreach ($ea_api as $event) {
 	echo("\n    <description>".$ead_item["description"]."</description>");
 	if (!is_null($ead_item["instagram"])) {
 		echo("\n    <instagram>".$ead_item["instagram"]["image_about"]."</instagram>");
-		echo("\n    <enclosure url=\"".$ead_item["instagram"]["image_url"]."\" />");
+		echo("\n    <enclosure url=\"".$ead_item["instagram"]["image_url"]."\" length=\"".$ead_item["instagram"]["image_lenght"]."\" type=\"".$ead_item["instagram"]["image_type"]."\" />");
 	}
 	echo("\n  </item>");
   }
@@ -151,7 +162,7 @@ foreach ($ea_api as $event) {
 	echo("\n    <description>".$sq_item["description"]."</description>");
 	if (!is_null($sq_item["instagram"])) {
 		echo("\n    <instagram>".$sq_item["instagram"]["image_about"]."</instagram>");
-		echo("\n    <enclosure url=\"".$sq_item["instagram"]["image_url"]."\" />");
+		echo("\n    <enclosure url=\"".$sq_item["instagram"]["image_url"]."\" length=\"".$sq_item["instagram"]["image_lenght"]."\" type=\"".$sq_item["instagram"]["image_type"]."\" />");
 	}
 	echo("\n  </item>");
   }
