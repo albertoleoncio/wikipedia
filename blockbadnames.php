@@ -58,9 +58,8 @@ echo("<hr>");
 //Coleta categoria de usuários notificados
 $list2 = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=categorymembers&cmtitle=Categoria%3A!Usu%C3%A1rios%20com%20nomes%20impr%C3%B3prios%20pass%C3%ADveis%20de%20bloqueio&cmprop=title&cmsort=timestamp&cmlimit=500"), true)["query"]["categorymembers"];
 
-//Define página de pedidos e recupera codigo-fonte da página
-$page2 = "Wikipédia:Pedidos/Revisão de nomes de usuário";
-$html2 = getAPI($page2);
+//Define página de pedidos
+$page = "Wikipédia:Pedidos/Revisão de nomes de usuário";
 
 //Loop para cada usuário da categoria
 foreach ($list2 as $item2) {
@@ -96,9 +95,9 @@ foreach ($list2 as $item2) {
 		if (array_search("2077627", array_column($afluentes["linkshere"], 'pageid')) !== FALSE) continue;
 	}
 
-	//Insere pedido no código
-	$html2 = $html2."\n\n{{subst:Nome de usuário impróprio/BloqBot|".preg_replace('/.*?:/', '', $item2["title"])."}}";
-}
+	//Prepara código de pedido
+	$html = "{{subst:Nome de usuário impróprio/BloqBot|".preg_replace('/.*?:/', '', $item2["title"])."}}";
 
-//Gravar código
-editAPI($html2, NULL, FALSE, "bot: Inserindo pedido(s) de usuário(s) notificado(s) há 5 dias", $page2, $usernameBQ);
+	//Gravar código
+	editAPI($html, "new", FALSE, "bot: Inserindo pedido de usuário notificado há 5 dias", $page, $usernameBQ);
+} 

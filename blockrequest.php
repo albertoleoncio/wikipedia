@@ -71,10 +71,10 @@ for ($i=0; $i < $count; $i++) {
 		":{{subst:Bloqueio feito|por=".$blockinfo['by']."|".$tempo."}}. [[User:BloqBot|BloqBot]] ~~~~~}}", 
 		$sections[$i]
 	);
-}
 
-//Grava página
-editAPI(implode("\n\n", $sections), NULL, true, "bot: Fechando pedidos cumpridos", $pagina, $usernameBQ);
+	//Grava seção
+	editAPI($sections[$i], $i, true, "bot: Fechando pedido cumprido", $pagina, $usernameBQ);
+}
 
 //Reseta varíaveis
 unset($sections);
@@ -146,9 +146,9 @@ for ($i=0; $i < $count; $i++) {
 		":{{subst:Bloqueio feito|por=".$blockinfo['by']."|".$tempo."}}. [[User:BloqBot|BloqBot]] ~~~~~}}", 
 		$sections[$i]
 	);
-}
 
-//Grava página
-editAPI(implode("\n\n", $sections), NULL, true, "bot: Fechando pedidos cumpridos", $pagina, $usernameBQ);
+	//Grava seção
+	editAPI($sections[$i], $i, true, "bot: Fechando pedido cumprido", $pagina, $usernameBQ);
+}
 
 echo "OK!";
