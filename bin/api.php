@@ -98,7 +98,14 @@ function editAPI( $text , $section , $minor , $summary , $page, $userAPI) {
 		"format" 		=> "json"
 	];
 
-	if (!is_null($section))	$params4["section"]	= $section;
+	if (!is_null($section))	{
+		if ($section == "append") {
+			$params4["appendtext"] = $params4["text"];
+			unset($params4["text"]);
+		} else {
+			$params4["section"]	= $section;
+		}
+	}		
 	if ($minor)				$params4["minor"]	= true;
 	if ($minor)				$params4["bot"]		= true;
 

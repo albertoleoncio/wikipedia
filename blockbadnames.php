@@ -5,8 +5,29 @@ include './bin/globals.php';
 include './bin/api.php';
 loginAPI($usernameBQ, $passwordBQ);
 
+//Função api_get
+function api_get($params) {
+	global $usernameBQ;
+	$ch1 = curl_init( "https://pt.wikipedia.org/w/api.php?" . http_build_query( $params ) );
+	curl_setopt( $ch1, CURLOPT_RETURNTRANSFER, true );
+	curl_setopt( $ch1, CURLOPT_COOKIEJAR, $usernameBQ."_cookie.inc" );
+	curl_setopt( $ch1, CURLOPT_COOKIEFILE, $usernameBQ."_cookie.inc" );
+	$data = curl_exec( $ch1 );
+	curl_close( $ch1 );
+	return $data;
+}
+
 //Coleta categoria de usuários notificados
-$list = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=categorymembers&cmtitle=Category%3A!Usu%C3%A1rios%20com%20nomes%20impr%C3%B3prios%20notificados&cmprop=title%7Ctimestamp&cmsort=timestamp&cmlimit=500"), true)["query"]["categorymembers"];
+$params_cat = [
+	"action"  => "query",
+	"format"  => "php",
+	"list"    => "categorymembers",
+	"cmtitle" => "Categoria:!Usuários_com_nomes_impróprios_notificados",
+	"cmprop"  => "title|timestamp",
+	"cmsort"  => "timestamp",
+	"cmlimit" => "500"
+];
+$list = unserialize(api_get($params_cat))["query"]["categorymembers"];
 
 //Loop para cada usuário da categoria
 foreach ($list as $item) {
@@ -15,7 +36,13 @@ foreach ($list as $item) {
 	$usertalk = $item["title"];
 
 	//Coleta informações do usuário
-	$info = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=blocks&bkusers=".urlencode(preg_replace('/.*?:/', '', $usertalk))), true)['query']['blocks'];
+	$params_blocks = [
+		"action"  => "query",
+		"format"  => "php",
+		"list"    => "blocks",
+		"bkusers" => preg_replace('/.*?:/', '', $usertalk)
+	];
+	$info = unserialize(api_get($params_blocks))['query']['blocks'];
 
 	//Verifica se usuário está bloqueado
 	if (!isset($info[0])) {
@@ -23,12 +50,14 @@ foreach ($list as $item) {
 		//Verifica se prazo de 5 dias foi decorrido. Caso sim, interrompe loop e segue para o próximo usuário
 		if ((date("U", strtotime($item["timestamp"])) + 432000) > time()) continue;
 
-		//Define página de discussão do usuário e recupera codigo-fonte da página
-		$page = $usertalk;
-		$html = getAPI($page);
-
-		//Gravar código
-		editAPI($html, NULL, TRUE, "", $page, $usernameBQ);
+		//Purga página de discussão do usuário para recarregar categorias
+		$params_purge = [
+			"action"          => "purge",
+			"format"          => "php",
+			"forcelinkupdate" => "1",
+			"titles"          => $usertalk
+		];
+		api_get($params_purge);
 
 	} else {
 
@@ -56,7 +85,16 @@ foreach ($list as $item) {
 echo("<hr>");
 
 //Coleta categoria de usuários notificados
-$list2 = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=categorymembers&cmtitle=Categoria%3A!Usu%C3%A1rios%20com%20nomes%20impr%C3%B3prios%20pass%C3%ADveis%20de%20bloqueio&cmprop=title&cmsort=timestamp&cmlimit=500"), true)["query"]["categorymembers"];
+$params_cat2 = [
+	"action"  => "query",
+	"format"  => "php",
+	"list"    => "categorymembers",
+	"cmtitle" => "Categoria:!Usuários_com_nomes_impróprios_passíveis_de_bloqueio",
+	"cmprop"  => "title",
+	"cmsort"  => "timestamp",
+	"cmlimit" => "500"
+];
+$list2 = unserialize(api_get($params_cat2))["query"]["categorymembers"];
 
 //Define página de pedidos
 $page = "Wikipédia:Pedidos/Revisão de nomes de usuário";
@@ -68,7 +106,13 @@ foreach ($list2 as $item2) {
 	$usertalk = $item2["title"];
 
 	//Coleta informações do usuário
-	$info2 = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=blocks&bkusers=".urlencode(preg_replace('/.*?:/', '', $usertalk))), true)['query']['blocks'];
+	$params_blocks = [
+		"action"  => "query",
+		"format"  => "php",
+		"list"    => "blocks",
+		"bkusers" => preg_replace('/.*?:/', '', $usertalk)
+	];
+	$info2 = unserialize(api_get($params_blocks))['query']['blocks'];
 
 	//Verifica se usuário está bloqueado
 	if (isset($info2[0])) {
@@ -87,7 +131,13 @@ foreach ($list2 as $item2) {
 	}
 
 	//Coleta afluentes da página de usuário
-	$afluentes = end(json_decode(file_get_contents('https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=linkshere&titles='.urlencode($item2["title"])), true)["query"]["pages"]);
+	$params_blocks = [
+		"action"  => "query",
+		"format"  => "php",
+		"prop"    => "linkshere",
+		"titles"  => $item2["title"]
+	];
+	$afluentes = end(unserialize(api_get($params_blocks))["query"]["pages"]);
 
 	//Verifica se já há pedido de revisão ou renomeação para a conta
 	if (isset($afluentes["linkshere"])) {
@@ -96,8 +146,10 @@ foreach ($list2 as $item2) {
 	}
 
 	//Prepara código de pedido
-	$html = "{{subst:Nome de usuário impróprio/BloqBot|".preg_replace('/.*?:/', '', $item2["title"])."}}";
+	$html = "\n\n{{subst:Nome de usuário impróprio/BloqBot|".preg_replace('/.*?:/', '', $item2["title"])."}}";
 
 	//Gravar código
-	editAPI($html, "new", FALSE, "bot: Inserindo pedido de usuário notificado há 5 dias", $page, $usernameBQ);
+	editAPI($html, "append", FALSE, "bot: Inserindo pedido de usuário notificado há 5 dias", $page, $usernameBQ);
 } 
+
+echo("OK!");
