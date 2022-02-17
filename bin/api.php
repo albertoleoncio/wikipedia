@@ -99,7 +99,7 @@ function editAPI( $text , $section , $minor , $summary , $page, $userAPI) {
 	];
 
 	if (!is_null($section))	{
-		if ($section == "append") {
+		if ($section === "append") {
 			$params4["appendtext"] = $params4["text"];
 			unset($params4["text"]);
 		} else {
