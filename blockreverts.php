@@ -25,6 +25,7 @@ $rollbacks_API = file_get_contents("https://pt.wikipedia.org/w/api.php?action=qu
 $rollbacks_API = unserialize($rollbacks_API)["query"]["recentchanges"];
 
 //Processa cada registro de reversão
+$notify = array();
 foreach ($rollbacks_API as $rollback) {
 
 	//Recupera nome do alvo
@@ -75,4 +76,22 @@ foreach ($notify as $case) {
 
 	//Gravar código na lista de reversões já lançadas
 	editAPI($done_html."\n".$case["id"], NULL, FALSE, "bot: Lançando ID de reversão", $done_page, $usernameBQ);
+
+	//Envia conteúdo para grupo no Telegram
+	$telegram_context = array(
+		'http' => array(
+			'method' => 'POST',
+			'header' => "Content-Type:application/x-www-form-urlencoded\r\n",
+			'content' => http_build_query(
+				array(
+					'chat_id' => -1001169425230, 
+					'parse_mode' => 'MarkdownV2', 
+					'text' => "[\[Δ".$case["id"]."\]](https://pt.wikipedia.org/wiki/Special:diff/".$case["id"]."): [".$case["target"]."](https://pt.wikipedia.org/wiki/User:".$case["target"].") revertido por [".$case["user"]."](https://pt.wikipedia.org/wiki/User:".$case["user"].") em [".$case["title"]."](https://pt.wikipedia.org/wiki/".$case["title"].")\."
+				)
+			)
+		)
+	);
+	$telegram_stream = stream_context_create($telegram_context);
+	$telegram = file_get_contents('https://api.telegram.org/bot'.$TelegramToken.'/sendMessage', false, $telegram_stream);
+	print_r($telegram);
 }
