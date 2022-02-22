@@ -53,7 +53,7 @@ function busca_imagem ($article) {
 /////////
 
 //Gera lista recente via API
-$ead_api = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&prop=revisions&titles=Usu%C3%A1rio(a)%3AAlbeROBOT%2FEAD&rvprop=timestamp%7Ccontent%7Cids&rvslots=main&rvlimit=5");
+$ead_api = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&prop=revisions&titles=Usu%C3%A1rio(a)%3AAlbeROBOT%2FEAD&rvprop=timestamp%7Ccontent%7Cids&rvslots=main&rvlimit=1");
 $ead_api = unserialize($ead_api)["query"]["pages"]["6375156"]["revisions"];
 
 //Processa cada item
@@ -75,7 +75,7 @@ foreach ($ead_api as $article) {
 //
 /////////
 
-$sq_api = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&prop=revisions&titles=Usu%C3%A1rio(a)%3ASabiaQueBot%2Flog&rvprop=timestamp%7Ccontent%7Cids&rvslots=main&rvlimit=5");
+$sq_api = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&prop=revisions&titles=Usu%C3%A1rio(a)%3ASabiaQueBot%2Flog&rvprop=timestamp%7Ccontent%7Cids&rvslots=main&rvlimit=1");
 $sq_api = unserialize($sq_api)["query"]["pages"]["6731563"]["revisions"];
 foreach ($sq_api as $prop) {
 	preg_match_all('/…[^\n]*/', $prop["slots"]["main"]["*"], $content);
@@ -107,7 +107,7 @@ foreach ($ea_api as $event) {
 	$ea[] = array(
 		"title"			=> $title["1"]["0"],
 		"description" 	=> $text."\n\nEsse é um evento recente ou em curso que está sendo acompanhado por nossas voluntárias e voluntários. Veja mais detalhes no link.",
-		"instagram" => busca_imagem($title["1"]["0"]),
+		"instagram" => busca_imagem(rawurlencode($title["1"]["0"])),
 		"link" 			=> "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($title["1"]["0"]),
 		"timestamp"		=> date('D, d M Y H:i:s O',strtotime($event["timestamp"])),
 		"guid"			=> $event["revid"]
