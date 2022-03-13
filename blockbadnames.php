@@ -50,14 +50,8 @@ foreach ($list as $item) {
 		//Verifica se prazo de 5 dias foi decorrido. Caso sim, interrompe loop e segue para o próximo usuário
 		if ((date("U", strtotime($item["timestamp"])) + 432000) > time()) continue;
 
-		//Purga página de discussão do usuário para recarregar categorias
-		$params_purge = [
-			"action"          => "purge",
-			"format"          => "php",
-			"forcelinkupdate" => "1",
-			"titles"          => $usertalk
-		];
-		api_get($params_purge);
+		//Faz edição nula na página de discussão do usuário para recarregar categorias
+		editAPI("\n\n", "append", TRUE, "bot: Null edit", $usertalk, $usernameBQ);
 
 	} else {
 
