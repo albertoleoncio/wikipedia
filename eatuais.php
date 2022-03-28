@@ -163,7 +163,7 @@ foreach ($htmlA as $key => $section) {
 		$htmlC = getAPI($pageC);
 
 		//Insere novo evento recente
-		$htmlC = preg_replace('/<\/span><\/div>/', "</span></div>\n".preg_replace('/<!--+ *|(?<=-)-+>/', '', $recente), $htmlC);
+		$htmlC = preg_replace('/-->/', "-->\n".preg_replace('/<!--+ *|(?<=-)-+>/', '', $recente), $htmlC);
 
 		//Salva página
 		editAPI($htmlC, NULL, FALSE, "bot: (3/4) Inserido proposta recente", $pageC, $usernameEA);
