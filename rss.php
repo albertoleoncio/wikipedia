@@ -60,7 +60,7 @@ $ead_api = unserialize($ead_api)["query"]["pages"]["6375156"]["revisions"];
 foreach ($ead_api as $article) {
 	$ead[] = array(
 		"title" 		=> $article["slots"]["main"]["*"],
-		"description"	=> $article["slots"]["main"]["*"]." é um artigo de destaque na Wikipédia!\n\nIsso significa que foi identificado como um dos melhores artigos produzidos pela comunidade da Wikipédia.\n\nO que achou? Ainda tem como melhorar?",
+		"description"	=> $article["slots"]["main"]["*"]." é um artigo de destaque na Wikipédia!\n\nIsso significa que foi identificado como um dos melhores artigos produzidos pela comunidade da Wikipédia.\n\nO que achou? Ainda tem como melhorar?\n\n#wikipedia #ptwikipedia #ptwiki #conhecimentolivre #artigodedestaque",
 		"instagram" => busca_imagem(rawurlencode($article["slots"]["main"]["*"])),
 		"link" 			=> "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($article["slots"]["main"]["*"]), 
 		"timestamp" 	=> date('D, d M Y H:i:s O',strtotime($article["timestamp"])),
@@ -83,7 +83,7 @@ foreach ($sq_api as $prop) {
 	preg_match_all('/(?<=wiki\/).*/', $prop["slots"]["main"]["*"], $title);
 	$sq[] = array(
 		"title"			=> $title["0"]["0"],
-		"description" 	=> "Você sabia que...\n\n".$content["0"]["0"],
+		"description" 	=> "Você sabia que...\n\n".$content["0"]["0"]."\n\n#wikipedia #ptwikipedia #ptwiki #conhecimentolivre #wikicuriosidade #sabiaque",
 		"instagram" => busca_imagem($title["0"]["0"]),
 		"link" 			=> str_replace('https://pt.wikipedia.org/wiki/', 'https://pt.wikipedia.org/w/index.php?title=', $address["0"]["0"]),
 		"timestamp"		=> date('D, d M Y H:i:s O',strtotime($prop["timestamp"])),
@@ -106,7 +106,7 @@ foreach ($ea_api as $event) {
 	$text = preg_replace('/\'|\[\[[^\|\]]*\||\]|\[\[/', '', $content);
 	$ea[] = array(
 		"title"			=> $title["1"]["0"],
-		"description" 	=> $text."\n\nEsse é um evento recente ou em curso que está sendo acompanhado por nossas voluntárias e voluntários. Veja mais detalhes no link.",
+		"description" 	=> $text."\n\nEsse é um evento recente ou em curso que está sendo acompanhado por nossas voluntárias e voluntários. Veja mais detalhes no link.\n\n#wikipedia #ptwikipedia #ptwiki #conhecimentolivre #eventosatuais",
 		"instagram" => busca_imagem(rawurlencode($title["1"]["0"])),
 		"link" 			=> "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($title["1"]["0"]),
 		"timestamp"		=> date('D, d M Y H:i:s O',strtotime($event["timestamp"])),

@@ -40,7 +40,7 @@ foreach ($potd_api as $image) {
 
 	$potd[] = array(
 		"title" 		=> $image["slots"]["main"]["*"],
-		"description" 	=> "Imagem do dia em ".$image["slots"]["main"]["*"].": ".$content["0"]["0"]."\nAutor: ".strip_tags($meta["Artist"]["value"])." (Licença: ".strip_tags($meta["LicenseShortName"]["value"])." - ".strip_tags($meta["LicenseUrl"]["value"]).")\nVeja mais informações no link:",
+		"description" 	=> "Imagem do dia em ".$image["slots"]["main"]["*"].": ".$content["0"]["0"]."\nAutor: ".strip_tags($meta["Artist"]["value"])." (Licença: ".strip_tags($meta["LicenseShortName"]["value"])." - ".strip_tags($meta["LicenseUrl"]["value"]).")\nVeja mais informações no link.\n\n#wikipedia #ptwikipedia #ptwiki #conhecimentolivre #fotododia #imagemdodia #wikicommons",
 		"link" 			=> "https://pt.wikipedia.org/wiki/WP:Imagem_em_destaque/".rawurlencode($image["slots"]["main"]["*"]),
 		"timestamp" 	=> date('D, d M Y H:i:s O',strtotime($image["timestamp"])),
 		"guid"			=> $image["revid"],
