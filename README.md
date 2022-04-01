@@ -46,6 +46,8 @@ caa.php - Atualizador de contagem de candidatos a artigo no painel dos administr
 
 urcold.php - Script para remover arquivos de conteúdo restrito das categorias de eliminação inseridas erroneamente.
 
+fnc.php - Gera lista de fontes não confiáveis a partir da categoria da central de confiabilidade.
+
 ## Utilitários
 
 apurador.php - Contabilizador de votos.
