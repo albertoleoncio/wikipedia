@@ -205,7 +205,6 @@ function getsectionsAPI( $page ) {
 
 }
 
-
 function uploadAPI ( $text, $location, $summary, $page, $userAPI) {
 	global $endPoint;
 
@@ -287,4 +286,55 @@ function uploadAPI ( $text, $location, $summary, $page, $userAPI) {
 	$output = json_decode( $output, true );
 	print_r ( $output );
 	echo ( "</pre>" );
+}
+
+function deleteAPI( $page, $reason, $userAPI) {
+	global $endPoint;
+
+	$params3 = [
+		"action" 	=> "query",
+		"meta" 		=> "tokens",
+		"format" 	=> "json"
+	];
+
+	$url = $endPoint . "?" . http_build_query( $params3 );
+
+	$ch1 = curl_init( $url );
+
+	curl_setopt( $ch1, CURLOPT_RETURNTRANSFER, true );
+	curl_setopt( $ch1, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
+	curl_setopt( $ch1, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
+
+	$output1 = curl_exec( $ch1 );
+	curl_close( $ch1 );
+
+	$result1 = json_decode( $output1, true );
+	$csrftoken = $result1["query"]["tokens"]["csrftoken"];
+
+	$params4 = [
+		"action" 		=> "delete",
+		"title" 		=> $page,
+		"reason"		=> $reason,
+		"token" 		=> $csrftoken,
+		"format" 		=> "json"
+	];
+
+	$ch = curl_init();
+
+	curl_setopt( $ch, CURLOPT_URL, $endPoint );
+	curl_setopt( $ch, CURLOPT_POST, true );
+	curl_setopt( $ch, CURLOPT_POSTFIELDS, http_build_query( $params4 ) );
+	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+	curl_setopt( $ch, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
+	curl_setopt( $ch, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
+
+	$output = curl_exec( $ch );
+	curl_close( $ch );
+
+	echo ( "<pre style=\"background-color: antiquewhite;\">" );
+	$output = json_decode( $output, true );
+	if (isset($output['delete'])) $output = $output['delete'];
+	print_r ( $output );
+	echo ( "</pre>" );
+	if (isset($output["logid"])) return $output["logid"];
 }
