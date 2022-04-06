@@ -3,15 +3,15 @@ include './bin/globals.php';
 
 //Login
 include './bin/api.php';
-loginAPI($username, $password);
+loginAPI($usernameEN, $passwordEN);
 
 //Funções
 function api_get($params) {
-	global $username;
+	global $usernameEN;
 	$ch1 = curl_init( "https://pt.wikipedia.org/w/api.php?" . http_build_query( $params ) );
 	curl_setopt( $ch1, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch1, CURLOPT_COOKIEJAR, $username."_cookie.inc" );
-	curl_setopt( $ch1, CURLOPT_COOKIEFILE, $username."_cookie.inc" );
+	curl_setopt( $ch1, CURLOPT_COOKIEJAR, $usernameEN."_cookie.inc" );
+	curl_setopt( $ch1, CURLOPT_COOKIEFILE, $usernameEN."_cookie.inc" );
 	$data = curl_exec( $ch1 );
 	curl_close( $ch1 );
 	return $data;
@@ -103,30 +103,30 @@ foreach ($data as $iso => $variation) {
 	//Se não, elimina o aviso
 	foreach ($list_existentes[$iso] as $existente) {
 		if (!in_array($existente, $list_cats[$iso])) {
-			/*deleteAPI(
+			deleteAPI(
 				"MediaWiki:Editnotice-0-".$existente, 
 				"G1 - [[WP:ER#ERg1|Eliminação técnica]] (bot: Eliminando editnotice desnecessário)", 
-				$username
+				$usernameEN
 			);
-			sleep(10);*/
+			sleep(10);
 			echo("<br>Eliminar MediaWiki:Editnotice-0-".$existente);
 		}
 	}
-
+	
 	//Verifica se o item da categoria possui aviso correspondente
 	//Se não, cria o aviso
 	foreach ($list_cats[$iso] as $item_cat) {
 		if ($variation["afluir"] == "MediaWiki:Editnotice-0-".$item_cat) continue;
 		if (!in_array($item_cat, $list_existentes[$iso])) {
-			/*editAPI(
-				"{{:"$variation["afluir"]."}}", 
+			editAPI(
+				"{{:".$variation["afluir"]."}}", 
 				NULL, 
 				FALSE, 
 				"bot: Criando editnotice", 
 				"MediaWiki:Editnotice-0-".$item_cat, 
-				$username
+				$usernameEN
 			);
-			sleep(10);*/
+			sleep(10);
 			echo("<br>Criar MediaWiki:Editnotice-0-".$item_cat);
 		}
 	}
