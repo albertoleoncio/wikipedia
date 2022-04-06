@@ -84,23 +84,38 @@ foreach ($list_approved as $approved) {
 	preg_match_all('/\| *?timestamp *?= *?\K[^\|]*/', $section_last_wikitext, $timestamp);
 
 	//Insere dados na array
-	$valid = isset($nome["0"]["0"]) ? trim($nome["0"]["0"]) : false;
-	if(!empty($valid)) $general_list[trim($nome["0"]["0"])] = [
-		"area" => @trim($area["0"]["0"]),
-		"dominio1" => @trim($dominio1["0"]["0"]),
-		"dominio2" => @trim($dominio2["0"]["0"]),
-		"dominio3" => @trim($dominio3["0"]["0"]),
-		"dominio4" => @trim($dominio4["0"]["0"]),
-		"dominio5" => @trim($dominio5["0"]["0"]),
-		"timestamp" => @trim($timestamp["0"]["0"])
-	];
-}
+	$refname = isset($nome["0"]["0"]) ? trim($nome["0"]["0"]) : false;
+	if(!empty($refname)) { 
+		$general_list[$refname] = [
+			"area" => @trim($area["0"]["0"]),
+			"dominio1" => @trim($dominio1["0"]["0"]),
+			"dominio2" => @trim($dominio2["0"]["0"]),
+			"dominio3" => @trim($dominio3["0"]["0"]),
+			"dominio4" => @trim($dominio4["0"]["0"]),
+			"dominio5" => @trim($dominio5["0"]["0"]),
+			"timestamp" => @trim($timestamp["0"]["0"])
+		];
 
+		for ($i=1; $i < 6; $i++) { 
+			if(!empty($general_list[$refname]["dominio".$i])) {
+				$blacklist_params = [
+					"action" 	=> "spamblacklist",
+					"format" 	=> "php",
+					"url" 		=> "http://".$general_list[$refname]["dominio".$i]
+				];
+				if (unserialize(api_get($blacklist_params))["spamblacklist"]["result"] == "blacklisted") {
+					$general_list[$refname]["dominio".$i] = "</nowiki>'''<nowiki>".$general_list[$refname]["dominio".$i]."</nowiki>'''<nowiki>";
+				}
+			}
+		}
+	}
+}
+	
 //Monta lista de fontes
 $wikicode = '{| class="wikitable sortable" style="font-size: 87%;"
 |+ Lista de fontes não confiáveis
 |-
-! Nome !! Área !! Dia de inclusão !! Domínio(s) associado(s)';
+! Nome !! Área !! Dia de inclusão !! Domínio(s) associado(s) (em negrito: listado na [[WP:SBLD|SBL]])';
 foreach ($general_list as $key => $value) {
 	$wikicode .= "\n|-\n| [[WP:Fontes confiáveis/Central de confiabilidade/".$key."|".$key."]] || ".$value["area"]." || ".date("d/m/Y", ((int)$value["timestamp"]))." || <nowiki>".$value["dominio1"];
 	if ($value["dominio2"] != FALSE) $wikicode .= ", ".$value["dominio2"];
@@ -110,6 +125,8 @@ foreach ($general_list as $key => $value) {
 	$wikicode .= "</nowiki>";
 }
 $wikicode .= "\n|}";
+$wikicode = str_replace('<nowiki></nowiki>','',$wikicode);
+$wikicode = str_replace('<nowiki>, </nowiki>',', ',$wikicode);
 
 //Salva página
 editAPI($wikicode, NULL, FALSE, "bot: Atualizando lista", "Wikipédia:Fontes não confiáveis/Lista", $username);
