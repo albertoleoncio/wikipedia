@@ -43,6 +43,9 @@ $data = [
 
 foreach ($data as $iso => $variation) {
 
+	//Mensagem inicial
+	echo($variation["afluir"]." em processamento... ");
+
 	//Categoria de artigos escritos da variante
 	$escrito_params = [
 		"action" 		=> "query",
@@ -112,7 +115,7 @@ foreach ($data as $iso => $variation) {
 			echo("<br>Eliminar MediaWiki:Editnotice-0-".$existente);
 		}
 	}
-	
+
 	//Verifica se o item da categoria possui aviso correspondente
 	//Se não, cria o aviso
 	foreach ($list_cats[$iso] as $item_cat) {
@@ -121,7 +124,7 @@ foreach ($data as $iso => $variation) {
 			editAPI(
 				"{{:".$variation["afluir"]."}}", 
 				NULL, 
-				FALSE, 
+				TRUE, 
 				"bot: Criando editnotice", 
 				"MediaWiki:Editnotice-0-".$item_cat, 
 				$usernameEN
@@ -130,4 +133,7 @@ foreach ($data as $iso => $variation) {
 			echo("<br>Criar MediaWiki:Editnotice-0-".$item_cat);
 		}
 	}
+
+	//Mensagem final
+	echo("OK!<br>");
 }
