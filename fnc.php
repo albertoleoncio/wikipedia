@@ -58,21 +58,50 @@ foreach ($list_approved as $approved) {
 		"prop" 		=> "sections"
 	];
 	$approved_sections = unserialize(api_get($approved_sections_params))["parse"]["sections"];
-	$section_last = "0";
-	foreach ($approved_sections as $section) {
-		if ($section["level"] == "2") $section_last = $section["index"];
+
+	//Cria array com parâmetros "level" de cada seção
+	$filter = array_column($approved_sections, "level");
+
+	//Coleta as keys de cada level e insere como valores em uma array
+	$filter = array_keys($filter, "2");
+
+	//Inverte array, para que os valores se tornem keys
+	$filter = array_flip($filter);
+
+	//Finaliza filtragem, criando array com as keys correspondentes
+	$filter = array_intersect_key($approved_sections, $filter);
+
+	//Inverte ordem das seções para começar análise a partir da última seção, mantendo as keys
+	$filter = array_reverse($filter, true);
+
+	//Loop para recuperar o código-fonte de cada seção, a partir da última
+	foreach ($filter as $section_last) {
+		$section_last_wikitext_params = [
+			"action" 	=> "parse",
+			"format" 	=> "php",
+			"page" 		=> $approved,
+			"prop" 		=> "wikitext",
+			"section" 	=> $section_last["index"]
+		];
+		$section_last_wikitext = unserialize(api_get($section_last_wikitext_params))["parse"]["wikitext"]["*"];
+
+		//Procura pelo parâmetro "estado"
+		preg_match_all('/\| *?estado *?= *?\K[^\|]*/', $section_last_wikitext, $estado);
+
+		//Verifica se o parâmetro existe
+		//Caso sim, verifica se o valor é "inconclusivo" e, caso sim, pula loop atual e procede para a próxima seção
+		//Caso não, interrompe loop e segue para a análise da seção
+		if (isset($estado["0"]["0"])) {
+			if (trim($estado["0"]["0"]) == "inconclusivo") {
+				continue;
+			} else {
+				break;
+			}
+		} else {
+			break;
+		}
 	}
-
-	//Recupera código-fonte da última seção
-	$section_last_wikitext_params = [
-		"action" 	=> "parse",
-		"format" 	=> "php",
-		"page" 		=> $approved,
-		"prop" 		=> "wikitext",
-		"section" 	=> $section_last
-	];
-	$section_last_wikitext = unserialize(api_get($section_last_wikitext_params))["parse"]["wikitext"]["*"];
-
+	
 	//Captura parâmetros via regex
 	preg_match_all('/\| *?nome *?= *?\K[^\|]*/', $section_last_wikitext, $nome);
 	preg_match_all('/\| *?área *?= *?\K[^\|]*/', $section_last_wikitext, $area);
