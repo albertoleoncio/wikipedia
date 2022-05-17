@@ -110,6 +110,9 @@ foreach ($list_approved as $approved) {
 		}
 	}
 }
+
+//Ordenar lista
+uksort($general_list, array(Collator::create( 'pt_BR' ), 'compare'));
 	
 //Monta lista de fontes
 $wikicode = '{| class="wikitable sortable" style="font-size: 87%;"
@@ -117,7 +120,7 @@ $wikicode = '{| class="wikitable sortable" style="font-size: 87%;"
 |-
 ! Nome !! Área !! Dia de inclusão !! Domínio(s) associado(s) (em negrito: listado na [[WP:SBLD|SBL]])';
 foreach ($general_list as $key => $value) {
-	$wikicode .= "\n|-\n| [[WP:Fontes confiáveis/Central de confiabilidade/".$key."|".$key."]] || ".$value["area"]." || ".date("d/m/Y", ((int)$value["timestamp"]))." || <nowiki>".$value["dominio1"];
+	$wikicode .= "\n|-\n| <span id='{{anchorencode:".$key."}}'>[[WP:Fontes confiáveis/Central de confiabilidade/".$key."|".$key."]]</span> || ".$value["area"]." || ".date("d/m/Y", ((int)$value["timestamp"]))." || <nowiki>".$value["dominio1"];
 	if ($value["dominio2"] != FALSE) $wikicode .= ", ".$value["dominio2"];
 	if ($value["dominio3"] != FALSE) $wikicode .= ", ".$value["dominio3"];
 	if ($value["dominio4"] != FALSE) $wikicode .= ", ".$value["dominio4"];
