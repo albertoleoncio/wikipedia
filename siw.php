@@ -112,7 +112,7 @@ if ($_GET["artigo_titulo"]) {
 	foreach ($editores_artigo_js as $usuario_js) {
 	    $open .= "window.open('https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($usuario_js)."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d=', '_blank');";
 	}
-	echo "<button type=\"button\" onclick=\"alert('Lembre-se de habilitar os pop-ups!');{$open}\">Avisar todos</button>";
+	if (count($editores_artigo_js) != 0) echo "<button type=\"button\" onclick=\"alert('Lembre-se de habilitar os pop-ups!');{$open}\">Avisar todos</button>";
 
 } else echo "Preencha o formulário ao lado";
 						?></div>
