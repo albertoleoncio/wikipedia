@@ -47,6 +47,16 @@
 		      			<div class="w3-container w3-padding-48 w3-card">
 		      					
 <?php
+
+//Função para usar API do MediaWiki
+function api_get($params) {
+	$ch1 = curl_init( "https://pt.wikipedia.org/w/api.php?" . http_build_query( $params ) );
+	curl_setopt( $ch1, CURLOPT_RETURNTRANSFER, true );
+	$data = curl_exec( $ch1 );
+	curl_close( $ch1 );
+	return $data;
+}
+
 //Verifica se alguma página foi informada
 if ($_GET["artigo_titulo"]) {
 
@@ -58,73 +68,108 @@ if ($_GET["artigo_titulo"]) {
 			<ul class='w3-ul w3-hoverable w3-border'>";
 
 	//Coleta nome dos usuários que editaram o artigo, excluindo os bots
-	$editores_artigo = pos(json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=contributors&titles=".urlencode(trim($_GET["artigo_titulo"]))."&pcexcluderights=bot&pclimit=max"), true)['query']['pages']);
+	$contributors_params = [
+		"action"          => "query",
+		"format"          => "php",
+		"prop"            => "contributors",
+		"titles"          => trim($_GET["artigo_titulo"]),
+		"pcexcluderights" => "bot",
+		"pclimit"         => "max"
+	];
+	$contributors = pos(unserialize(api_get($contributors_params))['query']['pages']);
 
 	//Verifica se artigo não existe
-	if (isset($editores_artigo['missing'])) {
+	if (isset($contributors['missing'])) {
 		echo "Artigo não existe!";
 	} else {
 
 		//Coloca nomes dos usuários na array
-		$editores_artigo = $editores_artigo['contributors'];
+		$contributors = $contributors['contributors'];
 
 		//Coleta revisões do artigo, para detectar revisões menores
 		if (isset($_GET["menor"])) {
 			$no_minor = array();
-			$revisoes = pos(json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=revisions&titles=".urlencode(trim($_GET["artigo_titulo"]))."&rvprop=user%7Cflags&rvlimit=max"), true)['query']['pages'])['revisions'];
-			foreach ($revisoes as $revisao) {
-				if (isset($revisao['anon']) OR isset($revisao['minor'])) continue;
-				$no_minor[$revisao['user']] = true;
+            $revisions_params = [
+                "action"    => "query",
+                "format"    => "php",
+                "prop"      => "revisions",
+                "titles"    => trim($_GET["artigo_titulo"]),
+                "rvprop"    => "user|flags",
+                "rvlimit"   => "max"
+            ];
+			$revisions = pos(unserialize(api_get($revisions_params))['query']['pages'])['revisions'];
+			foreach ($revisions as $rev) {
+				if (isset($rev['anon']) OR isset($rev['minor'])) continue;
+				$no_minor[$rev['user']] = true;
 			}
 		}
 
 		//Coleta lista de usuários descadastrados
-		$desc = explode("\n#", file_get_contents("https://pt.wikipedia.org/w/index.php?title=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Descadastro&action=raw&section=1"));
-		unset($desc[0]);
+        $optout_params = [
+            "action"    => "query",
+            "format"    => "php",
+            "prop"      => "revisions",
+            "titles"    => "Predefinição:Aviso-ESR-SIW/Descadastro",
+            "rvprop"    => "content",
+            "rvslots"   => "main",
+            "rvsection" => "1"
+        ];
+		$optout = explode("\n#", unserialize(api_get($optout_params))["query"]["pages"]["6352119"]["revisions"]["0"]["slots"]["main"]["*"]);
+		unset($optout[0]);
 
 		//Loop de verificação dos usuários
-		foreach ($editores_artigo as $usuario) {
+		foreach ($contributors as $user) {
 
 			//Coleta informações do usuário
-			$usercontribs = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=users%7Cusercontribs&usprop=blockinfo&uclimit=1&ususers=".urlencode($usuario['name'])."&ucuser=".urlencode($usuario['name'])), true)['query'];
+            $usercontribs_params = [
+                "action"    => "query",
+                "format"    => "php",
+                "list"      => "users|usercontribs",
+                "pageids"   => "6352119",
+                "usprop"    => "blockinfo",
+                "ususers"   => $user['name'],
+                "ucuser"    => $user['name'],
+                "uclimit"   => "1"
+            ];
+			$usercontribs = unserialize(api_get($usercontribs_params))['query'];
 			
 			//Verifica se usuário está bloqueado e encerra loop em caso positivo
-			if (isset($usercontribs['users'][0]['blockid']) AND !isset($usercontribs['users'][0]['blockpartial'])) continue;
+			if (isset($usercontribs['users']["0"]['blockid']) AND !isset($usercontribs['users']["0"]['blockpartial'])) continue;
 
 			//Verifica se há edições não-menores do usuário no artigo e se a opção foi selecionada, encerrando loop em caso positivo
-			if (isset($_GET["menor"]) AND !isset($no_minor[$usuario['name']])) continue;
+			if (isset($_GET["menor"]) AND !isset($no_minor[$user['name']])) continue;
 
 			//Verifica se usuário está na lista de descadastro, encerrando loop em caso positivo
-			if (in_array($usuario['name'], $desc)) continue;
+			if (in_array($user['name'], $optout)) continue;
 
 			//Verifica se usuário está inativo e contabiliza os dias após a ultima edição. 
 			//Se a opção de exclusão dos inativos for selecionada, encerra loop de acordo com a opção
-			if ((date("U", strtotime($usercontribs['usercontribs'][0]['timestamp'])) + 7776000) < time()) {
-				$dias_inativo = round((time() - date("U", strtotime($usercontribs['usercontribs'][0]['timestamp']))) / 86400);
-				if ($_GET["inativo"] == 5 AND $dias_inativo >= 1825) continue;
-				if ($_GET["inativo"] == 4 AND $dias_inativo >= 365) continue;
-				if ($_GET["inativo"] == 3 AND $dias_inativo >= 180) continue;
-				if ($_GET["inativo"] == 2 AND $dias_inativo >= 90) continue;
-			} else $dias_inativo = false;
+			if ((date("U", strtotime($usercontribs['usercontribs']["0"]['timestamp'])) + 7776000) < time()) {
+				$days_inactive = round((time() - date("U", strtotime($usercontribs['usercontribs']["0"]['timestamp']))) / 86400);
+				if ($_GET["inativo"] == 5 AND $days_inactive >= 1825) continue;
+				if ($_GET["inativo"] == 4 AND $days_inactive >= 365) continue;
+				if ($_GET["inativo"] == 3 AND $days_inactive >= 180) continue;
+				if ($_GET["inativo"] == 2 AND $days_inactive >= 90) continue;
+			} else $days_inactive = false;
 			
 			//Retorna links individuais para envio de aviso
-			echo "<li class=\"w3-padding-small w3-left-align\" style=\"cursor:pointer;\"><a style=\"text-decoration-line:none\" href=\"https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($usuario['name'])."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d=\" target=\"_blank\">".$usuario['name']."</a>";
-			if ($dias_inativo > 90) echo " <small>(inativo há ".$dias_inativo." dias)</small>";
+			echo "<li class=\"w3-padding-small w3-left-align\" style=\"cursor:pointer;\"><a style=\"text-decoration-line:none\" href=\"https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($user['name'])."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d=\" target=\"_blank\">".$user['name']."</a>";
+			if ($days_inactive > 90) echo " <small>(inativo há ".$days_inactive." dias)</small>";
 			echo "</li>";
 
 			//Guarda nome do usuário para criar código do botão de avisar todos
-			$editores_artigo_js[] = $usuario['name'];
+			$contributors_js[] = $user['name'];
 		}
 
 		//Botão de abrir todas as páginas de usuários de uma só vez
-		if (count($editores_artigo_js) != 0) {
+		if (count($contributors_js) != 0) {
 			$open = '';
-			foreach ($editores_artigo_js as $usuario_js) {
-		    	$open .= "window.open('https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($usuario_js)."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d=', '_blank');";
+			foreach ($contributors_js as $user_js) {
+		    	$open .= "window.open('https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($user_js)."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d=', '_blank');";
 			}
 			echo "<button type=\"button\" onclick=\"alert('Lembre-se de habilitar os pop-ups!');{$open}\">Avisar todos</button>";
 		} else {
-			echo "Encontrados ".count($editores_artigo_js)." editores.";
+			echo "Encontrados ".count($contributors_js)." editores.";
 		}
 	}
 } else echo "Preencha o formulário ao lado";
