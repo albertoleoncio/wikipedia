@@ -19,11 +19,11 @@
 		      						<input class="w3-input w3-padding-16 w3-border" <?php if (isset($_GET["artigo_titulo"]) OR $_GET["artigo_titulo"] != "") echo "value='".$_GET["artigo_titulo"]."'"; ?> type="text" name="artigo_titulo">
 		      					</p>
 		      					<br>
-		      					<p class="w3-center w3-wide">USUÁRIOS INATIVOS</p>
+		      					<p class="w3-center w3-wide">EDITORES INATIVOS</p>
 		      					<p class="w3-text-grey">
 			      					<select class="w3-select w3-border" name="inativo">
 										<option value="" disabled>Selecione...</option>
-										<option value="1"<?php if ($_GET["artigo_titulo"] AND $_GET["inativo"] == 1) echo " selected"; ?>>Incluir todos os usuários</option>
+										<option value="1"<?php if ($_GET["artigo_titulo"] AND $_GET["inativo"] == 1) echo " selected"; ?>>Incluir todos os editores</option>
 										<option value="2"<?php if ($_GET["artigo_titulo"] AND $_GET["inativo"] == 2) echo " selected"; ?>>Remover inativos há 3 meses</option>
 										<option value="3"<?php if ($_GET["artigo_titulo"] AND $_GET["inativo"] == 3) echo " selected"; ?>>Remover inativos há 6 meses</option>
 										<option value="4"<?php if ($_GET["artigo_titulo"] AND $_GET["inativo"] == 4) echo " selected"; ?>>Remover inativos há 1 ano</option>
@@ -67,7 +67,7 @@ if ($_GET["artigo_titulo"]) {
 			<br><br>
 			<ul class='w3-ul w3-hoverable w3-border'>";
 
-	//Coleta nome dos usuários que editaram o artigo, excluindo os bots
+	//Coleta nome dos editores que editaram o artigo, excluindo os bots
 	$contributors_params = [
 		"action"          => "query",
 		"format"          => "php",
@@ -83,7 +83,7 @@ if ($_GET["artigo_titulo"]) {
 		echo "Artigo não existe!";
 	} else {
 
-		//Coloca nomes dos usuários na array
+		//Coloca nomes dos editores na array
 		$contributors = $contributors['contributors'];
 
 		//Coleta revisões do artigo, para detectar revisões menores
@@ -104,7 +104,7 @@ if ($_GET["artigo_titulo"]) {
 			}
 		}
 
-		//Coleta lista de usuários descadastrados
+		//Coleta lista de editores descadastrados
         $optout_params = [
             "action"    => "query",
             "format"    => "php",
@@ -117,7 +117,7 @@ if ($_GET["artigo_titulo"]) {
 		$optout = explode("\n#", unserialize(api_get($optout_params))["query"]["pages"]["6352119"]["revisions"]["0"]["slots"]["main"]["*"]);
 		unset($optout[0]);
 
-		//Loop de verificação dos usuários
+		//Loop de verificação dos editores
 		foreach ($contributors as $user) {
 
 			//Coleta informações do usuário
@@ -160,8 +160,8 @@ if ($_GET["artigo_titulo"]) {
 			//Guarda nome do usuário para criar código do botão de avisar todos
 			$contributors_js[] = $user['name'];
 		}
-
-		//Botão de abrir todas as páginas de usuários de uma só vez
+		
+		//Botão de abrir todas as páginas de editores de uma só vez
 		if (count($contributors_js) != 0) {
 			$open = '';
 			foreach ($contributors_js as $user_js) {
