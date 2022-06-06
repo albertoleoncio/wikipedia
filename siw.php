@@ -160,7 +160,15 @@ if ($_GET["artigo_titulo"]) {
 			//Guarda nome do usuário para criar código do botão de avisar todos
 			$contributors_js[] = $user['name'];
 		}
-
+		
+		//Abre diretamente a página do editor, se só houver 1 a ser avisado
+		if (count($contributors_js) == 1) {
+			echo "<script type='text/javascript'>alert('Lembre-se de habilitar os pop-ups!');</script>";
+			echo	"<script type="text/javascript">
+					window.open('https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($contributors_js[0])."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d=', '_self');
+					</script>";
+		}
+		
 		//Botão de abrir todas as páginas de usuários de uma só vez
 		if (count($contributors_js) != 0) {
 			$open = '';
