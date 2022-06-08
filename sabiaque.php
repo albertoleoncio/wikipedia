@@ -99,7 +99,7 @@ if (!isset($output1[1][0])) die("Texto da proposição não encontrado.");
 $dados[1] = ltrim($output1[1][0],"…. ");
 
 //Coleta artigo-chave da proposição
-preg_match_all('/\'\'\'\[\[([^\]\|\#]*)|\[\[([^\|]*)\|\'\'\'/', $output1[1][0], $output2);
+preg_match_all('/\'\'\'\[\[([^\]\|\#]*)|\[\[([^\|\]]*)\|\'\'\'[^\]\']*\'\'\'\]\]/', $output1[1][0], $output2);
 $dados[2] = $output2[2][0].$output2[1][0];
 
 //Coleta nome de proponente
