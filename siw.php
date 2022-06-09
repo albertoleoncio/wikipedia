@@ -60,14 +60,7 @@ function api_get($params) {
 //Verifica se alguma página foi informada
 if ($_GET["artigo_titulo"]) {
 
-	//Introdução da lista
-	echo 	"<p class='w3-center w3-wide'>EDITORES DO ARTIGO</p>
-			<h3 class='w3-center' style='hyphens: auto;'><b>".trim($_GET["artigo_titulo"])."</b></h3>
-			<small>Ao clicar, uma nova janela será aberta para o envio da mensagem. Em seguida, clique em \"Publicar alterações\", ou use o atalho ALT+SHIFT+S.</small>
-			<br><br>
-			<ul class='w3-ul w3-hoverable w3-border'>";
-
-	//Coleta nome dos editores que editaram o artigo, excluindo os bots
+	//Coleta nome dos usuários que editaram o artigo, excluindo os bots
 	$contributors_params = [
 		"action"          => "query",
 		"format"          => "php",
@@ -80,10 +73,16 @@ if ($_GET["artigo_titulo"]) {
 
 	//Verifica se artigo não existe
 	if (isset($contributors['missing'])) {
-		echo "Artigo não existe!";
+		echo "<h3 class='w3-center' style='hyphens: auto;'><b>Artigo ".trim($_GET["artigo_titulo"])." não existe!</b></h3>";
 	} else {
-
-		//Coloca nomes dos editores na array
+		//Introdução da lista
+		echo 	"<p class='w3-center w3-wide'>EDITORES DO ARTIGO</p>
+				<h3 class='w3-center' style='hyphens: auto;'><b>".trim($_GET["artigo_titulo"])."</b></h3>
+				<small>Ao clicar, uma nova janela será aberta para o envio da mensagem. Em seguida, clique em \"Publicar alterações\", ou use o atalho ALT+SHIFT+S.</small>
+				<br><br>
+				<ul class='w3-ul w3-hoverable w3-border'>";
+			
+		//Coloca nomes dos usuários na array
 		$contributors = $contributors['contributors'];
 
 		//Coleta revisões do artigo, para detectar revisões menores
