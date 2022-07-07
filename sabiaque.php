@@ -101,9 +101,11 @@ $dados[1] = ltrim($output1[1][0],"…. ");
 //Coleta artigo-chave da proposição
 preg_match_all('/\'\'\'\[\[([^\]\|\#]*)|\[\[([^\|\]]*)\|\'\'\'[^\]\']*\'\'\'\]\]/', $output1[1][0], $output2);
 $dados[2] = $output2[2][0].$output2[1][0];
+if (!$dados[2]) die("Artigo-chave da proposição não encontrado.");
 
 //Coleta nome de proponente
 preg_match_all('/\* \'\'\'Proponente\'\'\' – [^\[]*\[\[[^:]*:([^|]*)/', $htmlA_exploded[1], $output3);
+if (!isset($output3[1][0])) die("Nome de proponente não encontrado.");
 $dados[3] = $output3[1][0];
 
 //Coleta discussão da proposição e elimina proposição a publicar
