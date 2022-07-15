@@ -66,7 +66,7 @@ foreach ($notify as $case) {
 	$html = getAPI($page);
 
 	//Insere pedido no código
-	$html = $html."\n#{{dif|".$case["id"]."}}: Usuário '".$case["target"]."' revertido por '".$case["user"]."' na página [[".$case["title"]."]].";
+	$html = $html."\n#{{dif|".$case["id"]."}}: Usuário '".$case["target"]."' revertido por '".$case["user"]."' na página [[:".$case["title"]."]].";
 
 	//Gravar código
 	editAPI($html, NULL, FALSE, "bot: Inserindo reversão não-usual", $page, $usernameBQ);
