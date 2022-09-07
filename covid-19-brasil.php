@@ -31,6 +31,7 @@ $results = curl_exec($curl2);
 $PortalEstado = json_decode($results, true);
 
 //Formação dos campos de dados gerais
+if (!isset($PortalSintese[0])) die("PortalSintese indisponível");
 $confirmado = str_replace(".", "", $PortalSintese[0]['casosAcumuladoN']);
 $obitos = str_replace(".", "", $PortalSintese[0]['obitosAcumuladoN']);
 $recuperados = str_replace(".", "", $PortalSintese[0]['Recuperadosnovos']);

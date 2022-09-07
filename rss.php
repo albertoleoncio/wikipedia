@@ -38,6 +38,7 @@ function busca_imagem ($article) {
 	curl_close($ch);
 
 	//Monta resposta
+	if (!isset($meta["Artist"]["value"])) $meta["Artist"]["value"] = "Desconhecido";
 	return array(
 		"image_about" 	=> "Para saber mais sobre o tema, basta acessar o link na bio e o artigo estará na nossa página principal!\n\n\n\nSobre a imagem:\nAutor: ".trim(strip_tags($meta["Artist"]["value"])).".\nLicença ".trim(strip_tags($meta["LicenseShortName"]["value"])).".\nPara mais informações sobre essa imagem, entre no endereço da bio e pesquise por Imagem:".$address['pageimage'],
 		"image_url" 		=> $location,
