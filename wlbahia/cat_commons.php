@@ -115,16 +115,10 @@ if (mysqli_connect_errno()) {
 }
 
 //Insere resultado no banco de dados
+$stmt = mysqli_prepare($con, "INSERT IGNORE INTO `list` (`cidade`, `qnde`, `creators`) VALUES (?, ?, ?)");
+mysqli_stmt_bind_param($stmt, "sii", $key, $value, $creators[$key]);
 foreach ($list as $key => $value) {
-	$a = addslashes($key);
-	$b = addslashes($value);
-	$c = addslashes($creators[$key]);
-	mysqli_query($con, "
-		INSERT IGNORE INTO 
-			`list` (`cidade`, `qnde`, `creators`) 
-		VALUES 
-			('{$a}', '{$b}', '{$c}')
-		;");
+	mysqli_stmt_execute($stmt);
 }
 
 //Imprime, na tela, a quantidade total de arquivos da cidade
