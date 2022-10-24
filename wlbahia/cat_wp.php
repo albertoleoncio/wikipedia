@@ -98,15 +98,10 @@ if (mysqli_connect_errno()) {
 }
 
 //Insere resultado no banco de dados
+$stmt = mysqli_prepare($con, "INSERT IGNORE INTO `list_wp` (`cidade`, `qnde`) VALUES (?, ?)");
+mysqli_stmt_bind_param($stmt, "si", $key, $value);
 foreach ($list as $key => $value) {
-	$a = addslashes($key);
-	$b = addslashes($value);
-	mysqli_query($con, "
-		INSERT IGNORE INTO 
-			`list_wp` (`cidade`, `qnde`) 
-		VALUES 
-			('{$a}', '{$b}')
-		;");
+	mysqli_stmt_execute($stmt);
 }
 
 //Retorna resultado do município

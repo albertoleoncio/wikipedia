@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 //Escapa parâmetros fornecidos pelo usuário
 $artigo_titulo = htmlspecialchars($_GET["artigo_titulo"]) ?: false;
@@ -22,24 +22,32 @@ $inativo = htmlspecialchars($_GET["inativo"]) ?: false;
 							<div class="w3-container w3-padding-48 w3-card">
 		      					<p class="w3-center w3-wide">ARTIGO</p>
 		      					<p class="w3-text-grey">
-		      						<input class="w3-input w3-padding-16 w3-border" value='<?=($artigo_titulo)?:"";?>' type="text" name="artigo_titulo">
+		      						<input 
+		      						class="w3-input w3-padding-16 w3-border" 
+		      						value='<?=($artigo_titulo)?:"";?>' 
+		      						type="text" 
+		      						name="artigo_titulo">
 		      					</p>
 		      					<br>
 		      					<p class="w3-center w3-wide">EDITORES INATIVOS</p>
 		      					<p class="w3-text-grey">
 			      					<select class="w3-select w3-border" name="inativo">
 										<option value="" disabled>Selecione...</option>
-										<option value="1" <?=($artigo_titulo AND $inativo == 1)?"selected":"";?>>Incluir todos os editores</option>
-										<option value="2" <?=($artigo_titulo AND $inativo == 2)?"selected":"";?>>Remover inativos há 3 meses</option>
-										<option value="3" <?=($artigo_titulo AND $inativo == 3)?"selected":"";?>>Remover inativos há 6 meses</option>
-										<option value="4" <?=($artigo_titulo AND $inativo == 4)?"selected":"";?>>Remover inativos há 1 ano</option>
-										<option value="5" <?=($artigo_titulo AND $inativo == 5)?"selected":"";?>>Remover inativos há 5 anos</option>
+										<option value="1" <?=($artigo_titulo && $inativo == 1)?"selected":"";?>>Incluir todos os editores</option>
+										<option value="2" <?=($artigo_titulo && $inativo == 2)?"selected":"";?>>Remover inativos há 3 meses</option>
+										<option value="3" <?=($artigo_titulo && $inativo == 3)?"selected":"";?>>Remover inativos há 6 meses</option>
+										<option value="4" <?=($artigo_titulo && $inativo == 4)?"selected":"";?>>Remover inativos há 1 ano</option>
+										<option value="5" <?=($artigo_titulo && $inativo == 5)?"selected":"";?>>Remover inativos há 5 anos</option>
 									</select>
 								</p>
 		      					<br>
 								<p class="w3-center w3-wide">EDIÇÕES MENORES</p>
 		      					<p>
-		      						<input name="menor" class="w3-check" type="checkbox" <?=($artigo_titulo AND isset($_GET["menor"]))?"checked":"";?>>
+		      						<input 
+		      						name="menor" 
+		      						class="w3-check" 
+		      						type="checkbox" 
+		      						<?=($artigo_titulo && isset($_GET["menor"]))?"checked":"";?>>
 		      						<label>Excluir edições menores</label>
 		      					</p>
 		      					<br>
@@ -139,10 +147,10 @@ if ($artigo_titulo) {
 			$usercontribs = unserialize(api_get($usercontribs_params))['query'];
 			
 			//Verifica se usuário está bloqueado e encerra loop em caso positivo
-			if (isset($usercontribs['users']["0"]['blockid']) AND !isset($usercontribs['users']["0"]['blockpartial'])) continue;
+			if (isset($usercontribs['users']["0"]['blockid']) && !isset($usercontribs['users']["0"]['blockpartial'])) continue;
 
 			//Verifica se há edições não-menores do usuário no artigo e se a opção foi selecionada, encerrando loop em caso positivo
-			if (isset($_GET["menor"]) AND !isset($no_minor[$user['name']])) continue;
+			if (isset($_GET["menor"]) && !isset($no_minor[$user['name']])) continue;
 
 			//Verifica se usuário está na lista de descadastro, encerrando loop em caso positivo
 			if (in_array($user['name'], $optout)) continue;
@@ -151,10 +159,10 @@ if ($artigo_titulo) {
 			//Se a opção de exclusão dos inativos for selecionada, encerra loop de acordo com a opção
 			if ((date("U", strtotime($usercontribs['usercontribs']["0"]['timestamp'])) + 7776000) < time()) {
 				$days_inactive = round((time() - date("U", strtotime($usercontribs['usercontribs']["0"]['timestamp']))) / 86400);
-				if ($inativo == 5 AND $days_inactive >= 1825) continue;
-				if ($inativo == 4 AND $days_inactive >= 365) continue;
-				if ($inativo == 3 AND $days_inactive >= 180) continue;
-				if ($inativo == 2 AND $days_inactive >= 90) continue;
+				if ($inativo == 5 && $days_inactive >= 1825) continue;
+				if ($inativo == 4 && $days_inactive >= 365) continue;
+				if ($inativo == 3 && $days_inactive >= 180) continue;
+				if ($inativo == 2 && $days_inactive >= 90) continue;
 			} else $days_inactive = false;
 			
 			//Retorna links individuais para envio de aviso
