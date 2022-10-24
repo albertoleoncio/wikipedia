@@ -1,4 +1,10 @@
-<!DOCTYPE html>
+<?php 
+
+//Escapa parâmetros fornecidos pelo usuário
+$artigo_titulo = htmlspecialchars($_GET["artigo_titulo"]) ?: false;
+$inativo = htmlspecialchars($_GET["inativo"]) ?: false;
+
+?><!DOCTYPE html>
 <html lang="pt-BR">
 	<head>
 		<title>ESR-SIW</title>
@@ -16,24 +22,24 @@
 							<div class="w3-container w3-padding-48 w3-card">
 		      					<p class="w3-center w3-wide">ARTIGO</p>
 		      					<p class="w3-text-grey">
-		      						<input class="w3-input w3-padding-16 w3-border" <?php if (isset($_GET["artigo_titulo"]) OR $_GET["artigo_titulo"] != "") echo "value='".$_GET["artigo_titulo"]."'"; ?> type="text" name="artigo_titulo">
+		      						<input class="w3-input w3-padding-16 w3-border" value='<?=($artigo_titulo)?:"";?>' type="text" name="artigo_titulo">
 		      					</p>
 		      					<br>
 		      					<p class="w3-center w3-wide">EDITORES INATIVOS</p>
 		      					<p class="w3-text-grey">
 			      					<select class="w3-select w3-border" name="inativo">
 										<option value="" disabled>Selecione...</option>
-										<option value="1"<?php if ($_GET["artigo_titulo"] AND $_GET["inativo"] == 1) echo " selected"; ?>>Incluir todos os editores</option>
-										<option value="2"<?php if ($_GET["artigo_titulo"] AND $_GET["inativo"] == 2) echo " selected"; ?>>Remover inativos há 3 meses</option>
-										<option value="3"<?php if ($_GET["artigo_titulo"] AND $_GET["inativo"] == 3) echo " selected"; ?>>Remover inativos há 6 meses</option>
-										<option value="4"<?php if ($_GET["artigo_titulo"] AND $_GET["inativo"] == 4) echo " selected"; ?>>Remover inativos há 1 ano</option>
-										<option value="5"<?php if ($_GET["artigo_titulo"] AND $_GET["inativo"] == 5) echo " selected"; ?>>Remover inativos há 5 anos</option>
+										<option value="1" <?=($artigo_titulo AND $inativo == 1)?"selected":"";?>>Incluir todos os editores</option>
+										<option value="2" <?=($artigo_titulo AND $inativo == 2)?"selected":"";?>>Remover inativos há 3 meses</option>
+										<option value="3" <?=($artigo_titulo AND $inativo == 3)?"selected":"";?>>Remover inativos há 6 meses</option>
+										<option value="4" <?=($artigo_titulo AND $inativo == 4)?"selected":"";?>>Remover inativos há 1 ano</option>
+										<option value="5" <?=($artigo_titulo AND $inativo == 5)?"selected":"";?>>Remover inativos há 5 anos</option>
 									</select>
 								</p>
 		      					<br>
 								<p class="w3-center w3-wide">EDIÇÕES MENORES</p>
 		      					<p>
-		      						<input name="menor" class="w3-check" type="checkbox"<?php if ($_GET["artigo_titulo"] AND isset($_GET["menor"])) echo " checked"; ?>>
+		      						<input name="menor" class="w3-check" type="checkbox" <?=($artigo_titulo AND isset($_GET["menor"]))?"checked":"";?>>
 		      						<label>Excluir edições menores</label>
 		      					</p>
 		      					<br>
@@ -58,14 +64,14 @@ function api_get($params) {
 }
 
 //Verifica se alguma página foi informada
-if ($_GET["artigo_titulo"]) {
+if ($artigo_titulo) {
 
 	//Coleta nome dos usuários que editaram o artigo, excluindo os bots
 	$contributors_params = [
 		"action"          => "query",
 		"format"          => "php",
 		"prop"            => "contributors",
-		"titles"          => trim($_GET["artigo_titulo"]),
+		"titles"          => trim($artigo_titulo),
 		"pcexcluderights" => "bot",
 		"pclimit"         => "max"
 	];
@@ -73,11 +79,11 @@ if ($_GET["artigo_titulo"]) {
 
 	//Verifica se artigo não existe
 	if (isset($contributors['missing'])) {
-		echo "<h3 class='w3-center' style='hyphens: auto;'><b>Artigo ".trim($_GET["artigo_titulo"])." não existe!</b></h3>";
+		echo "<h3 class='w3-center' style='hyphens: auto;'><b>Artigo ".trim($artigo_titulo)." não existe!</b></h3>";
 	} else {
 		//Introdução da lista
 		echo 	"<p class='w3-center w3-wide'>EDITORES DO ARTIGO</p>
-				<h3 class='w3-center' style='hyphens: auto;'><b>".trim($_GET["artigo_titulo"])."</b></h3>
+				<h3 class='w3-center' style='hyphens: auto;'><b>".trim($artigo_titulo)."</b></h3>
 				<small>Ao clicar, uma nova janela será aberta para o envio da mensagem. Em seguida, clique em \"Publicar alterações\", ou use o atalho ALT+SHIFT+S.</small>
 				<br><br>
 				<ul class='w3-ul w3-hoverable w3-border'>";
@@ -92,7 +98,7 @@ if ($_GET["artigo_titulo"]) {
                 "action"    => "query",
                 "format"    => "php",
                 "prop"      => "revisions",
-                "titles"    => trim($_GET["artigo_titulo"]),
+                "titles"    => trim($artigo_titulo),
                 "rvprop"    => "user|flags",
                 "rvlimit"   => "max"
             ];
@@ -145,14 +151,14 @@ if ($_GET["artigo_titulo"]) {
 			//Se a opção de exclusão dos inativos for selecionada, encerra loop de acordo com a opção
 			if ((date("U", strtotime($usercontribs['usercontribs']["0"]['timestamp'])) + 7776000) < time()) {
 				$days_inactive = round((time() - date("U", strtotime($usercontribs['usercontribs']["0"]['timestamp']))) / 86400);
-				if ($_GET["inativo"] == 5 AND $days_inactive >= 1825) continue;
-				if ($_GET["inativo"] == 4 AND $days_inactive >= 365) continue;
-				if ($_GET["inativo"] == 3 AND $days_inactive >= 180) continue;
-				if ($_GET["inativo"] == 2 AND $days_inactive >= 90) continue;
+				if ($inativo == 5 AND $days_inactive >= 1825) continue;
+				if ($inativo == 4 AND $days_inactive >= 365) continue;
+				if ($inativo == 3 AND $days_inactive >= 180) continue;
+				if ($inativo == 2 AND $days_inactive >= 90) continue;
 			} else $days_inactive = false;
 			
 			//Retorna links individuais para envio de aviso
-			echo "<li class=\"w3-padding-small w3-left-align\" style=\"cursor:pointer;\"><a style=\"text-decoration-line:none\" href=\"https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($user['name'])."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d=\" target=\"_blank\">".$user['name']."</a>";
+			echo "<li class=\"w3-padding-small w3-left-align\" style=\"cursor:pointer;\"><a style=\"text-decoration-line:none\" href=\"https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($user['name'])."&action=edit&section=new&preloadtitle=".urlencode("[[".$artigo_titulo."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($artigo_titulo))."&preloadparams%5b%5d=\" target=\"_blank\">".$user['name']."</a>";
 			if ($days_inactive > 90) echo " <small>(inativo há ".$days_inactive." dias)</small>";
 			echo "</li>";
 
@@ -164,7 +170,7 @@ if ($_GET["artigo_titulo"]) {
 		if (count($contributors_js) != 0) {
 			$open = '';
 			foreach ($contributors_js as $user_js) {
-		    	$open .= "window.open('https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($user_js)."&action=edit&section=new&preloadtitle=".urlencode("[[".$_GET["artigo_titulo"]."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($_GET["artigo_titulo"]))."&preloadparams%5b%5d=', '_blank');";
+		    	$open .= "window.open('https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($user_js)."&action=edit&section=new&preloadtitle=".urlencode("[[".$artigo_titulo."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($artigo_titulo))."&preloadparams%5b%5d=', '_blank');";
 			}
 			echo "<button type=\"button\" onclick=\"alert('Lembre-se de habilitar os pop-ups!');{$open}\">Avisar todos</button>";
 		} else {

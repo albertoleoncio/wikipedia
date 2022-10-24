@@ -130,7 +130,7 @@ foreach ($list_approved as $approved) {
 				$blacklist_params = [
 					"action" 	=> "spamblacklist",
 					"format" 	=> "php",
-					"url" 		=> "http://".$general_list[$refname]["dominio".$i]
+					"url" 		=> "https://".$general_list[$refname]["dominio".$i]
 				];
 				if (unserialize(api_get($blacklist_params))["spamblacklist"]["result"] == "blacklisted") {
 					$general_list[$refname]["dominio".$i] = "</nowiki>'''<nowiki>".$general_list[$refname]["dominio".$i]."</nowiki>'''<nowiki>";

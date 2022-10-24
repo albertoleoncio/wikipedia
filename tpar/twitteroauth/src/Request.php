@@ -257,6 +257,6 @@ class Request
      */
     public static function generateNonce()
     {
-        return md5(microtime() . mt_rand());
+        return md5(microtime() . random_int());
     }
 }

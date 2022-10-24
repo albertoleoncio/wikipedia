@@ -116,7 +116,15 @@ if (mysqli_connect_errno()) {
 
 //Insere resultado no banco de dados
 foreach ($list as $key => $value) {
-	mysqli_query($con, "INSERT IGNORE INTO `list` (`cidade`, `qnde`, `creators`) VALUES ('".addslashes($key)."', '".$value."', '".$creators[$key]."');");
+	$a = addslashes($key);
+	$b = addslashes($value);
+	$c = addslashes($creators[$key]);
+	mysqli_query($con, "
+		INSERT IGNORE INTO 
+			`list` (`cidade`, `qnde`, `creators`) 
+		VALUES 
+			('{$a}', '{$b}', '{$c}')
+		;");
 }
 
 //Imprime, na tela, a quantidade total de arquivos da cidade
