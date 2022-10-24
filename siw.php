@@ -22,10 +22,10 @@ $inativo = htmlspecialchars($_GET["inativo"]) ?: false;
 							<div class="w3-container w3-padding-48 w3-card">
 		      					<p class="w3-center w3-wide">ARTIGO</p>
 		      					<p class="w3-text-grey">
-		      						<input 
-		      						class="w3-input w3-padding-16 w3-border" 
-		      						value='<?=($artigo_titulo)?:"";?>' 
-		      						type="text" 
+		      						<input
+		      						class="w3-input w3-padding-16 w3-border"
+		      						value='<?=($artigo_titulo)?:"";?>'
+		      						type="text"
 		      						name="artigo_titulo">
 		      					</p>
 		      					<br>
@@ -43,10 +43,10 @@ $inativo = htmlspecialchars($_GET["inativo"]) ?: false;
 		      					<br>
 								<p class="w3-center w3-wide">EDIÇÕES MENORES</p>
 		      					<p>
-		      						<input 
-		      						name="menor" 
-		      						class="w3-check" 
-		      						type="checkbox" 
+		      						<input
+		      						name="menor"
+		      						class="w3-check"
+		      						type="checkbox"
 		      						<?=($artigo_titulo && isset($_GET["menor"]))?"checked":"";?>>
 		      						<label>Excluir edições menores</label>
 		      					</p>
@@ -147,7 +147,9 @@ if ($artigo_titulo) {
 			$usercontribs = unserialize(api_get($usercontribs_params))['query'];
 			
 			//Verifica se usuário está bloqueado e encerra loop em caso positivo
-			if (isset($usercontribs['users']["0"]['blockid']) && !isset($usercontribs['users']["0"]['blockpartial'])) continue;
+			if (isset($usercontribs['users']["0"]['blockid']) && !isset($usercontribs['users']["0"]['blockpartial'])) {
+				continue;
+			}
 
 			//Verifica se há edições não-menores do usuário no artigo e se a opção foi selecionada, encerrando loop em caso positivo
 			if (isset($_GET["menor"]) && !isset($no_minor[$user['name']])) continue;
@@ -159,14 +161,34 @@ if ($artigo_titulo) {
 			//Se a opção de exclusão dos inativos for selecionada, encerra loop de acordo com a opção
 			if ((date("U", strtotime($usercontribs['usercontribs']["0"]['timestamp'])) + 7776000) < time()) {
 				$days_inactive = round((time() - date("U", strtotime($usercontribs['usercontribs']["0"]['timestamp']))) / 86400);
-				if ($inativo == 5 && $days_inactive >= 1825) continue;
-				if ($inativo == 4 && $days_inactive >= 365) continue;
-				if ($inativo == 3 && $days_inactive >= 180) continue;
-				if ($inativo == 2 && $days_inactive >= 90) continue;
+				if ($inativo == 5 && $days_inactive >= 1825) {
+					continue;
+				} elseif ($inativo == 4 && $days_inactive >= 365) {
+					continue;
+				} elseif ($inativo == 3 && $days_inactive >= 180) {
+					continue;
+				} elseif ($inativo == 2 && $days_inactive >= 90) {
+					continue;
+				}
 			} else $days_inactive = false;
 			
 			//Retorna links individuais para envio de aviso
-			echo "<li class=\"w3-padding-small w3-left-align\" style=\"cursor:pointer;\"><a style=\"text-decoration-line:none\" href=\"https://pt.wikipedia.org/w/index.php?title=User_talk:".urlencode($user['name'])."&action=edit&section=new&preloadtitle=".urlencode("[[".$artigo_titulo."]] ([[WP:ESR-SIW]])")."&preload=Predefini%C3%A7%C3%A3o:Aviso-ESR-SIW/Preload&preloadparams%5b%5d=".urlencode(trim($artigo_titulo))."&preloadparams%5b%5d=\" target=\"_blank\">".$user['name']."</a>";
+			$individual_link = [
+				'title' 			=> "User talk:{$user['name']}",
+				'action' 			=> 'edit',
+				'section' 			=> 'new',
+				'preloadtitle' 		=> "[[{$artigo_titulo}]] ([[WP:ESR-SIW]])",
+				'preload' 			=> 'Predefinição:Aviso-ESR-SIW/Preload',
+				'preloadparams[]'	=> trim($artigo_titulo),
+				'preloadparams[]'	=> ''
+			];
+			$individual_link = http_build_query($individual_link);
+			echo('<li class="w3-padding-small w3-left-align" style="cursor:pointer;">');
+			echo("<a
+				style='text-decoration-line:none'
+				target='_blank'
+				href='https://pt.wikipedia.org/w/index.php?{$individual_link}'
+				>{$user['name']}</a>";
 			if ($days_inactive > 90) echo " <small>(inativo há ".$days_inactive." dias)</small>";
 			echo "</li>";
 
