@@ -1,5 +1,5 @@
 <?php
-include './bin/globals.php';
+require_once './bin/globals.php';
 
 //Define fuso horário como UTC
 date_default_timezone_set('UTC');
@@ -73,7 +73,7 @@ $wikiCode = "<!--
 -->{{#ifeq:{{{1}}}|antigo|".$old."}}";
 
 //Login
-include './bin/api.php';
+require_once './bin/api.php';
 loginAPI($username, $password);
 
 //Define endereço da predefinição

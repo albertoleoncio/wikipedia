@@ -1,5 +1,5 @@
 <pre><?php
-include './bin/globals.php';
+require_once './bin/globals.php';
 
 //Define fuso horário como UTC
 date_default_timezone_set('UTC');
@@ -11,9 +11,9 @@ $timestamp_now = time();
 $dados = array();
 
 //Login
-include './bin/api.php';
+require_once './bin/api.php';
 loginAPI($usernameEA, $passwordEA);
-require "tpar/twitteroauth/autoload.php";
+require_once "tpar/twitteroauth/autoload.php";
 use Abraham\TwitterOAuth\TwitterOAuth;
 
 //Define página de propostas
@@ -117,6 +117,7 @@ foreach ($htmlA as $key => $section) {
 
 		//Explode código e remove marcador de imagem no texto
 		$htmlB_sections = explode("\n<!-- % -->\n", $htmlB);
+		if (count($htmlB_sections) != 3) die("Predefinição principal formatada incorretamente!");
 		$htmlB_sections["1"] = preg_replace('/\(\'\'[^\']*?\'\'\) |\'\'\([^\)]*\)\'\' /', '', $htmlB_sections["1"]);
 		$htmlB_events = explode("\n", $htmlB_sections["1"]);
 

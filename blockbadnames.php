@@ -1,8 +1,8 @@
 <?php
-include './bin/globals.php';
+require_once './bin/globals.php';
 
 //Login
-include './bin/api.php';
+require_once './bin/api.php';
 loginAPI($usernameBQ, $passwordBQ);
 
 //Funções

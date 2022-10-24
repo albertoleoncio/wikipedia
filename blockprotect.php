@@ -1,9 +1,9 @@
 <?php
-include './bin/globals.php';
+require_once './bin/globals.php';
 date_default_timezone_set('UTC');
 
 //Login
-include './bin/api.php';
+require_once './bin/api.php';
 loginAPI($usernameBQ, $passwordBQ);
 
 //Recupera códig-fonte da página, dividida por seções

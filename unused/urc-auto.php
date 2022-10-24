@@ -26,7 +26,7 @@ if ($handle = fopen("lista3.txt",'c+')) {
     fclose($handle);
 }
 
-include 'globals.php';
+require_once 'globals.php';
 echo "<pre>";
 
 $wiki = new Wikimate($api_url);

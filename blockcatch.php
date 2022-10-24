@@ -6,7 +6,7 @@
 */
 
 $endPoint = "https://pt.wikipedia.org/w/api.php";
-require '../credenciais.php';
+require_once '../credenciais.php';
 loginRequest(getLoginToken(), $usernameBQ, $passwordBQ);
 
 ////////////////////////////////////////////////////////////////////////////////////////

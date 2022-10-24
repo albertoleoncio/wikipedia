@@ -147,7 +147,7 @@ unset($território);
 
 //Login
 $endPoint = "https://".$isocode.".wikipedia.org/w/api.php";
-include './bin/api.php';
+require_once './bin/api.php';
 loginAPI($username, $password);
 echo "<hr><b>".$template."</b>\n";
 

@@ -48,5 +48,5 @@ function refparser($ref) {
 	return $refparsed;
 }
 
-include './bin/globals.php';
-include './bin/covid-19-mundo.php';
+require_once './bin/globals.php';
+require_once './bin/covid-19-mundo.php';

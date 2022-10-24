@@ -1,5 +1,5 @@
 <?php
-include './bin/globals.php';
+require_once './bin/globals.php';
 
 //Define fuso horário como UTC
 date_default_timezone_set('UTC');
@@ -11,7 +11,7 @@ $today = strtotime('today');
 $dados = array();
 
 //Login
-include './bin/api.php';
+require_once './bin/api.php';
 loginAPI($usernameSQ, $passwordSQ);
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -295,7 +295,7 @@ editAPI($htmlD, NULL, FALSE, "bot: (6/6) Inserindo ParabénsSQ", $pageD, $userna
 $twitter_status = "Você sabia que...\n\n…".preg_replace('/[\[\]\']/', '', preg_replace('/\[\[[^\|\]]*\|([^\]]*)\]\]/', '$1', $dados[1]))."\n\nLeia mais na Wikipédia: https://pt.wikipedia.org/wiki/".rawurlencode($dados[2]);
 
 //Envia Tweet
-require "tpar/twitteroauth/autoload.php";
+require_once "tpar/twitteroauth/autoload.php";
 use Abraham\TwitterOAuth\TwitterOAuth;
 define('CONSUMER_KEY', $twitter_consumer_key);
 define('CONSUMER_SECRET', $twitter_consumer_secret);

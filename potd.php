@@ -12,8 +12,8 @@ if ($ultimo === FALSE OR $ultimo == "") die("Nao foi possível recuperar os dado
 if ($atual == $ultimo) die("Nada a alterar!");
 
 //Login
-include './bin/globals.php';
-include './bin/api.php';
+require_once './bin/globals.php';
+require_once './bin/api.php';
 loginAPI($username, $password);
 
 //Define página de usuário
@@ -35,7 +35,7 @@ $twitter_status = "Imagem do dia em ".$atual.". Veja mais informações em https
 print_r($twitter_status);
 
 //Envia Tweet
-require "tpar/twitteroauth/autoload.php";
+require_once "tpar/twitteroauth/autoload.php";
 use Abraham\TwitterOAuth\TwitterOAuth;
 define('CONSUMER_KEY', $twitter_consumer_key);
 define('CONSUMER_SECRET', $twitter_consumer_secret);

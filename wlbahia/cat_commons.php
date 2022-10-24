@@ -143,8 +143,8 @@ if (isset($query['continue']['cmcontinue'])) {
 	$wikiCode = $wikiCode."|}\n";
 
 	//Login
-	require __DIR__.'/../bin/globals.php';
-	require __DIR__.'/../bin/api.php';
+	require_once __DIR__.'/../bin/globals.php';
+	require_once __DIR__.'/../bin/api.php';
 	loginAPI($username, $password);
 
 	//Define página

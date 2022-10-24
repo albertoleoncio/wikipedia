@@ -1,5 +1,5 @@
 <?php
-include 'globals.php';
+require_once 'globals.php';
 
 $headers = array(
     'X-Parse-Application-Id: unAFkcaNDeXajurGB7LChj8SgQYS2ptm',

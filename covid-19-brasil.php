@@ -1,5 +1,5 @@
 <?php
-include './bin/globals.php';
+require_once './bin/globals.php';
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -69,7 +69,7 @@ foreach ($PortalEstado as $linha) {
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Login
-include './bin/api.php';
+require_once './bin/api.php';
 loginAPI($username, $password);
 
 //Recupera dados da predefinição

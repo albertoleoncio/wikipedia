@@ -12,8 +12,8 @@ if ($ultimo === FALSE OR $ultimo == "") die("Nao foi possível recuperar os dado
 if ($atual == $ultimo) die("Nada a alterar!");
 
 //Login
-include './bin/globals.php';
-include './bin/api.php';
+require_once './bin/globals.php';
+require_once './bin/api.php';
 loginAPI($username, $password);
 
 //Define página de usuário
@@ -26,7 +26,7 @@ editAPI($atual, 0, true, "bot: Atualizando EAD", $page, $username);
 $twitter_status = $atual." é um artigo de destaque na Wikipédia!\n\nIsso significa que ele foi identificado como um dos melhores artigos produzidos pela comunidade da Wikipédia.\n\nO que achou? Ainda tem como melhorar?\nhttps://pt.wikipedia.org/wiki/".rawurlencode($atual);
 
 //Envia Tweet
-require "tpar/twitteroauth/autoload.php";
+require_once "tpar/twitteroauth/autoload.php";
 use Abraham\TwitterOAuth\TwitterOAuth;
 define('CONSUMER_KEY', $twitter_consumer_key);
 define('CONSUMER_SECRET', $twitter_consumer_secret);
