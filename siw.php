@@ -138,16 +138,23 @@ if ($artigo_titulo) {
                 "action"    => "query",
                 "format"    => "php",
                 "list"      => "users|usercontribs",
+                "meta"		=> "globaluserinfo",
                 "pageids"   => "6352119",
                 "usprop"    => "blockinfo",
                 "ususers"   => $user['name'],
                 "ucuser"    => $user['name'],
+                "guiuser"	=> $user['name'],
                 "uclimit"   => "1"
             ];
 			$usercontribs = unserialize(api_get($usercontribs_params))['query'];
 			
 			//Verifica se usuário está bloqueado e encerra loop em caso positivo
 			if (isset($usercontribs['users']["0"]['blockid']) && !isset($usercontribs['users']["0"]['blockpartial'])) {
+				continue;
+			}
+
+			//Verifica se usuário está travado globalmente e encerra loop em caso positivo
+			if (isset($usercontribs['globaluserinfo']['locked'])) {
 				continue;
 			}
 
@@ -188,7 +195,7 @@ if ($artigo_titulo) {
 				style='text-decoration-line:none'
 				target='_blank'
 				href='https://pt.wikipedia.org/w/index.php?{$individual_link}'
-				>{$user['name']}</a>";
+				>{$user['name']}</a>");
 			if ($days_inactive > 90) echo " <small>(inativo há ".$days_inactive." dias)</small>";
 			echo "</li>";
 
