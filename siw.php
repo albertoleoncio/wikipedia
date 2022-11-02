@@ -186,15 +186,14 @@ if ($artigo_titulo) {
 				'section' 			=> 'new',
 				'preloadtitle' 		=> "[[{$artigo_titulo}]] ([[WP:ESR-SIW]])",
 				'preload' 			=> 'Predefinição:Aviso-ESR-SIW/Preload',
-				'preloadparams[]'	=> trim($artigo_titulo),
-				'preloadparams[]'	=> ''
+				'preloadparams[]'	=> trim($artigo_titulo)
 			];
 			$individual_link = http_build_query($individual_link);
 			echo('<li class="w3-padding-small w3-left-align" style="cursor:pointer;">');
 			echo("<a
 				style='text-decoration-line:none'
 				target='_blank'
-				href='https://pt.wikipedia.org/w/index.php?{$individual_link}'
+				href='https://pt.wikipedia.org/w/index.php?{$individual_link}&preloadparams%5b%5d='
 				>{$user['name']}</a>");
 			if ($days_inactive > 90) echo " <small>(inativo há ".$days_inactive." dias)</small>";
 			echo "</li>";
