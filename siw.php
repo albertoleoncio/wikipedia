@@ -211,7 +211,7 @@ if ($artigo_titulo) {
 			}
 			echo "<button type=\"button\" onclick=\"alert('Lembre-se de habilitar os pop-ups!');{$open}\">Avisar todos</button>";
 		} else {
-			echo "Encontrados ".count($contributors_js)." editores.";
+			echo "Não há quem deseje ser avisado.";
 		}
 	}
 } else echo "Preencha o formulário ao lado";
