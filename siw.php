@@ -1,8 +1,9 @@
 <?php
 
 //Escapa parâmetros fornecidos pelo usuário
-$artigo_titulo = htmlspecialchars($_GET["artigo_titulo"]) ?: false;
 $inativo = htmlspecialchars($_GET["inativo"]) ?: false;
+$artigo_titulo = htmlspecialchars($_GET["artigo_titulo"]) ?: false;
+$artigo_titulo = str_replace('_', ' ', $artigo_titulo) ?: false;
 
 ?><!DOCTYPE html>
 <html lang="pt-BR">
