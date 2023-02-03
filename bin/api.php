@@ -22,47 +22,70 @@ getsectionsAPI($page);
 if (!isset($endPoint)) $endPoint = $api_url;
 
 function loginAPI( $userAPI , $passAPI ) {
-	global $endPoint;
+    
+    global $endPoint;
 
-	$params1 = [
-		"action" => "query",
-		"meta" => "tokens",
-		"type" => "login",
-		"format" => "json"
-	];
+    $params_logged = [
+        "action"    => "query",
+        "meta"      => "userinfo",
+        "uiprop"    => "rights",
+        "format"    => "php"
+    ];
 
-	$url = $endPoint . "?" . http_build_query( $params1 );
+    $url_logged = $endPoint . "?" . http_build_query( $params_logged );
 
-	$ch1 = curl_init( $url );
-	curl_setopt( $ch1, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch1, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
-	curl_setopt( $ch1, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
+    $ch_logged = curl_init($url_logged);
+    curl_setopt($ch_logged, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch_logged, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc");
+    curl_setopt($ch_logged, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc");
+    $output_logged = curl_exec($ch_logged);
+    curl_close($ch_logged);
 
-	$output1 = curl_exec( $ch1 );
-	curl_close( $ch1 );
+    $logged_data = unserialize($output_logged)["query"]["userinfo"] ?? false;
+    if(!isset($logged_data["anon"])) return $logged_data["name"];
 
-	$result1 = json_decode( $output1, true );
-	$logintoken = $result1["query"]["tokens"]["logintoken"];
+    $token_params = [
+        "action"    => "query",
+        "meta"      => "tokens",
+        "type"      => "login",
+        "format"    => "php",
+        "maxlag"    => "5"
+    ];
 
-	$params2 = [
-		"action" 		=> "login",
-		"lgname" 		=> $userAPI,
-		"lgpassword" 	=> $passAPI,
-		"lgtoken" 		=> $logintoken,
-		"format" 		=> "json"
-	];
+    $url_token = $endPoint . "?" . http_build_query($token_params);
 
-	$ch = curl_init();
+    $ch_token = curl_init($url_token);
+    curl_setopt($ch_token, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch_token, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc");
+    curl_setopt($ch_token, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc");
+    $output_token = curl_exec($ch_token);
+    curl_close($ch_token);
 
-	curl_setopt( $ch, CURLOPT_URL, $endPoint );
-	curl_setopt( $ch, CURLOPT_POST, true );
-	curl_setopt( $ch, CURLOPT_POSTFIELDS, http_build_query( $params2 ) );
-	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
-	curl_setopt( $ch, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
+    $token = unserialize($output_token)["query"]["tokens"]["logintoken"] ?? false;
+    if(!$token) die("Maxlagged!");
 
-	$output = curl_exec( $ch );
-	curl_close( $ch );
+    $login_params = [
+        "action"        => "login",
+        "lgname"        => $userAPI,
+        "lgpassword"    => $passAPI,
+        "lgtoken"       => $token,
+        "format"        => "php"
+    ];
+
+    $ch_login = curl_init();
+    curl_setopt($ch_login, CURLOPT_URL, $endPoint);
+    curl_setopt($ch_login, CURLOPT_POST, true);
+    curl_setopt($ch_login, CURLOPT_POSTFIELDS, http_build_query($login_params));
+    curl_setopt($ch_login, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch_login, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc");
+    curl_setopt($ch_login, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc");
+    $output_login = curl_exec($ch_login);
+    curl_close($ch_login);
+
+    $logged_username = unserialize($output_login)["login"]["lgusername"] ?? false;
+    if(!$logged_username) die("Não houve log-in!");
+
+    return $logged_username;
 
 }
 
