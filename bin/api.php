@@ -12,24 +12,27 @@
 
 Comandos:
 
-loginAPI($userAPI, $passAPI);
-editAPI($text, $section, $minor, $summary, $page, $user);
-getAPI($page);
-getsectionsAPI($page);
+loginAPI($userAPI, $passAPI)
+editAPI($text, $section, $minor, $summary, $page, $user)
+getAPI($page)
+getsectionsAPI($page)
+uploadAPI($text, $location, $summary, $page, $userAPI)
+deleteAPI($page, $reason, $userAPI)
+retrieveAPI($params, $userAPI)
 
 */
 
 if (!isset($endPoint)) $endPoint = $api_url;
 
 function loginAPI( $userAPI , $passAPI ) {
-    
     global $endPoint;
 
     $params_logged = [
         "action"    => "query",
         "meta"      => "userinfo",
         "uiprop"    => "rights",
-        "format"    => "php"
+        "format"    => "php",
+        "maxlag"    => "5"
     ];
 
     $url_logged = $endPoint . "?" . http_build_query( $params_logged );
@@ -42,14 +45,14 @@ function loginAPI( $userAPI , $passAPI ) {
     curl_close($ch_logged);
 
     $logged_data = unserialize($output_logged)["query"]["userinfo"] ?? false;
+    if(!$logged_data) die("Maxlagged!");
     if(!isset($logged_data["anon"])) return $logged_data["name"];
 
     $token_params = [
         "action"    => "query",
         "meta"      => "tokens",
         "type"      => "login",
-        "format"    => "php",
-        "maxlag"    => "5"
+        "format"    => "php"
     ];
 
     $url_token = $endPoint . "?" . http_build_query($token_params);
@@ -62,7 +65,7 @@ function loginAPI( $userAPI , $passAPI ) {
     curl_close($ch_token);
 
     $token = unserialize($output_token)["query"]["tokens"]["logintoken"] ?? false;
-    if(!$token) die("Maxlagged!");
+    if(!$token) die("Não foi possível solicitar o token de login!");
 
     $login_params = [
         "action"        => "login",
@@ -90,274 +93,288 @@ function loginAPI( $userAPI , $passAPI ) {
 }
 
 function editAPI( $text , $section , $minor , $summary , $page, $userAPI) {
-	global $endPoint;
+    global $endPoint;
 
-	$params3 = [
-		"action" 	=> "query",
-		"meta" 		=> "tokens",
-		"format" 	=> "json"
-	];
+    $token_params = [
+        "action"    => "query",
+        "meta"      => "tokens",
+        "format"    => "php"
+    ];
 
-	$url = $endPoint . "?" . http_build_query( $params3 );
+    $url_token = $endPoint . "?" . http_build_query($token_params);
 
-	$ch1 = curl_init( $url );
+    $ch_token = curl_init($url_token);
+    curl_setopt($ch_token, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch_token, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc");
+    curl_setopt($ch_token, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc");
+    $output_token = curl_exec($ch_token);
+    curl_close($ch_token);
 
-	curl_setopt( $ch1, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch1, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
-	curl_setopt( $ch1, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
+    $csrftoken = unserialize($output_token)["query"]["tokens"]["csrftoken"] ?? false;
+    if(!$csrftoken) die("Não foi possível solicitar o token CSRF!");
 
-	$output1 = curl_exec( $ch1 );
-	curl_close( $ch1 );
+    $edit_params = [
+        "action"        => "edit",
+        "title"         => $page,
+        "text"          => $text,
+        "summary"       => $summary,
+        "token"         => $csrftoken,
+        "format"        => "json"
+    ];
 
-	$result1 = json_decode( $output1, true );
-	$csrftoken = $result1["query"]["tokens"]["csrftoken"];
+    if (!is_null($section)) {
+        if ($section === "append") {
+            $edit_params["appendtext"] = $edit_params["text"];
+            unset($edit_params["text"]);
+        } else {
+            $edit_params["section"] = $section;
+        }
+    }       
+    if ($minor)             $edit_params["minor"]   = true;
+    if ($minor)             $edit_params["bot"]     = true;
 
-	$params4 = [
-		"action" 		=> "edit",
-		"title" 		=> $page,
-		"text"			=> $text,
-		"summary"		=> $summary,
-		"token" 		=> $csrftoken,
-		"format" 		=> "json"
-	];
+    $ch = curl_init();
 
-	if (!is_null($section))	{
-		if ($section === "append") {
-			$params4["appendtext"] = $params4["text"];
-			unset($params4["text"]);
-		} else {
-			$params4["section"]	= $section;
-		}
-	}		
-	if ($minor)				$params4["minor"]	= true;
-	if ($minor)				$params4["bot"]		= true;
+    curl_setopt( $ch, CURLOPT_URL, $endPoint );
+    curl_setopt( $ch, CURLOPT_POST, true );
+    curl_setopt( $ch, CURLOPT_POSTFIELDS, http_build_query( $edit_params ) );
+    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt( $ch, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
+    curl_setopt( $ch, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
 
-	$ch = curl_init();
+    $output = curl_exec( $ch );
+    curl_close( $ch );
 
-	curl_setopt( $ch, CURLOPT_URL, $endPoint );
-	curl_setopt( $ch, CURLOPT_POST, true );
-	curl_setopt( $ch, CURLOPT_POSTFIELDS, http_build_query( $params4 ) );
-	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
-	curl_setopt( $ch, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
-
-	$output = curl_exec( $ch );
-	curl_close( $ch );
-
-	echo ( "<pre style=\"background-color: antiquewhite;\">" );
-	$output = json_decode( $output, true );
-	if (isset($output['edit'])) $output = $output['edit'];
-	print_r ( $output );
-	echo ( "</pre>" );
-	if (isset($output["newrevid"])) return $output["newrevid"];
+    echo ( "<pre style=\"background-color: antiquewhite;\">" );
+    $output = json_decode( $output, true );
+    if (isset($output['edit'])) $output = $output['edit'];
+    print_r ( $output );
+    echo ( "</pre>" );
+    if (isset($output["newrevid"])) return $output["newrevid"];
 }
 
 function getAPI( $page ) {
-	global $endPoint;
+    global $endPoint;
 
-	$params = [
-	    "action" 		=> "query",
-	    "prop" 			=> "revisions",
-	    "titles" 		=> $page,
-	    "rvprop" 		=> "content",
-	    "rvslots" 		=> "main",
-	    "formatversion" => "2",
-	    "format" 		=> "json"
-	];
+    $params = [
+        "action"        => "query",
+        "prop"          => "revisions",
+        "titles"        => $page,
+        "rvprop"        => "content",
+        "rvslots"       => "main",
+        "formatversion" => "2",
+        "format"        => "json"
+    ];
 
-	$url = $endPoint . "?" . http_build_query( $params );
+    $url = $endPoint . "?" . http_build_query( $params );
 
-	$ch = curl_init( $url );
-	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-	$output = curl_exec( $ch );
-	curl_close( $ch );
+    $ch = curl_init( $url );
+    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+    $output = curl_exec( $ch );
+    curl_close( $ch );
 
-	$result = json_decode( $output, true );
+    $result = json_decode( $output, true );
 
-	if (!isset($result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"]["content"])) {
-		return FALSE;
-	} else {
-		return $result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"]["content"];
-	}
+    if (!isset($result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"]["content"])) {
+        return FALSE;
+    } else {
+        return $result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"]["content"];
+    }
 }
 
 function getsectionsAPI( $page ) {
-	global $endPoint;
+    global $endPoint;
 
-	$section = 0;
-	$validsection = true;
-	$allsections = array();
+    $section = 0;
+    $validsection = true;
+    $allsections = array();
 
-	while ($validsection) {
+    while ($validsection) {
 
-		$params = [
-		    "action" 		=> "query",
-		    "prop" 			=> "revisions",
-		    "titles" 		=> $page,
-		    "rvprop" 		=> "content",
-		    "rvslots" 		=> "main",
-		    "formatversion" => "2",
-		    "rvsection"		=> $section,
-		    "format" 		=> "json"
-		];
+        $params = [
+            "action"        => "query",
+            "prop"          => "revisions",
+            "titles"        => $page,
+            "rvprop"        => "content",
+            "rvslots"       => "main",
+            "formatversion" => "2",
+            "rvsection"     => $section,
+            "format"        => "json"
+        ];
 
-		$url = $endPoint . "?" . http_build_query( $params );
+        $url = $endPoint . "?" . http_build_query( $params );
 
-		$ch = curl_init( $url );
-		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-		$output = curl_exec( $ch );
-		curl_close( $ch );
+        $ch = curl_init( $url );
+        curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+        $output = curl_exec( $ch );
+        curl_close( $ch );
 
-		$result = json_decode( $output, true );
+        $result = json_decode( $output, true );
 
-		if (!isset($result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"])) {
-			return FALSE;
-		} else {
-			$main = $result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"];
-		}
+        if (!isset($result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"])) {
+            return FALSE;
+        } else {
+            $main = $result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"];
+        }
 
-		if (isset($main["nosuchsection"])) {
-			$validsection = false;
-		} else {
-			$allsections[$section] = $main["content"];
-			$section++;
-		}
-	}
+        if (isset($main["nosuchsection"])) {
+            $validsection = false;
+        } else {
+            $allsections[$section] = $main["content"];
+            $section++;
+        }
+    }
 
-	return $allsections;
+    return $allsections;
 
 }
 
 function uploadAPI ( $text, $location, $summary, $page, $userAPI) {
-	global $endPoint;
+    global $endPoint;
 
-	//Get token
-	$params1 = [
-		"action" 	=> "query",
-		"meta" 		=> "tokens",
-		"format" 	=> "json"
-	];
+    //Get token
+    $params1 = [
+        "action"    => "query",
+        "meta"      => "tokens",
+        "format"    => "json"
+    ];
 
-	$url1 = $endPoint . "?" . http_build_query( $params1 );
+    $url1 = $endPoint . "?" . http_build_query( $params1 );
 
-	$ch1 = curl_init( $url1 );
+    $ch1 = curl_init( $url1 );
 
-	curl_setopt( $ch1, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch1, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
-	curl_setopt( $ch1, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
+    curl_setopt( $ch1, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt( $ch1, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
+    curl_setopt( $ch1, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
 
-	$output1 = curl_exec( $ch1 );
-	curl_close( $ch1 );
+    $output1 = curl_exec( $ch1 );
+    curl_close( $ch1 );
 
-	$result1 = json_decode( $output1, true );
-	$csrftoken = $result1["query"]["tokens"]["csrftoken"];
+    $result1 = json_decode( $output1, true );
+    $csrftoken = $result1["query"]["tokens"]["csrftoken"];
 
-	//Get siteinfo
-	$params2 = [
-		"action" 	=> "query",
-		"meta" 		=> "siteinfo",
-		"siprop" 	=> "general|fileextensions",
-		"format" 	=> "json"
-	];
+    //Get siteinfo
+    $params2 = [
+        "action"    => "query",
+        "meta"      => "siteinfo",
+        "siprop"    => "general|fileextensions",
+        "format"    => "json"
+    ];
 
-	$url2 = $endPoint . "?" . http_build_query( $params2 );
+    $url2 = $endPoint . "?" . http_build_query( $params2 );
 
-	$ch2 = curl_init( $url2 );
+    $ch2 = curl_init( $url2 );
 
-	curl_setopt( $ch2, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch2, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
-	curl_setopt( $ch2, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
+    curl_setopt( $ch2, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt( $ch2, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
+    curl_setopt( $ch2, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
 
-	$output2 = curl_exec( $ch2 );
-	curl_close( $ch2 );
+    $output2 = curl_exec( $ch2 );
+    curl_close( $ch2 );
 
-	$result2 = json_decode( $output2, true );
-	$max_upload_size = $result2["query"]["general"]["maxuploadsize"];
-	foreach ($result2["query"]["fileextensions"] as $ext) $allowed_extensions[] = $ext["ext"];
+    $result2 = json_decode( $output2, true );
+    $max_upload_size = $result2["query"]["general"]["maxuploadsize"];
+    foreach ($result2["query"]["fileextensions"] as $ext) $allowed_extensions[] = $ext["ext"];
 
-	//Verifications about the file
-	if (!file_exists($location)) return FALSE;
-	if (!in_array(pathinfo($location)['extension'], $allowed_extensions)) return FALSE;
-	if (filesize($location) > $max_upload_size) return FALSE;
+    //Verifications about the file
+    if (!file_exists($location)) return FALSE;
+    if (!in_array(pathinfo($location)['extension'], $allowed_extensions)) return FALSE;
+    if (filesize($location) > $max_upload_size) return FALSE;
 
 
-	$params4 = [
-		"action" 		=> "upload",
-		"filename" 		=> $page,
-		"comment" 		=> $summary,
-		"text"			=> $text,
-		"file"			=> curl_file_create($location, mime_content_type($location), $page),
-		"token" 		=> $csrftoken,
-		"ignorewarnings"=> "1",
-		"format" 		=> "json"
-	];
+    $params4 = [
+        "action"        => "upload",
+        "filename"      => $page,
+        "comment"       => $summary,
+        "text"          => $text,
+        "file"          => curl_file_create($location, mime_content_type($location), $page),
+        "token"         => $csrftoken,
+        "ignorewarnings"=> "1",
+        "format"        => "json"
+    ];
 
-	$ch = curl_init();
+    $ch = curl_init();
 
-	curl_setopt( $ch, CURLOPT_URL, $endPoint );
-	curl_setopt( $ch, CURLOPT_POST, true );
-	curl_setopt( $ch, CURLOPT_HTTPHEADER, array('Content-type: multipart/form-data'));
-	curl_setopt( $ch, CURLOPT_POSTFIELDS, $params4 );
-	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
-	curl_setopt( $ch, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
+    curl_setopt( $ch, CURLOPT_URL, $endPoint );
+    curl_setopt( $ch, CURLOPT_POST, true );
+    curl_setopt( $ch, CURLOPT_HTTPHEADER, array('Content-type: multipart/form-data'));
+    curl_setopt( $ch, CURLOPT_POSTFIELDS, $params4 );
+    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt( $ch, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
+    curl_setopt( $ch, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
 
-	$output = curl_exec( $ch );
-	curl_close( $ch );
+    $output = curl_exec( $ch );
+    curl_close( $ch );
 
-	echo ( "<pre style=\"background-color: antiquewhite;\">" );
-	$output = json_decode( $output, true );
-	print_r ( $output );
-	echo ( "</pre>" );
+    echo ( "<pre style=\"background-color: antiquewhite;\">" );
+    $output = json_decode( $output, true );
+    print_r ( $output );
+    echo ( "</pre>" );
 }
 
 function deleteAPI( $page, $reason, $userAPI) {
-	global $endPoint;
+    global $endPoint;
 
-	$params3 = [
-		"action" 	=> "query",
-		"meta" 		=> "tokens",
-		"format" 	=> "json"
-	];
+    $params3 = [
+        "action"    => "query",
+        "meta"      => "tokens",
+        "format"    => "json"
+    ];
 
-	$url = $endPoint . "?" . http_build_query( $params3 );
+    $url = $endPoint . "?" . http_build_query( $params3 );
 
-	$ch1 = curl_init( $url );
+    $ch1 = curl_init( $url );
 
-	curl_setopt( $ch1, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch1, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
-	curl_setopt( $ch1, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
+    curl_setopt( $ch1, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt( $ch1, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
+    curl_setopt( $ch1, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
 
-	$output1 = curl_exec( $ch1 );
-	curl_close( $ch1 );
+    $output1 = curl_exec( $ch1 );
+    curl_close( $ch1 );
 
-	$result1 = json_decode( $output1, true );
-	$csrftoken = $result1["query"]["tokens"]["csrftoken"];
+    $result1 = json_decode( $output1, true );
+    $csrftoken = $result1["query"]["tokens"]["csrftoken"];
 
-	$params4 = [
-		"action" 		=> "delete",
-		"title" 		=> $page,
-		"reason"		=> $reason,
-		"token" 		=> $csrftoken,
-		"format" 		=> "json"
-	];
+    $params4 = [
+        "action"        => "delete",
+        "title"         => $page,
+        "reason"        => $reason,
+        "token"         => $csrftoken,
+        "format"        => "json"
+    ];
 
-	$ch = curl_init();
+    $ch = curl_init();
 
-	curl_setopt( $ch, CURLOPT_URL, $endPoint );
-	curl_setopt( $ch, CURLOPT_POST, true );
-	curl_setopt( $ch, CURLOPT_POSTFIELDS, http_build_query( $params4 ) );
-	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
-	curl_setopt( $ch, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
+    curl_setopt( $ch, CURLOPT_URL, $endPoint );
+    curl_setopt( $ch, CURLOPT_POST, true );
+    curl_setopt( $ch, CURLOPT_POSTFIELDS, http_build_query( $params4 ) );
+    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt( $ch, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
+    curl_setopt( $ch, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
 
-	$output = curl_exec( $ch );
-	curl_close( $ch );
+    $output = curl_exec( $ch );
+    curl_close( $ch );
 
-	echo ( "<pre style=\"background-color: antiquewhite;\">" );
-	$output = json_decode( $output, true );
-	if (isset($output['delete'])) $output = $output['delete'];
-	print_r ( $output );
-	echo ( "</pre>" );
-	if (isset($output["logid"])) return $output["logid"];
+    echo ( "<pre style=\"background-color: antiquewhite;\">" );
+    $output = json_decode( $output, true );
+    if (isset($output['delete'])) $output = $output['delete'];
+    print_r ( $output );
+    echo ( "</pre>" );
+    if (isset($output["logid"])) return $output["logid"];
+}
+
+function runAPI($params, $userAPI) {
+    global $endPoint;
+
+    $ch = curl_init();
+
+    curl_setopt( $ch, CURLOPT_URL, $endPoint . http_build_query( $params ) );
+    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt( $ch, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc" );
+    curl_setopt( $ch, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc" );
+
+    $output = curl_exec( $ch );
+    curl_close( $ch );
+
+    return $output;
 }
