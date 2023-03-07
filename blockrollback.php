@@ -27,11 +27,11 @@ foreach ($blocks_API as $key => $log) {
 	if (in_array($log["userid"], $rollbackers_IDs)) {
 
 		//Recupera nome do alvo
-		$target = explode(":", $log["title"]);
+		$target = explode(":", $log["title"], 2);
 
-		//Verifica privilégios do alvo
+		//Verifica privilégios do alvo e retorna 'false' caso seja IP
 		$target_API = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&list=users&usprop=rights&ususers=".urlencode($target["1"]));
-		$target_API = unserialize($target_API)["query"]["users"]["0"]["rights"];
+		$target_API = unserialize($target_API)["query"]["users"]["0"]["rights"] ?? array(false);
 
 		//Verifica se alvo é autoconfirmado
 		if (in_array("editsemiprotected", $target_API)) {
