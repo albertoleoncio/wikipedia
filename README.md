@@ -12,11 +12,10 @@ Bots:
 
 - https://pt.wikipedia.org/wiki/User:AlbeROBOT
 - https://pt.wikipedia.org/wiki/User:SabiaQueBot
+- https://pt.wikipedia.org/wiki/User:EventosAtuaisBot
 - https://pt.wikipedia.org/wiki/User:BloqBot
 
-## Scripts COVID-19
-
-- covid-19-brasil-cons.php - Atualiza os dados dos casos por unidade federativa brasileira. Utiliza os dados das secretarias de saúde das unidades federativas com a curadoria dos veículos de comunicação UOL, O Estado de S. Paulo, Folha de S.Paulo, O Globo, g1 e Extra.
+## Script COVID-19
 
 - covid-19-brasil.php - Atualiza os dados dos casos por unidade federativa brasileira. Utiliza os dados do Ministério da Saúde. Link: https://covid.saude.gov.br/.
 
@@ -44,6 +43,7 @@ Bots:
 - urcold.php - Script para remover arquivos de conteúdo restrito das categorias de eliminação inseridas erroneamente.
 - fnc.php - Gera lista de fontes não confiáveis a partir da categoria da central de confiabilidade.
 - editnoticesbot.php - Cria e elimina Editnotices de sobre variantes da Língua Portuguesa nos artigos.
+- working.php - Textos em processo de transcrição no Wikisource que foram modificados recentemente.
 
 ## Redes sociais
 
