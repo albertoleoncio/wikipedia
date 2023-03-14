@@ -378,7 +378,7 @@ function runAPI($params, $userAPI) {
 
     $ch = curl_init();
 
-    curl_setopt($ch, CURLOPT_URL, $endPoint . http_build_query($params));
+    curl_setopt($ch, CURLOPT_URL, $endPoint . "?" . http_build_query($params));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc");
     curl_setopt($ch, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc");
@@ -387,4 +387,87 @@ function runAPI($params, $userAPI) {
     curl_close($ch);
 
     return $output;
+}
+
+function optionsAPI($name, $data, $userAPI) {
+    global $endPoint;
+
+    //Modo leitura
+    if (!$data) {
+        $read_params = [
+            "action"        => "query",
+            "format"        => "php",
+            "meta"          => "userinfo",
+            "formatversion" => "2",
+            "uiprop"        => "options"
+        ];
+        $ch_read = curl_init();
+
+        curl_setopt($ch_read, CURLOPT_URL, $endPoint . "?" . http_build_query($read_params));
+        curl_setopt($ch_read, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch_read, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc");
+        curl_setopt($ch_read, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc");
+        $read = curl_exec($ch_read);
+        curl_close($ch_read);
+
+        $read = unserialize(unserialize($read)["query"]["userinfo"]["options"]["userjs-$name"]) ?? false;
+
+        return $read;
+
+    //Modo gravação    
+    } else {
+
+        //Coleta token para edição
+        $token_params = [
+            "action"    => "query",
+            "meta"      => "tokens",
+            "format"    => "php"
+        ];
+        $url_token = $endPoint . "?" . http_build_query($token_params);
+        $ch_token = curl_init($url_token);
+        curl_setopt($ch_token, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch_token, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc");
+        curl_setopt($ch_token, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc");
+        $output_token = curl_exec($ch_token);
+        curl_close($ch_token);
+        $csrftoken = unserialize($output_token)["query"]["tokens"]["csrftoken"] ?? false;
+
+        //Interrompe script caso ocorra erro na obtenção do token
+        if(!$csrftoken) die("Não foi possível solicitar o token CSRF!");
+
+        //Prepara parâmetros básicos para envio ao API
+        $write_params = [
+            "action"        => "options",
+            "token"         => $csrftoken,
+            "optionname"    => "userjs-$name",
+            "optionvalue"   => serialize($data),
+            "format"        => "php"
+        ];
+
+        //Executa edição
+        $ch_write = curl_init();
+        curl_setopt($ch_write, CURLOPT_URL, $endPoint);
+        curl_setopt($ch_write, CURLOPT_POST, true);
+        curl_setopt($ch_write, CURLOPT_POSTFIELDS, http_build_query($write_params));
+        curl_setopt($ch_write, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch_write, CURLOPT_COOKIEJAR, $userAPI."_cookie.inc");
+        curl_setopt($ch_write, CURLOPT_COOKIEFILE, $userAPI."_cookie.inc");
+        $write = curl_exec($ch_write);
+        curl_close($ch_write);
+
+        //Coleta resposta do API
+        $write = unserialize($write) ?? false;
+
+        //Mostra resposta da API via echo
+        echo "<pre style='background-color: antiquewhite;'>";
+        print_r($write);
+        echo "</pre>";
+
+        //Retorna resultado da API
+        if (isset($write["options"])) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
