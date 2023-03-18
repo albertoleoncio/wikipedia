@@ -3,30 +3,18 @@ require_once './bin/globals.php';
 require_once './bin/api2.php';
 
 /**
- * 
+ *
  */
 class BadNames {
 
-    /** @var string URL da API */
-    private $apiUrl;
-
-    /** @var string Login do bot */
-    private $usernameBQ;
-
-    /** @var string Senha do bot */
-    private $passwordBQ;
-
-    /** @var string Variável para acumular pedidos de notificação */
-    private $requests_rnu;
-
     /**
-     * Construtor da classe com criação do objeto 'wikiaphpi'
-     * @param string $apiUrl 
-     * @param string $usernameBQ 
-     * @param string $passwordBQ 
+     * Construtor da classe com criação do objeto 'WikiAphpi'
+     * @param string $apiUrl
+     * @param string $usernameBQ
+     * @param string $passwordBQ
      */
     public function __construct($apiUrl, $usernameBQ, $passwordBQ) {
-        $this->api = new wikiaphpi($apiUrl, $usernameBQ, $passwordBQ);
+        $this->api = new WikiAphpi($apiUrl, $usernameBQ, $passwordBQ);
     }
 
     /**
@@ -36,12 +24,15 @@ class BadNames {
      */
     private function removeImproperNameCategory($userTalk) {
         $html = preg_replace(
-            '/{{#ifeq:[^\|]*\|{{PAGENAME}}\|{{#ifexpr:.*\]\]}}}}/', '', 
+            '/{{#ifeq:[^\|]*\|{{PAGENAME}}\|{{#ifexpr:.*\]\]}}}}/',
+            '',
             $this->api->get($userTalk)
         );
         return $this->api->edit(
-            $html, NULL, TRUE, 
-            "bot: Removendo categoria de nome impróprio", 
+            $html,
+            null,
+            true,
+            "bot: Removendo categoria de nome impróprio",
             $userTalk
         );
     }
@@ -96,12 +87,12 @@ class BadNames {
         }
 
         //Verifica se há bloqueio ativo
-        if (isset($info['0'])) { 
+        if (isset($info['0'])) {
             return true;
         } else {
             return false;
         }
-        
+
     }
 
     /**
@@ -117,8 +108,7 @@ class BadNames {
             "titles"  => $userTalk
         ];
         $result = end($this->api->see($params)["query"]["pages"]);
-        $linkshere = $result["linkshere"] ?? array();
-        return $linkshere;
+        return $result["linkshere"] ?? array();
     }
 
     /**
@@ -128,8 +118,10 @@ class BadNames {
      */
     private function nullEdit($userTalk) {
         return $this->api->edit(
-            "\n\n", "append", TRUE, 
-            "bot: Null edit", 
+            "\n\n",
+            "append",
+            true,
+            "bot: Null edit",
             $userTalk
         );
     }
@@ -141,17 +133,17 @@ class BadNames {
      */
     private function isPendingRequest($userTalk) {
         $linkshere = $this->getLinkshere($userTalk);
-        if (array_search("6286011", array_column($linkshere, 'pageid')) !== FALSE) {
+        if (array_search("6286011", array_column($linkshere, 'pageid')) !== false) {
             return true;
         }
-        if (array_search("2077627", array_column($linkshere, 'pageid')) !== FALSE) {
+        if (array_search("2077627", array_column($linkshere, 'pageid')) !== false) {
             return true;
         }
         return false;
     }
 
     /**
-     * Verifica se usuário notificado ainda não está bloqueado. 
+     * Verifica se usuário notificado ainda não está bloqueado.
      * Caso não esteja, faz um null edit para recarregar categorias.
      * Caso contrário, remove categoria de monitoramento
      * @param string $userTalk Página de discussão do usuário
@@ -162,9 +154,7 @@ class BadNames {
             $this->removeImproperNameCategory($userTalk);
         } else {
             $renameDeadline = date("U", strtotime($timestamp)) + 432000;
-            if ($renameDeadline > time()) {
-                return;
-            } else {
+            if ($renameDeadline < time()) {
                 $this->nullEdit($userTalk);
             }
         }
@@ -198,7 +188,6 @@ class BadNames {
         $cat = "Categoria:!Usuários_com_nomes_impróprios_notificados";
         $notified = $this->getCategorizedUserTalkPages($cat);
         foreach ($notified as $user) {
-        	echo "Processando usuário ".$user;
             $this->checkAndRemoveCategory($user["title"], $user["timestamp"]);
         }
     }
@@ -216,8 +205,10 @@ class BadNames {
             $requests .= $this->checkAndPrepareRequest($user["title"], $user["timestamp"]);
         }
         $this->api->edit(
-            $requests, "append", FALSE, 
-            "bot: Inserindo pedido(s) de usuário(s) notificado(s) há 5 dias", 
+            $requests,
+            "append",
+            false,
+            "bot: Inserindo pedido(s) de usuário(s) notificado(s) há 5 dias",
             "Wikipédia:Pedidos/Revisão de nomes de usuário"
         );
     }

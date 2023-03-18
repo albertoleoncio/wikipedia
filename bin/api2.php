@@ -5,7 +5,7 @@
 /**
  * Class wikiaphpi provides an interface to interact with API from MediaWiki.
  */
-class wikiaphpi {
+class WikiAphpi {
 
     /** @var string The base URL for API requests. */
     private $endpoint;
@@ -54,7 +54,7 @@ class wikiaphpi {
             $url .= "?" . http_build_query($params);
         }
 
-        // optional for specific headers 
+        // optional for specific headers
         if ($headers !== false) {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         }
@@ -77,7 +77,7 @@ class wikiaphpi {
         if ($result2 === false) {
             throw new Exception("Error unserializing. API' format is PHP?");
         }
-        
+
         return $result2;
     }
 
@@ -156,12 +156,12 @@ class wikiaphpi {
             "meta"      => "tokens",
             "format"    => "php"
         ];
-        $result_api = $this->sendCurlRequest($params, false);
-        $result = $result_api["query"]["tokens"]["csrftoken"] ?? false;
+        $resultApi = $this->sendCurlRequest($params, false);
+        $result = $resultApi["query"]["tokens"]["csrftoken"] ?? false;
 
         //Interrompe script caso ocorra erro na obtenção do token
         if ($result === false) {
-            throw new Exception(print_r($result_api, true));
+            throw new Exception(print_r($resultApi, true));
         }
 
         return $result;
@@ -187,12 +187,12 @@ class wikiaphpi {
             "formatversion" => "2",
             "format"        => "php"
         ];
-        $result_api = $this->sendCurlRequest($params, false);
-        $result = $result_api["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"]["content"] ?? false;
+        $resultApi = $this->sendCurlRequest($params, false);
+        $result = $resultApi["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"]["content"] ?? false;
 
         //Interrompe script caso ocorra erro na obtenção do token
         if ($result === false) {
-            throw new Exception(print_r($result_api, true));
+            throw new Exception(print_r($resultApi, true));
         }
 
         return $result;
@@ -207,47 +207,47 @@ class wikiaphpi {
      */
     public function getsections($page) {
 
-	    $section = 0;
-	    $validsection = true;
-	    $allsections = array();
+        $section = 0;
+        $validsection = true;
+        $allsections = array();
 
-	    while ($validsection) {
+        while ($validsection) {
 
-	        $params = [
-	            "action"        => "query",
-	            "prop"          => "revisions",
-	            "titles"        => $page,
-	            "rvprop"        => "content",
-	            "rvslots"       => "main",
-	            "formatversion" => "2",
-	            "rvsection"     => $section,
-	            "format"        => "php"
-	        ];
+            $params = [
+                "action"        => "query",
+                "prop"          => "revisions",
+                "titles"        => $page,
+                "rvprop"        => "content",
+                "rvslots"       => "main",
+                "formatversion" => "2",
+                "rvsection"     => $section,
+                "format"        => "php"
+            ];
 
-	        $result = $this->sendCurlRequest($params, false);
+            $result = $this->sendCurlRequest($params, false);
 
-	        $main = $result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"] ?? false;
+            $main = $result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"] ?? false;
 
-	        if ($main === false) {
-	            throw new Exception(print_r($main, true));
-	        }
+            if ($main === false) {
+                throw new Exception(print_r($main, true));
+            }
 
-	        if (isset($main["nosuchsection"])) {
-	            $validsection = false;
-	        } else {
-	            $allsections[$section] = $main["content"];
-	            $section++;
-	        }
-	    }
+            if (isset($main["nosuchsection"])) {
+                $validsection = false;
+            } else {
+                $allsections[$section] = $main["content"];
+                $section++;
+            }
+        }
 
-	    return $allsections;
-	}
+        return $allsections;
+    }
 
 
     /**
      * Edits a page.
      *
-     * @param string $text Content of the page 
+     * @param string $text Content of the page
      * @param sting $section Number of section to be edited, "append" to add at the end of page or null to edit the entire page.
      * @param bool $minor True makes the edit be marked as a minor edit and a bot edit.
      * @param type $summary Summary of edit.
@@ -255,7 +255,7 @@ class wikiaphpi {
      * @return int The revision ID.
      */
     public function edit($text, $section, $minor, $summary, $page) {
-       
+
         //Prepara parâmetros básicos para envio ao API
         $params = [
             "action"        => "edit",
@@ -286,17 +286,17 @@ class wikiaphpi {
         }
 
         //Executa edição
-        $result_api = $this->sendCurlRequest($params, true);
+        $resultApi = $this->sendCurlRequest($params, true);
 
         //Retorna número zero caso não não tenha ocorrido mudanças na página
-        if (isset($result_api['edit']["nochange"])) {
-        	return 0;
+        if (isset($resultApi['edit']["nochange"])) {
+            return 0;
         }
 
         //Retorna número da revisão
-        $result = $result_api['edit']["newrevid"] ?? false;
+        $result = $resultApi['edit']["newrevid"] ?? false;
         if ($result === false) {
-            throw new Exception(print_r($result_api, true));
+            throw new Exception(print_r($resultApi, true));
         }
         return $result;
     }
@@ -317,12 +317,12 @@ class wikiaphpi {
             "token"         => $this->getCsrfToken(),
             "format"        => "php"
         ];
-        $result_api = $this->sendCurlRequest($params, true);
-        $result = $result_api['delete']["logid"] ?? false;
+        $resultApi = $this->sendCurlRequest($params, true);
+        $result = $resultApi['delete']["logid"] ?? false;
 
         //Retorna número da revisão
         if ($result === false) {
-            throw new Exception(print_r($result_api, true));
+            throw new Exception(print_r($resultApi, true));
         }
 
         //Retorna número do log
@@ -369,10 +369,10 @@ class wikiaphpi {
         if (!file_exists($location)) {
             throw new Exception("File not found!");
         }
-        if (!in_array(pathinfo($location)['extension'], $allowed_extensions)) {
+        if (!in_array(pathinfo($location)['extension'], $siteinfo["fileextensions"])) {
             throw new Exception("Extension not allowed!");
         }
-        if (filesize($location) > $max_upload_size) {
+        if (filesize($location) > $siteinfo["maxuploadsize"]) {
             throw new Exception("File too big!");
         }
 
@@ -389,12 +389,12 @@ class wikiaphpi {
         ];
 
         $upload_api = $this->sendCurlRequest($params_upload, true, array('Content-type: multipart/form-data'));
-        
+
         $result = $upload_api["upload"]["filename"] ?? false;
 
         //Retorna número da revisão
         if ($result === false) {
-            throw new Exception(print_r($result_api, true));
+            throw new Exception(print_r($resultApi, true));
         }
 
         //Retorna nome do arquivo
@@ -404,12 +404,12 @@ class wikiaphpi {
 
     /**
      * Read a option
-     * 
+     *
      * @param string $name Name of the option
      * @return string The content of the option
      */
-    public function read_option($name) {
-       
+    public function readOption($name) {
+
         $params = [
             "action"        => "query",
             "format"        => "php",
@@ -417,24 +417,22 @@ class wikiaphpi {
             "formatversion" => "2",
             "uiprop"        => "options"
         ];
-        $result_api = $this->sendCurlRequest($params, false);
+        $resultApi = $this->sendCurlRequest($params, false);
 
-        $read = unserialize(unserialize($result_api)["query"]["userinfo"]["options"]["userjs-wikiaphpi-$name"]) ?? false;
-
-        return $read;
-	}
+        return unserialize(unserialize($resultApi)["query"]["userinfo"]["options"]["userjs-wikiaphpi-$name"]) ?? false;
+    }
 
 
-	/**
-	 * Write a option
-	 * 
-	 * @param string $name Name of the option
-	 * @param string $data Content of the option
-	 * @return bool True if saved
-	 */
-    public function write_option($name, $data) {
+    /**
+     * Write a option
+     *
+     * @param string $name Name of the option
+     * @param string $data Content of the option
+     * @return bool True if saved
+     */
+    public function writeOption($name, $data) {
 
-            
+
         $params = [
             "action"        => "options",
             "token"         => $this->getCsrfToken(),
@@ -444,14 +442,14 @@ class wikiaphpi {
         ];
 
         //Executa edição
-        $result_api = $this->sendCurlRequest($params, true);
+        $resultApi = $this->sendCurlRequest($params, true);
 
         //Coleta resposta do API
-        $result = unserialize($result_api) ?? false;
+        $result = unserialize($resultApi) ?? false;
 
         //Retorna resultado da API
         if (!isset($result["options"])) {
-            throw new Exception(print_r($result_api, true));
+            throw new Exception(print_r($resultApi, true));
         }
 
         return true;
@@ -460,15 +458,12 @@ class wikiaphpi {
 
     /**
      * Generic function to get logged info without any action
-     * 
+     *
      * @param array $params Parameters to be send to the API
      * @return array API's response
      */
     public function see($params) {
-
-	    $result = $this->sendCurlRequest($params, false);
-
-	    return $result;
-	}
+        return $this->sendCurlRequest($params, false);
+    }
 
 }
