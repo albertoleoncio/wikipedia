@@ -1,151 +1,237 @@
 <?php
 require_once './bin/globals.php';
+require_once './bin/api2.php';
 
-//Login
-require_once './bin/api.php';
-loginAPI($usernameBQ, $passwordBQ);
+/**
+ * 
+ */
+class BadNames {
 
-//Funções
-function api_get($params) {
-	global $usernameBQ;
-	$ch1 = curl_init( "https://pt.wikipedia.org/w/api.php?" . http_build_query( $params ) );
-	curl_setopt( $ch1, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch1, CURLOPT_COOKIEJAR, $usernameBQ."_cookie.inc" );
-	curl_setopt( $ch1, CURLOPT_COOKIEFILE, $usernameBQ."_cookie.inc" );
-	$data = curl_exec( $ch1 );
-	curl_close( $ch1 );
-	return $data;
+    /** @var string URL da API */
+    private $apiUrl;
+
+    /** @var string Login do bot */
+    private $usernameBQ;
+
+    /** @var string Senha do bot */
+    private $passwordBQ;
+
+    /** @var string Variável para acumular pedidos de notificação */
+    private $requests_rnu;
+
+    /**
+     * Construtor da classe com criação do objeto 'wikiaphpi'
+     * @param string $apiUrl 
+     * @param string $usernameBQ 
+     * @param string $passwordBQ 
+     */
+    public function __construct($apiUrl, $usernameBQ, $passwordBQ) {
+        $this->api = new wikiaphpi($apiUrl, $usernameBQ, $passwordBQ);
+    }
+
+    /**
+     * Remove marcação de categoria de usuários notificados
+     * @param sting $userTalk Página de discussão do usuário
+     * @return int Revision number
+     */
+    private function removeImproperNameCategory($userTalk) {
+        $html = preg_replace(
+            '/{{#ifeq:[^\|]*\|{{PAGENAME}}\|{{#ifexpr:.*\]\]}}}}/', '', 
+            $this->api->get($userTalk)
+        );
+        return $this->api->edit(
+            $html, NULL, TRUE, 
+            "bot: Removendo categoria de nome impróprio", 
+            $userTalk
+        );
+    }
+
+    /**
+     * Recupera usuários listados na categoria de monitoramento
+     * @param sting $categoryTitle Nome da categoria
+     * @return array Lista de páginas de discussão destes usuários
+     */
+    private function getCategorizedUserTalkPages($categoryTitle) {
+        $params = [
+            "action"  => "query",
+            "format"  => "php",
+            "list"    => "categorymembers",
+            "cmtitle" => $categoryTitle,
+            "cmprop"  => "title|timestamp",
+            "cmsort"  => "timestamp",
+            "cmlimit" => "max"
+        ];
+        return $this->api->see($params)["query"]["categorymembers"];
+    }
+
+    /**
+     * Recupera nome de usuário pela sua página de discussão
+     * @param string $userTalk Página de discussão do usuário
+     * @return string Nome do usuário
+     */
+    private function getUserFromUserTalk($userTalk) {
+        return preg_replace('/.*?:/', '', $userTalk);
+    }
+
+    /**
+     * Verifica se há bloqueios ativos para o usuário informado
+     * @param string $userTalk Página de discussão do usuário
+     * @return bool True if blocked, false if is not
+     */
+    private function isUserBlocked($userTalk) {
+        $params = [
+            "action"  => "query",
+            "format"  => "php",
+            "list"    => "blocks",
+            "bkusers" => $this->getUserFromUserTalk($userTalk)
+        ];
+
+        //Executa API
+        $api = $this->api->see($params);
+
+        //Coleta subarray com bloqueios
+        $info = $api['query']['blocks'] ?? false;
+        if ($info === false) {
+            throw new Exception(print_r($api, true));
+        }
+
+        //Verifica se há bloqueio ativo
+        if (isset($info['0'])) { 
+            return true;
+        } else {
+            return false;
+        }
+        
+    }
+
+    /**
+     * Coleta lista de afluentes da página de discussão do usuário
+     * @param string $userTalk Página de discussão do usuário
+     * @return array Lista de páginas afluentes
+     */
+    private function getLinkshere($userTalk) {
+        $params = [
+            "action"  => "query",
+            "format"  => "php",
+            "prop"    => "linkshere",
+            "titles"  => $userTalk
+        ];
+        $result = end($this->api->see($params)["query"]["pages"]);
+        $linkshere = $result["linkshere"] ?? array();
+        return $linkshere;
+    }
+
+    /**
+     * Executa edição nula em página para que as categorias sejam reiniciadas
+     * @param string $userTalk Página de discussão do usuário
+     * @return int Revision number
+     */
+    private function nullEdit($userTalk) {
+        return $this->api->edit(
+            "\n\n", "append", TRUE, 
+            "bot: Null edit", 
+            $userTalk
+        );
+    }
+
+    /**
+     * Verifica se usuário possui pedido pendente de renomeação ou bloqueio
+     * @param string $userTalk Página de discussão do usuário
+     * @return bool Verdadeiro caso exista pedido, falso caso contrário
+     */
+    private function isPendingRequest($userTalk) {
+        $linkshere = $this->getLinkshere($userTalk);
+        if (array_search("6286011", array_column($linkshere, 'pageid')) !== FALSE) {
+            return true;
+        }
+        if (array_search("2077627", array_column($linkshere, 'pageid')) !== FALSE) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Verifica se usuário notificado ainda não está bloqueado. 
+     * Caso não esteja, faz um null edit para recarregar categorias.
+     * Caso contrário, remove categoria de monitoramento
+     * @param string $userTalk Página de discussão do usuário
+     * @param int $timestamp Horário de categorização
+     */
+    private function checkAndRemoveCategory($userTalk, $timestamp) {
+        if ($this->isUserBlocked($userTalk)) {
+            $this->removeImproperNameCategory($userTalk);
+        } else {
+            $renameDeadline = date("U", strtotime($timestamp)) + 432000;
+            if ($renameDeadline > time()) {
+                return;
+            } else {
+                $this->nullEdit($userTalk);
+            }
+        }
+    }
+
+    /**
+     * Verifica se usuário pendente ainda não está bloqueado
+     * Caso esteja, remove categorias de monitoramento
+     * Caso contrário, verifica se há pedidos em espera
+     * Se não houver, retorna código para notificar
+     * @param type $userTalk Página de discussão do usuário
+     * @return type
+     */
+    private function checkAndPrepareRequest($userTalk) {
+        if ($this->isUserBlocked($userTalk)) {
+            $this->removeImproperNameCategory($userTalk);
+        } else {
+            if ($this->isPendingRequest($userTalk)) {
+                return '';
+            } else {
+                $user = $this->getUserFromUserTalk($userTalk);
+                return "\n\n{{subst:Nome de usuário impróprio/BloqBot|${user}}}";
+            }
+        }
+    }
+
+    /**
+     * Processa usuários notificados
+     */
+    private function processNotifiedUsers() {
+        $cat = "Categoria:!Usuários_com_nomes_impróprios_notificados";
+        $notified = $this->getCategorizedUserTalkPages($cat);
+        foreach ($notified as $user) {
+        	echo "Processando usuário ".$user;
+            $this->checkAndRemoveCategory($user["title"], $user["timestamp"]);
+        }
+    }
+
+    /**
+     * Processa usuários passíveis de bloqueio
+     */
+    private function processPendingUsers() {
+        $cat = "Categoria:!Usuários_com_nomes_impróprios_passíveis_de_bloqueio";
+        $pending = $this->getCategorizedUserTalkPages($cat);
+
+        $requests = '';
+        foreach ($pending as $user) {
+        	echo "Processando usuário ".$user;
+            $requests .= $this->checkAndPrepareRequest($user["title"], $user["timestamp"]);
+        }
+        $this->api->edit(
+            $requests, "append", FALSE, 
+            "bot: Inserindo pedido(s) de usuário(s) notificado(s) há 5 dias", 
+            "Wikipédia:Pedidos/Revisão de nomes de usuário"
+        );
+    }
+
+    /**
+     * Processa usuários
+     */
+    public function processUsers() {
+        $this->processNotifiedUsers();
+        $this->processPendingUsers();
+    }
+
 }
-function uncat_blocked($usertalk) {
-	global $usernameBQ;
-	$html = preg_replace(
-		'/{{#ifeq:[^\|]*\|{{PAGENAME}}\|{{#ifexpr:.*\]\]}}}}/', '', 
-		getAPI($usertalk)
-	);
-	editAPI(
-		$html, NULL, TRUE, 
-		"bot: Removendo categoria de nome impróprio", 
-		$usertalk, $usernameBQ
-	);
-}
 
-//Coleta categoria de usuários notificados
-$params_cat = [
-	"action"  => "query",
-	"format"  => "php",
-	"list"    => "categorymembers",
-	"cmtitle" => "Categoria:!Usuários_com_nomes_impróprios_notificados",
-	"cmprop"  => "title|timestamp",
-	"cmsort"  => "timestamp",
-	"cmlimit" => "500"
-];
-$list = unserialize(api_get($params_cat))["query"]["categorymembers"];
 
-//Loop para cada usuário da categoria
-foreach ($list as $item) {
-
-	//Coleta nome da página de discussão do usuário
-	$usertalk = $item["title"];
-
-	//Coleta informações do usuário
-	$params_blocks = [
-		"action"  => "query",
-		"format"  => "php",
-		"list"    => "blocks",
-		"bkusers" => preg_replace('/.*?:/', '', $usertalk)
-	];
-	$info = unserialize(api_get($params_blocks))['query']['blocks'];
-
-	//Verifica se usuário ainda não está bloqueado
-	//Caso não esteja, faz um null edit para recarregar categorias
-	//Caso contrário, remove categoria de monitoramento
-	if (!isset($info[0])) {
-
-		//Verifica se prazo de 5 dias foi decorrido. Caso sim, interrompe loop e segue para o próximo usuário
-		if ((date("U", strtotime($item["timestamp"])) + 432000) > time()) continue;
-
-		//Faz edição nula na página de discussão do usuário para recarregar categorias
-		editAPI(
-			"\n\n", "append", TRUE, 
-			"bot: Null edit", 
-			$usertalk, $usernameBQ
-		);
-
-	} else {
-
-		//Define variável
-		$blockinfo = $info[0];
-
-		//Caso bloqueio seja menor que 24 horas, interrompe loop e segue para o próximo usuário
-		if ($blockinfo['expiry'] != "infinity") continue;
-
-		//Remove categoria de monitoramento
-		uncat_blocked($usertalk);
-	}
-}
-
-echo("<hr>");
-
-//Coleta categoria de usuários notificados
-$params_cat2 = [
-	"action"  => "query",
-	"format"  => "php",
-	"list"    => "categorymembers",
-	"cmtitle" => "Categoria:!Usuários_com_nomes_impróprios_passíveis_de_bloqueio",
-	"cmprop"  => "title",
-	"cmsort"  => "timestamp",
-	"cmlimit" => "500"
-];
-$list2 = unserialize(api_get($params_cat2))["query"]["categorymembers"];
-
-//Define variável de pedidos
-$requests_rnu = '';
-
-//Loop para cada usuário da categoria
-foreach ($list2 as $item2) {
-
-	//Coleta nome da página de discussão do usuário
-	$usertalk2 = $item2["title"];
-
-	//Coleta informações do usuário
-	$params_blocks = [
-		"action"  => "query",
-		"format"  => "php",
-		"list"    => "blocks",
-		"bkusers" => preg_replace('/.*?:/', '', $usertalk2)
-	];
-	$info2 = unserialize(api_get($params_blocks))['query']['blocks'];
-
-	//Verifica se usuário está bloqueado e remove categoria de monitoramento caso sim
-	//Caso contrário, insere pedido na RNU
-	if (isset($info2[0])) {
-		uncat_blocked($usertalk2);
-	} else {
-		//Coleta afluentes da página de usuário
-		$params_blocks = [
-			"action"  => "query",
-			"format"  => "php",
-			"prop"    => "linkshere",
-			"titles"  => $item2["title"]
-		];
-		$afluentes = end(unserialize(api_get($params_blocks))["query"]["pages"]);
-
-		//Verifica se já há pedido de revisão ou renomeação para a conta
-		if (isset($afluentes["linkshere"])) {
-			if (array_search("6286011", array_column($afluentes["linkshere"], 'pageid')) !== FALSE) continue;
-			if (array_search("2077627", array_column($afluentes["linkshere"], 'pageid')) !== FALSE) continue;
-		}
-
-		//Adiciona código de pedido na variável
-		$requests_rnu .= "\n\n{{subst:Nome de usuário impróprio/BloqBot|".preg_replace('/.*?:/', '', $item2["title"])."}}";
-	}
-}
-
-//Insere pedidos na RNU
-editAPI(
-	$requests_rnu, "append", FALSE, 
-	"bot: Inserindo pedido(s) de usuário(s) notificado(s) há 5 dias", 
-	"Wikipédia:Pedidos/Revisão de nomes de usuário", $usernameBQ
-); 
-
-echo("OK!");
+$badNames = new BadNames('https://pt.wikipedia.org/w/api.php', $usernameBQ, $passwordBQ);
+$badNames->processUsers();

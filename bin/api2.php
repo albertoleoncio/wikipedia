@@ -287,14 +287,17 @@ class wikiaphpi {
 
         //Executa edição
         $result_api = $this->sendCurlRequest($params, true);
-        $result = $result_api['edit']["newrevid"] ?? false;
 
-        //Retorna número da revisão
-        if ($result === false) {
-            throw new Exception(print_r($result_api, true));
+        //Retorna número zero caso não não tenha ocorrido mudanças na página
+        if (isset($result_api['edit']["nochange"])) {
+        	return 0;
         }
 
         //Retorna número da revisão
+        $result = $result_api['edit']["newrevid"] ?? false;
+        if ($result === false) {
+            throw new Exception(print_r($result_api, true));
+        }
         return $result;
     }
 
@@ -465,7 +468,7 @@ class wikiaphpi {
 
 	    $result = $this->sendCurlRequest($params, false);
 
-	    return $result_api;
+	    return $result;
 	}
 
 }
