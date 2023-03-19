@@ -140,7 +140,7 @@ class BadRollback {
         //Processa cada registro de bloqueio
         foreach ($logs as $log) {
 
-        	//Echo
+        	// Exibe mensagem de processamento do log
         	echo "Processando log {$log["logid"]}\n";
 
             //Verifica se incidente já foi lançado
@@ -158,8 +158,10 @@ class BadRollback {
 
             //Insere registro na array
             if ($verify !== false) {
-                $notify[$log['user']] = "\n{{subst:Incidente/Bloqbot|{$log['user']}|{$verify}|{$this->getNameFromUserPage($log['title'])}|{$log['logid']}}}\n";
-
+            	$user = $log['user'];
+            	$target = $this->getNameFromUserPage($log['title']);
+            	$incident = "\n{{subst:Incidente/Bloqbot|$user|$verify|$target|{$log['logid']}}}\n";
+            	$notify[$user] = $incident;
             }
         }
 
@@ -167,38 +169,52 @@ class BadRollback {
     }
 
     /**
-     * Recupera incidentes e edita página de log e de incidentes
-     */
-    public function run() {
+	 * Salva os incidentes na página de notificação de incidentes.
+	 * @param array $notifications Array contendo as notificações dos incidentes.
+	 */
+	private function saveIncidents($notifications) {
+	    $notifications = implode('', $notifications);
+	    $this->api->edit(
+	        $notifications,
+	        'append',
+	        false,
+	        "bot: Inserindo notificação de incidente envolvendo reversor",
+	        "Wikipédia:Pedidos/Notificação de incidentes"
+	    );
+	}
 
-        //Gera lista de notificações
-        $notifications = $this->compileNotifications(
-            $this->getRecentBlocks(),
-            $this->getRollbackers(),
-            $this->getNotified()
-        );
+	/**
+	 * Salva os números dos logs dos incidentes.
+	 * @param array $notifications Array contendo as notificações dos incidentes.
+	 */
+	private function saveIncidentLogs($notifications) {
+	    $logs = implode("\n", array_keys($notifications));
+	    $this->api->edit(
+	        "\n$logs",
+	        'append',
+	        true,
+	        "bot: Lançando ID de incidente",
+	        "Usuário(a):BloqBot/rev"
+	    );
+	}
 
-        //Grava log de incidentes
-        $logs = array_keys($notifications);
-        $logs = implode("\n", $logs);
-        $this->api->edit(
-            "\n$logs", 
-            'append', 
-            true,
-            "bot: Lançando ID de incidente",
-            "Usuário(a):BloqBot/rev"
-        );
+	/**
+	 * Executa o processo de compilação de notificações e salva no log e na página de incidentes.
+	 * Este método é responsável por compilar notificações de incidentes envolvendo reversores na Wikipédia e salvar
+	 * esses incidentes em duas páginas: a página de incidentes e a página de log para evitar duplicidade. 
+	 * Para isso, a função chama as funções auxiliares `compileNotifications()`, `saveIncidentLogs()` e `saveIncidents()`.
+	 * @return void
+	 */
+	public function run() {
+	    $notifications = $this->compileNotifications(
+	        $this->getRecentBlocks(),
+	        $this->getRollbackers(),
+	        $this->getNotified()
+	    );
 
-        //Grava incidentes
-        $notifications = implode('', $notifications);
-        $this->api->edit(
-            $notifications, 
-            'append', 
-            false,
-            "bot: Inserindo notificação de incidente envolvendo reversor",
-            "Wikipédia:Pedidos/Notificação de incidentes"
-        );
-    }
+	    $this->saveIncidentLogs($notifications);
+	    $this->saveIncidents($notifications);
+	}
 }
 
 //Executa script

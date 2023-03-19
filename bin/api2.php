@@ -205,7 +205,7 @@ class WikiAphpi {
      * @param strint $page Page to be readed.
      * @return array Content of the page.
      */
-    public function getsections($page) {
+    public function getSections($page) {
 
         $section = 0;
         $validsection = true;
