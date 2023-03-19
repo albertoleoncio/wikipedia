@@ -1,104 +1,206 @@
-<?php
+<pre><?php
 require_once './bin/globals.php';
+require_once './bin/api2.php';
 
-//Login
-require_once './bin/api.php';
-loginAPI($usernameBQ, $passwordBQ);
+/**
+ *
+ */
+class BadRollback {
 
-//Levanta lista de reversores
-$rollbackers_API = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&list=allusers&augroup=rollbacker&aulimit=500");
-$rollbackers_API = unserialize($rollbackers_API)["query"]["allusers"];
+    /**
+     * Construtor da classe com criação do objeto 'WikiAphpi'
+     * @param string $apiUrl
+     * @param string $usernameBQ
+     * @param string $passwordBQ
+     */
+    public function __construct($apiUrl, $usernameBQ, $passwordBQ) {
+        $this->api = new WikiAphpi($apiUrl, $usernameBQ, $passwordBQ);
+    }
 
-//Insere ID de reversores em uma array
-$rollbackers_IDs = array();
-foreach ($rollbackers_API as $user) $rollbackers_IDs[] = $user["userid"];
+    /**
+     * Levanta lista de reversores
+     * @return array Lista de IDs de usuários reversores
+     */
+    private function getRollbackers() {
+        $params = [
+          'action'  => 'query',
+          'format'  => 'php',
+          'list'    => 'allusers',
+          'augroup' => 'rollbacker',
+          'aulimit' => 'max'
+        ];
+        $rollbackers_API = $this->api->see($params)['query']['allusers'];
+        $rollbackers_IDs = array();
+        foreach ($rollbackers_API as $user) {
+            $rollbackers_IDs[] = $user['userid'];
+        }
+        
+        return $rollbackers_IDs;
+    }
 
-//Levanta lista de bloqueios ocorridos nos últimos 30 minutos
-$blocks_API = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&list=logevents&leprop=userid%7Cdetails%7Cids%7Ctitle%7Cuser%7Ctype%7Ctimestamp&letype=block&lelimit=500&letype=block&ledir=older&leend=".urlencode(gmdate('Y-m-d\TH:i:s\Z', strtotime("-30 minutes"))));
-$blocks_API = unserialize($blocks_API)["query"]["logevents"];
+    /**
+     * Levanta lista de bloqueios ocorridos nos últimos minutos
+     * @return array Lista de eventos e seus detalhes
+     */
+    public function getRecentBlocks() {
+        $params = [
+            'action'    => 'query',
+            'format'    => 'php',
+            'list'      => 'logevents',
+            'leprop'    => 'userid|details|ids|title|user|type|timestamp',
+            'letype'    => 'block',
+            'lelimit'   => 'max',
+            'ledir'     => 'older',
+            'leend'     => gmdate('Y-m-d\TH:i:s\Z', strtotime('-180 minutes'))
+        ];
+        $result = $this->api->see($params)['query']['logevents'];
+        return $result;
+    }
 
-//Cria array para armazenar casos para notificação
-$notify = array();
+    /**
+     * Verifica se usuário é autoconfirmado
+     * @param string $username Nome do usuário
+     * @return bool Verdadeiro se for autoconfirmado, falso caso contrário ou caso seja IP
+     */
+    private function isUserAutoConfirmed($username) {
+        $params = [
+            'action'    => 'query',
+            'format'    => 'php',
+            'list'      => 'users',
+            'usprop'    => 'rights',
+            'ususers'   => $username
+        ];
+        $result = $this->api->see($params)['query']['users'][0]['rights'] ?? [false];
+        return in_array('editsemiprotected', $result);
+    }
 
-//Processa cada registro de bloqueio
-foreach ($blocks_API as $key => $log) {
+    /**
+     * Recupera nome do usuário de acordo com o nome de sua página de usuário
+     * @param string $pagename Página do usuário
+     * @return string Nome do usuário
+     */
+    private function getNameFromUserPage($pagename) {
+        $name = explode(':', $pagename, 2);
+        return $name["1"];
+    }
 
-	//Verifica se autor é reversor
-	if (in_array($log["userid"], $rollbackers_IDs)) {
+    /**
+     * Verifica parâmetros do log de bloqueio
+     * @param array $log Parâmetros de log
+     * @return mixed String com erro detectado ou falso caso contrário
+     */
+    private function verifyLog($log) {
 
-		//Recupera nome do alvo
-		$target = explode(":", $log["title"], 2);
+        //Verifica se alvo é autoconfirmado
+        $target = $this->getNameFromUserPage($log['title']);
+        if ($this->isUserAutoConfirmed($target)) {
+            return "autoconfirmado";
+        }
 
-		//Verifica privilégios do alvo e retorna 'false' caso seja IP
-		$target_API = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&list=users&usprop=rights&ususers=".urlencode($target["1"]));
-		$target_API = unserialize($target_API)["query"]["users"]["0"]["rights"] ?? array(false);
+        //Ignora desbloqueios de não-autoconfirmados
+        if ($log["action"] == "unblock") {
+            return false;
+        }
 
-		//Verifica se alvo é autoconfirmado
-		if (in_array("editsemiprotected", $target_API)) {
-			$notify[] = [
-				"id"		=> $log["logid"],
-				"user"		=> $log["user"],
-				"target"	=> $target["1"],
-				"problem"	=> "autoconfirmado"
-			];
-			continue;			
-		}
+        //Verifica se bloqueio foi infinito
+        if (!isset($log['params']['expiry'])) {
+            return "infinito";
+        }
 
-		//Ignora desbloqueios de não-autoconfirmados
-		if ($log["action"] == "unblock") continue;
+        //Verifica se bloqueio é superior a 24 horas
+        $lenght = strtotime($log['params']['expiry']) - strtotime($log['timestamp']);
+        if ($lenght > 86401) {
+            return ($lenght/3600) . ' horas';
+        }
 
-		//Verifica se bloqueio foi infinito e armazena caso sim
-		if (!isset($log["params"]["expiry"])) {
-			$notify[] = [
-				"id"		=> $log["logid"],
-				"user"		=> $log["user"],
-				"target"	=> $target["1"],
-				"problem"	=> "infinito"
-			];
-			continue;
-		}
+        //Fallback
+        return false;
+    }
 
-		//Verifica se bloqueio é superior a 24 horas
-		$lenght = strtotime($log["params"]["expiry"]) - strtotime($log["timestamp"]);
-		if ($lenght > 86401) {
-			$notify[] = [
-				"id"		=> $log["logid"],
-				"user"		=> $log["user"],
-				"target"	=> $target["1"],
-				"problem"	=> ($lenght/3600)." horas"
-			];
-			continue;
-		}
-	}
+    /**
+     * Recupera lista de incidentes já notificados
+     * @return array IDs de log
+     */
+    private function getNotified() {
+        $list = $this->api->get('User:BloqBot/rev');
+        $list = explode("\n", $list);
+        return $list;
+    }
+
+    /**
+     * Compila array com incidentes a serem notificados
+     * @param array $logs Lista de arrays dos parâmetros de cada bloqueio
+     * @param array $rollbackersIDs Lista de IDs dos usuários reversores
+     * @param array $notified Lista de IDs dos incidentes já lançados
+     * @return array Incidentes a serem lançados
+     */
+    private function compileNotifications($logs, $rollbackersIDs, $notified) {
+        $notify = [];
+
+        //Processa cada registro de bloqueio
+        foreach ($logs as $log) {
+
+        	//Echo
+        	echo "Processando log {$log["logid"]}\n";
+
+            //Verifica se incidente já foi lançado
+            if (in_array($log['logid'], $notified)) {
+                continue;
+            }
+
+            //Verifica se autor não é reversor
+            if (!in_array($log['userid'], $rollbackersIDs)) {
+                continue;
+            }
+            
+            //Verifica parâmetros do registro
+            $verify = $this->verifyLog($log);
+
+            //Insere registro na array
+            if ($verify !== false) {
+                $notify[$log['user']] = "\n{{subst:Incidente/Bloqbot|{$log['user']}|{$verify}|{$this->getNameFromUserPage($log['title'])}|{$log['logid']}}}\n";
+
+            }
+        }
+
+        return $notify;
+    }
+
+    /**
+     * Recupera incidentes e edita página de log e de incidentes
+     */
+    public function run() {
+
+        //Gera lista de notificações
+        $notifications = $this->compileNotifications(
+            $this->getRecentBlocks(),
+            $this->getRollbackers(),
+            $this->getNotified()
+        );
+
+        //Grava log de incidentes
+        $logs = array_keys($notifications);
+        $logs = implode("\n", $logs);
+        $this->api->edit(
+            "\n$logs", 
+            'append', 
+            true,
+            "bot: Lançando ID de incidente",
+            "Usuário(a):BloqBot/rev"
+        );
+
+        //Grava incidentes
+        $notifications = implode('', $notifications);
+        $this->api->edit(
+            $notifications, 
+            'append', 
+            false,
+            "bot: Inserindo notificação de incidente envolvendo reversor",
+            "Wikipédia:Pedidos/Notificação de incidentes"
+        );
+    }
 }
 
-//Define páginas
-$page = "Wikipédia:Pedidos/Notificação de incidentes";
-$done_page = "Usuário(a):BloqBot/rev";
-
-//Recupera lista de incidentes já lançados
-$done_list = explode("\n", file_get_contents("https://pt.wikipedia.org/w/index.php?title=Usu%C3%A1rio(a):BloqBot/rev&action=raw"));
-
-//Loop para inserir incidentes na página
-foreach ($notify as $case) {
-
-	//Verifica se pedido já foi lançado e continua para o próximo pedido caso sim
-	if (in_array($case["id"], $done_list)) continue;
-
-	//Recupera codigo-fonte da página
-	$html = getAPI($page);
-
-	//Insere pedido no código
-	$html = $html."\n{{subst:Incidente/Bloqbot|".$case["user"]."|".$case["problem"]."|".$case["target"]."|".$case["id"]."}}\n";
-
-	//Gravar código
-	editAPI($html, NULL, FALSE, "bot: Inserindo notificação de incidente envolvendo reversor", $page, $usernameBQ);
-
-	//Recupera codigo-fonte da lista de incidentes já lançados
-	$done_html = getAPI($done_page);
-
-	//Gravar código na lista de incidentes já lançados
-	editAPI($done_html."\n".$case["id"], NULL, FALSE, "bot: Lançando ID de incidente", $done_page, $usernameBQ);
-}
-
-echo("Concluído!");
+//Executa script
+$badRollback = new BadRollback('https://pt.wikipedia.org/w/api.php', $usernameBQ, $passwordBQ);
+$badRollback->run();

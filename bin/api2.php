@@ -3,7 +3,7 @@
 
 
 /**
- * Class wikiaphpi provides an interface to interact with API from MediaWiki.
+ * Class WikiAphpi provides an interface to interact with API from MediaWiki.
  */
 class WikiAphpi {
 
@@ -17,7 +17,7 @@ class WikiAphpi {
     private $passAPI;
 
     /**
-     * Constructor for wikiaphpi class with login.
+     * Constructor for WikiAphpi class with login.
      *
      * @param string $endpoint The base URL for API requests.
      * @param string $userAPI The username to use for API requests.
@@ -463,7 +463,11 @@ class WikiAphpi {
      * @return array API's response
      */
     public function see($params) {
-        return $this->sendCurlRequest($params, false);
+        $see = $this->sendCurlRequest($params, false);
+        if (isset($see['error'])) {
+            throw new Exception(print_r($see['error'], true));
+        }
+        return $see;
     }
 
 }

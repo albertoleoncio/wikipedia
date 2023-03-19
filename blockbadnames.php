@@ -188,6 +188,7 @@ class BadNames {
         $cat = "Categoria:!Usuários_com_nomes_impróprios_notificados";
         $notified = $this->getCategorizedUserTalkPages($cat);
         foreach ($notified as $user) {
+            echo "Processando usuário {$user["title"]}\n";
             $this->checkAndRemoveCategory($user["title"], $user["timestamp"]);
         }
     }
@@ -201,7 +202,7 @@ class BadNames {
 
         $requests = '';
         foreach ($pending as $user) {
-        	echo "Processando usuário ".$user;
+        	echo "Processando usuário {$user["title"]}\n";
             $requests .= $this->checkAndPrepareRequest($user["title"], $user["timestamp"]);
         }
         $this->api->edit(
@@ -223,6 +224,6 @@ class BadNames {
 
 }
 
-
+//Executa script
 $badNames = new BadNames('https://pt.wikipedia.org/w/api.php', $usernameBQ, $passwordBQ);
 $badNames->processUsers();
