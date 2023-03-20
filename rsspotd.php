@@ -9,12 +9,11 @@
  * @package PotdRss
  */
 class PotdRss {
-    private $url;
 
     /**
      * Construtor da classe responsável por realizar chamadas à API do Wikipedia em Português.
      */
-    function __construct() {
+    public function __construct() {
         $this->url = 'https://pt.wikipedia.org/w/api.php?';
     }
 
@@ -100,7 +99,7 @@ class PotdRss {
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
         curl_setopt($ch, CURLOPT_AUTOREFERER, 1);
         curl_setopt($ch, CURLOPT_HEADER, false);
-        $response = curl_exec($ch);
+        curl_exec($ch);
         $location = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
         $size = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
         $type = curl_getinfo($ch, CURLINFO_CONTENT_TYPE );
