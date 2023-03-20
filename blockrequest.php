@@ -93,6 +93,8 @@ class BloqBotRequests {
         if ($page === false) {
             throw new Exception("Nome da página não encontrado!");
         }
+
+        return $page;
     }
 
     /**
@@ -300,7 +302,7 @@ class BloqBotRequests {
                 $blockLog, 
                 $this->calculateBlockTime($blockLog)
             );
-            $this->api->edit($text, $section, true, "bot: Fechando pedido cumprido", $page);
+            echo $this->api->edit($text, $section, true, "bot: Fechando pedido cumprido", $page);
         }
     }
 
@@ -319,7 +321,7 @@ class BloqBotRequests {
             echo " e já finalizada. Fechando...";
             $text = $this->replaceInitialSection($text);
             $text = $this->replaceFinalProtectSection($text, $protectLog);
-            $this->api->edit($text, $section, true, "bot: Fechando pedido cumprido", $page);
+            echo $this->api->edit($text, $section, true, "bot: Fechando pedido cumprido", $page);
         }
     }
 
