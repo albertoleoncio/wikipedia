@@ -1,154 +1,354 @@
-<?php
+<pre><?php
 require_once './bin/globals.php';
+require_once './bin/api2.php';
+date_default_timezone_set('UTC');
 
-//Login
-require_once './bin/api.php';
-loginAPI($usernameBQ, $passwordBQ);
-	
-//Recupera código-fonte da página, dividida por seções
-$pagina = "Wikipédia:Pedidos/Notificações de vandalismo";
-$sections = getsectionsAPI($pagina);
+class BloqBotRequests {
 
-//Conta quantidade de seções
-$count = count($sections);
+    /**
+     * Construtor da classe BloqBotRequests. Inicializa a API com as credenciais fornecidas.
+     * @param string $apiUrl O URL da API do MediaWiki.
+     * @param string $usernameBQ O nome de usuário para autenticação na API.
+     * @param string $passwordBQ A senha para autenticação na API.
+     */
+    public function __construct($apiUrl, $usernameBQ, $passwordBQ) {
+        $this->api = new WikiAphpi($apiUrl, $usernameBQ, $passwordBQ);
+    }
 
-//Loop para análise de cada seção
-for ($i=0; $i < $count; $i++) { 
+    /**
+     * Verifica se uma seção possui uma marcação de "<!--{{Respondido", indicando que ainda não foi respondida
+     * @param string $text O texto da seção a ser verificada
+     * @return bool Retorna true se a seção não possuir a marcação "<!--{{Respondido", caso contrário retorna false
+     */
+    private function isSectionAnswered($text) {
+        preg_match_all(
+            "/<!--\n?{{Respondido/", 
+            $text, 
+            $regex
+        );
+        if (!isset($regex['0']['0'])) {
+            return true;
+        }
+        return false;
+    }
 
-	//Reseta varíavel de regex
-	unset($regex);
+    /**
+     * Converte o texto de descrição de um evento de proteção para um formato wikificado.
+     * @param string $text O texto de descrição do evento de proteção a ser convertido.
+     * @return string O texto de descrição wikificado.
+    */
+    private function descriptionToWikitext($text) {
+        $sub1 = array(
+            "[", 
+            "edit=", 
+            "move=", 
+            "create=", 
+            "autoconfirmed", 
+            "extendedconfirmed", 
+            "editautoreviewprotected", 
+            "sysop"
+        );
+        $sub2 = array(
+            "\n:*[", 
+            "Editar: ", 
+            "Mover: ", 
+            "Criar: ", 
+            "[[Ficheiro:Wikipedia_Autoconfirmed.svg|20px]] [[Wikipédia:Autoconfirmados|Autoconfirmado]]", 
+            "[[Ficheiro:Usuario_Autoverificado.svg|20px]] [[Wikipédia:Autoconfirmados estendidos|Autoconfirmados estendidos]]", 
+            "[[Ficheiro:Wikipedia_Autopatrolled.svg|20px]] [[Wikipédia:Autorrevisores|Autorrevisor]]", 
+            "[[Ficheiro:Wikipedia_Administrator.svg|20px]] [[Wikipédia:Administradores|Administrador]]"
+        );
+        return str_replace($sub1, $sub2, $text);
+    }
 
-	//Proteção contra duplicação de seções
-	preg_match_all('/\n==/', $sections[$i], $dupl_sect);
-	if (isset($dupl_sect['0']['0'])) die(var_dump($dupl_sect['0']['0']));
 
-	//Verifica se pedido ainda está aberto
-	preg_match_all("/<!--\n?{{Respondido/", $sections[$i], $regex);
+    /**
+     * Obtém informações do evento de proteção mais recente de uma página.
+     * @param string $page O título da página.
+     * @return mixed Retorna um array associativa com as informações de registro ou falso se não houver nenhum evento de proteção na página.
+    */
+    private function getProtectionEventInfo($page) {
+        $info_params = [
+            'action'    => 'query',
+            'format'    => 'php',
+            'list'      => 'logevents',
+            'letype'    => 'protect',
+            'lelimit'   => '1',
+            'letitle'   => $page
+        ];
 
-	//Caso não esteja aberto, interrompe loop e segue para a próxima seção
-	if (!isset($regex['0']['0'])) continue;
+        $queryResult = $this->api->see($info_params);
+        return $queryResult['query']['logevents']['0'] ?? false;
+    }
 
-	//Divide seção por linhas
-	$lines = explode("\n", $sections[$i]);
+    /**
+     * Obtém o título da seção de acordo com seu wikitexto
+     * @param string $text O código-fonte da página. 
+     * @return string O título da seção.
+     */
+    private function getSectionTitle($text) {
+        $lines = explode("\n", $text);
 
-	//Recupera nome de usuário
-	$user = trim($lines['0'], "= ");
+        $page = trim($lines['0'], "= ") ?? false;
+        if ($page === false) {
+            throw new Exception("Nome da página não encontrado!");
+        }
+    }
 
-	//Coleta informações do usuário
-	$info = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=blocks&bkusers=".urlencode($user)), true)['query']['blocks'];
+    /**
+     * Obtém informações de proteção de uma página, com base no código-fonte da requisição.
+     * @param string $title O nome da página protegida.
+     * @return array|false Um array associativo com as seguintes informações sobre a proteção da página:
+     *  'timestamp': O timestamp Unix da proteção.
+     *  'description': Uma descrição wikificada da proteção.
+     *  'user': O usuário que protegeu a página.
+     *  'logid': O ID do registro da proteção.
+     *  'time': A data e hora da proteção no formato '00h00min de 0 de mês de 0000'.
+     * Retorna false caso não encontre informações de proteção.
+     * @throws Exception Caso não seja possível identificar o nome da página.
+    */
+    private function getProtectionInfo($title) {
 
-	//Caso não esteja bloqueado, interrompe loop e segue para a próxima seção
-	if (!isset($info[0])) {
-		continue;
-	} else {
-		$blockinfo = $info[0];
-	}
+        $info = $this->getProtectionEventInfo($title);
+        if (!$info) {
+            return false;
+        }
 
-	//Caso bloqueio seja menor que 24 horas, interrompe loop e segue para a próxima seção
-	if ($blockinfo['expiry'] != "infinity" AND (strtotime($blockinfo['expiry']) - strtotime($blockinfo['timestamp']) < 90000)) continue;
+        return [
+            'timestamp' => strtotime($info['timestamp']),
+            'description' => $this->descriptionToWikitext($info['params']['description']),
+            'user' => $info['user'],
+            'logid' => $info['logid'],
+            'time' => utf8_encode(
+                strftime(
+                    "%Hh%Mmin de %d de %B de %Y", 
+                    strtotime($info['timestamp'])
+                )
+            )
+        ];
+    }
 
-	//Define tempo de bloqueio
-	if ($blockinfo['expiry'] == "infinity") {
-		$tempo = "tempo indeterminado";
-	} else {
-		$interval = date_diff(date_create($blockinfo['timestamp']), date_create($blockinfo['expiry']));
-		$tempo = "";
-		if ($interval->format('%y') != 0) $tempo = $tempo.$interval->format('%y')." ano(s), ";
-		if ($interval->format('%m') != 0) $tempo = $tempo.$interval->format('%m')." mese(s), ";
-		if ($interval->format('%d') != 0) $tempo = $tempo.$interval->format('%d')." dia(s), ";
-		if ($interval->format('%h') != 0) $tempo = $tempo.$interval->format('%h')." hora(s), ";
-		if ($interval->format('%i') != 0) $tempo = $tempo.$interval->format('%i')." minuto(s), ";
-		if ($interval->format('%s') != 0) $tempo = $tempo.$interval->format('%s')." segundo(s), ";
-		$tempo = trim($tempo, ", ");
-	}
 
-	//Substitui seção inicial
-	$sections[$i] = preg_replace('/<!--\n?{{Respondido2[^>]*>/', '{{subst:Respondido2|feito|texto=', $sections[$i]);
+    /**
+     * Converte o nome de um mês para o seu número correspondente.
+     * @param string $m O nome do mês a ser convertido.
+     * @return string O número correspondente do mês (com dois dígitos).
+     * @throws Exception Se o nome do mês não for reconhecido.
+     */
+    private function convertMonthNameToNumber($m) {
+        $months = [
+            'janeiro'   => '01',
+            'fevereiro' => '02',
+            'março'     => '03',
+            'abril'     => '04',
+            'maio'      => '05',
+            'junho'     => '06',
+            'julho'     => '07',
+            'agosto'    => '08',
+            'setembro'  => '09',
+            'outubro'   => '10',
+            'novembro'  => '11',
+            'dezembro'  => '12'
+        ];
+        if (!isset($months[$m])) {
+            throw new Exception("$m não é um mês válido!");
+        }
+        return $months[$m];
+    }
 
-	//Substitui seção final
-	$sections[$i] = preg_replace(
-		'/<!--\n?:{{subst:(Bloqueio )?[Ff]eito[^>]*>/', 
-		":{{subst:Bloqueio feito|por=".$blockinfo['by']."|".$tempo."}}. [[User:BloqBot|BloqBot]] ~~~~~}}", 
-		$sections[$i]
-	);
+    /**
+     * Extrai a data e a hora da assinatura do solicitante e retorna um timestamp Unix.
+     * A função procura pela marcação de tempo no formato "dd de mês de yyyy (UTC)". 
+     * Em seguida, converte a data e hora para um timestamp Unix e retorna o valor.
+     * @param string $code O código da seção que contém a assinatura.
+     * @return int Retorna um timestamp Unix representando a data e hora da assinatura.
+     */
+    private function requestTimestamp($code) {
+        preg_match_all(
+            '/(\d{1,2})h(\d{1,2})min de (\d{1,2}) de ([^ ]*) de (\d{1,4}) \(UTC\)/',
+            $code,
+            $timestamp
+        );
 
-	//Grava seção
-	editAPI($sections[$i], $i, true, "bot: Fechando pedido cumprido", $pagina, $usernameBQ);
+        $y = $timestamp['5']['0'];
+        $m = $this->convertMonthNameToNumber($timestamp['4']['0']);
+        $d = $timestamp['3']['0'];
+        $h = $timestamp['2']['0'];
+        $i = $timestamp['1']['0'];
+
+        return strtotime("{$y}-{$m}-{$d}T{$h}:{$i}:00Z");
+    }
+
+    /**
+     * Verifica se há bloqueios ativos para o usuário informado
+     * @param string $user Nome do usuário
+     * @return array|false Caso exista bloqueio ativo ou não
+     */
+    private function isUserBlocked($user) {
+        $params = [
+            "action"  => "query",
+            "format"  => "php",
+            "list"    => "blocks",
+            "bkusers" => $user
+        ];
+
+        //Executa API
+        $api = $this->api->see($params);
+
+        //Coleta subarray com bloqueios
+        $info = $api['query']['blocks'] ?? false;
+        if ($info === false) {
+            throw new Exception(print_r($api, true));
+        }
+
+        //Retorna informações do bloqueio ativo ou falso caso não exista
+        return $info['0'] ?? false;
+    }
+
+    /**
+     * Substitui a parte inicial da seção indicando que o pedido de proteção foi cumprido.
+     * @param string $text Texto da seção
+     * @return string Texto modificado
+     */
+    private function replaceInitialSection($text) {
+        return preg_replace(
+            '/<!--\n?{{Respondido[^>]*>/', 
+            '{{Respondido2|feito|texto=', 
+            $text
+        );
+    }
+
+    /**
+     * Substitui a parte final da seção indicando que o pedido de proteção foi cumprido.
+     * @param string $text O conteúdo da seção a ser processada.
+     * @param array $protectLog Array contendo o registro da proteção
+     * @return string Texto modificado
+     */
+    private function replaceFinalProtectSection($text, $protectLog) {
+        $logLink = "[[Special:Redirect/logid/{$protectLog['logid']}|{$protectLog['time']} (UTC)]]";
+        $userLink = "[[User:{$protectLog['user']}|{$protectLog['user']}]]";
+        $params = $protectLog['description'];
+        $botLink = ":--[[User:BloqBot|BloqBot]] <small>~~~~~</small>}}";
+
+        $newText = preg_replace(
+            '/<!--:{{proteção[^>]*>/', 
+            ":{{subst:feito|Feito}}. Proteção realizada em {$logLink} por {$userLink} com o(s) seguinte(s) parâmetro(s): {$params}\n{$botLink}", 
+            $text
+        );
+
+        return $newText;
+    }
+
+    /**
+     * Substitui a parte final da seção com uma predefinição de bloqueio concluído
+     * @param string $text O conteúdo da seção a ser processada.
+     * @param array $protectLog Array contendo o registro do bloqueio
+     * @param string $tempo O prazo do bloqueio aplicado.
+     * @return string Texto modificado
+     */
+    private function replaceFinalBlockSection($text, $blockLog, $tempo) {
+        $newText = preg_replace(
+            '/<!--\n?:{{subst:(Bloqueio )?[Ff]eito[^>]*>/', 
+            ":{{subst:Bloqueio feito|por=".$blockLog['by']."|".$tempo."}}. [[User:BloqBot|BloqBot]] ~~~~~}}", 
+            $text
+        );
+
+        return $newText;
+    }
+
+    /**
+     * Calcula o tempo restante para o término do bloqueio, se houver.
+     * @param array $blockLog Um registro de bloqueio com informações sobre o bloqueio.
+     * @return string Uma string que descreve o tempo restante até o término do bloqueio, ou "tempo indeterminado" se o bloqueio for permanente.
+     */
+    private function calculateBlockTime($blockLog) {
+        if ($blockLog['expiry'] == "infinity") {
+            return "tempo indeterminado";
+        } else {
+            $interval = date_diff(date_create($blockLog['timestamp']), date_create($blockLog['expiry']));
+            $tempo = "";
+            if ($interval->format('%y') != 0) $tempo = $tempo.$interval->format('%y')." ano(s), ";
+            if ($interval->format('%m') != 0) $tempo = $tempo.$interval->format('%m')." mese(s), ";
+            if ($interval->format('%d') != 0) $tempo = $tempo.$interval->format('%d')." dia(s), ";
+            if ($interval->format('%h') != 0) $tempo = $tempo.$interval->format('%h')." hora(s), ";
+            if ($interval->format('%i') != 0) $tempo = $tempo.$interval->format('%i')." minuto(s), ";
+            if ($interval->format('%s') != 0) $tempo = $tempo.$interval->format('%s')." segundo(s), ";
+            $tempo = trim($tempo, ", ");
+            return $tempo;
+        }
+    }
+
+    /**
+     * Processa a seção para determinar se ela precisa ser fechada, extraindo o nome da
+     * conta a partir do título da seção. Se a conta referente for encontrada com um
+     * bloqueio ativo e o prazo de bloqueio for maior que 25 horas, 
+     * a seção será marcada como respondida e fechada.
+     * @param string $text O conteúdo da seção a ser processada.
+     * @param int $section O número da seção a ser processada.
+     * @param string $page O nome da página de pedidos.
+     */
+    private function processBlockingSection($text, $section, $page) {
+        $blockLog = $this->isUserBlocked($this->getSectionTitle($text));
+        if ($blockLog !== false) {
+            if ($blockLog['expiry'] != "infinity" AND (strtotime($blockLog['expiry']) - strtotime($blockLog['timestamp']) < 90000)){
+                return;
+            }
+            echo " e já finalizada. Fechando...";
+            $text = $this->replaceInitialSection($text);
+            $text = $this->replaceFinalBlockSection(
+                $text, 
+                $blockLog, 
+                $this->calculateBlockTime($blockLog)
+            );
+            $this->api->edit($text, $section, true, "bot: Fechando pedido cumprido", $page);
+        }
+    }
+
+    /**
+     * Processa a seção para determinar se ela precisa ser fechada, extraindo o nome da
+     * página a partir do título da seção. Se a página referente for encontrada com um
+     * registro de proteção e a solicitação de proteção foi feita antes
+     * da proteção atual, a seção será marcada como respondida e fechada.
+     * @param string $text O conteúdo da seção a ser processada.
+     * @param int $section O número da seção a ser processada.
+     * @param string $page O nome da página de pedidos.
+     */
+    private function processProtectingSection($text, $section, $page) {
+        $protectLog = $this->getProtectionInfo($this->getSectionTitle($text));
+        if ($protectLog && $this->requestTimestamp($text) > $protectLog['timestamp']) {
+            echo " e já finalizada. Fechando...";
+            $text = $this->replaceInitialSection($text);
+            $text = $this->replaceFinalProtectSection($text, $protectLog);
+            $this->api->edit($text, $section, true, "bot: Fechando pedido cumprido", $page);
+        }
+    }
+
+    /**
+     * Executa o bot para fechar todas as seções de uma página que ainda não foram marcadas como respondidas.
+     * Para cada seção da página fornecida, verifica se ela ainda está aberta e, se estiver, processa a seção para
+     * determinar se ela deve ser fechada. As seções são fechadas se o pedido correspondente tiver sido cumprido.
+     * @param string $page O nome da página de pedidos a ser processada.
+     */
+    public function run($page, $type) {
+        echo "\n\nIniciando página $page";
+        $sections = $this->api->getSections($page);
+        unset($sections[array_key_first($sections)]);
+        foreach ($sections as $section => $text) {
+            echo "\nProcessando seção ".$section;
+            if (!$this->isSectionAnswered($text)) {
+                echo " ainda aberta";
+                if ($type == 'protect') {
+                    $this->processProtectingSection($text, $section, $page);
+                } else {
+                    $this->processBlockingSection($text, $section, $page);
+                }
+            }
+        }
+    }
 }
 
-//Reseta varíaveis
-unset($sections);
-unset($pagina);
-
-//Recupera código-fonte da página, dividida por seções
-$pagina = 'Wikipédia:Pedidos/Revisão de nomes de usuário';
-$sections = getsectionsAPI($pagina);
-
-//Conta quantidade de seções
-$count = count($sections);
-
-//Loop para análise de cada seção
-for ($i=0; $i < $count; $i++) { 
-
-	//Reseta varíavel de regex
-	unset($regex);
-
-	//Proteção contra duplicação de seções
-	preg_match_all('/\n==/', $sections[$i], $dupl_sect);
-	if (isset($dupl_sect['0']['0'])) die(var_dump($dupl_sect['0']['0']));
-
-	//Verifica se pedido ainda está aberto
-	preg_match_all("/<!--\n?{{Respondido/", $sections[$i], $regex);
-
-	//Caso não esteja aberto, interrompe loop e segue para a próxima seção
-	if (!isset($regex['0']['0'])) continue;
-
-	//Divide seção por linhas
-	$lines = explode("\n", $sections[$i]);
-
-	//Recupera nome de usuário
-	$user = trim($lines['0'], "= ");
-
-	//Coleta informações do usuário
-	$info = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=blocks&bkusers=".urlencode($user)), true)['query']['blocks'];
-
-	//Caso não esteja bloqueado, interrompe loop e segue para a próxima seção
-	if (!isset($info[0])) {
-		continue;
-	} else {
-		$blockinfo = $info[0];
-	}
-
-	//Caso bloqueio seja menor que 24 horas, interrompe loop e segue para a próxima seção
-	if ($blockinfo['expiry'] != "infinity" AND (strtotime($blockinfo['expiry']) - strtotime($blockinfo['timestamp']) < 90000)) continue;
-
-	//Define tempo de bloqueio
-	if ($blockinfo['expiry'] == "infinity") {
-		$tempo = "tempo indeterminado";
-	} else {
-		$interval = date_diff(date_create($blockinfo['timestamp']), date_create($blockinfo['expiry']));
-		$tempo = "";
-		if ($interval->format('%y') != 0) $tempo = $tempo.$interval->format('%y')." ano(s), ";
-		if ($interval->format('%m') != 0) $tempo = $tempo.$interval->format('%m')." mese(s), ";
-		if ($interval->format('%d') != 0) $tempo = $tempo.$interval->format('%d')." dia(s), ";
-		if ($interval->format('%h') != 0) $tempo = $tempo.$interval->format('%h')." hora(s), ";
-		if ($interval->format('%i') != 0) $tempo = $tempo.$interval->format('%i')." minuto(s), ";
-		if ($interval->format('%s') != 0) $tempo = $tempo.$interval->format('%s')." segundo(s), ";
-		$tempo = trim($tempo, ", ");
-	}
-
-	//Substitui seção inicial
-	$sections[$i] = preg_replace('/<!--\n?{{Respondido2[^>]*>/', '{{subst:Respondido2|feito|texto=', $sections[$i]);
-
-	//Substitui seção final
-	$sections[$i] = preg_replace(
-		'/<!--\n?:{{subst:(Bloqueio )?[Ff]eito[^>]*>/', 
-		":{{subst:Bloqueio feito|por=".$blockinfo['by']."|".$tempo."}}. [[User:BloqBot|BloqBot]] ~~~~~}}", 
-		$sections[$i]
-	);
-
-	//Grava seção
-	editAPI($sections[$i], $i, true, "bot: Fechando pedido cumprido", $pagina, $usernameBQ);
-}
-
-echo "OK!";
+//Executa script
+$api = new BloqBotRequests('https://pt.wikipedia.org/w/api.php', $usernameBQ, $passwordBQ);
+$api->run('Wikipédia:Pedidos/Notificações de vandalismo', 'block');
+$api->run('Wikipédia:Pedidos/Revisão de nomes de usuário', 'block');
+$api->run('Wikipédia:Pedidos/Proteção', 'protect');
