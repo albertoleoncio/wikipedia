@@ -3,19 +3,11 @@ require_once './bin/globals.php';
 require_once './bin/api2.php';
 
 /**
- *
+ * Classe responsável pela notificação de incidentes relacionados aos reversores da Wikipédia
+ * em português que porventura realizaram bloqueios fora dos parâmetros autorizados pela 
+ * política local.
  */
-class BadRollback {
-
-    /**
-     * Construtor da classe com criação do objeto 'WikiAphpi'
-     * @param string $apiUrl
-     * @param string $usernameBQ
-     * @param string $passwordBQ
-     */
-    public function __construct($apiUrl, $usernameBQ, $passwordBQ) {
-        $this->api = new WikiAphpi($apiUrl, $usernameBQ, $passwordBQ);
-    }
+class BadRollback extends WikiAphpi {
 
     /**
      * Levanta lista de reversores
@@ -29,7 +21,7 @@ class BadRollback {
           'augroup' => 'rollbacker',
           'aulimit' => 'max'
         ];
-        $rollbackers_API = $this->api->see($params)['query']['allusers'];
+        $rollbackers_API = $this->see($params)['query']['allusers'];
         $rollbackers_IDs = array();
         foreach ($rollbackers_API as $user) {
             $rollbackers_IDs[] = $user['userid'];
@@ -53,7 +45,7 @@ class BadRollback {
             'ledir'     => 'older',
             'leend'     => gmdate('Y-m-d\TH:i:s\Z', strtotime('-180 minutes'))
         ];
-        $result = $this->api->see($params)['query']['logevents'];
+        $result = $this->see($params)['query']['logevents'];
         return $result;
     }
 
@@ -70,7 +62,7 @@ class BadRollback {
             'usprop'    => 'rights',
             'ususers'   => $username
         ];
-        $result = $this->api->see($params)['query']['users'][0]['rights'] ?? [false];
+        $result = $this->see($params)['query']['users'][0]['rights'] ?? [false];
         return in_array('editsemiprotected', $result);
     }
 
@@ -122,7 +114,7 @@ class BadRollback {
      * @return array IDs de log
      */
     private function getNotified() {
-        $list = $this->api->get('User:BloqBot/rev');
+        $list = $this->get('User:BloqBot/rev');
         $list = explode("\n", $list);
         return $list;
     }
@@ -174,7 +166,7 @@ class BadRollback {
 	 */
 	private function saveIncidents($notifications) {
 	    $notifications = implode('', $notifications);
-	    $this->api->edit(
+	    $this->edit(
 	        $notifications,
 	        'append',
 	        false,
@@ -189,7 +181,7 @@ class BadRollback {
 	 */
 	private function saveIncidentLogs($notifications) {
 	    $logs = implode("\n", array_keys($notifications));
-	    $this->api->edit(
+	    $this->edit(
 	        "\n$logs",
 	        'append',
 	        true,

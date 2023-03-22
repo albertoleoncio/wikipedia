@@ -1,11 +1,15 @@
 <?php
 
 
-
 /**
- * Class WikiAphpi provides an interface to interact with API from MediaWiki.
+ * The WikiAphpi class provides an interface for interacting with MediaWiki API.
+ *
+ * This abstract class implements common methods for accessing and modifying data
+ * on a MediaWiki website using its API. It is designed to be extended by concrete
+ * classes that implement specific functionality. Authentication is required through 
+ * a endpoint, username and password, performing a login operation upon instantiation.
  */
-class WikiAphpi {
+abstract class WikiAphpi {
 
     /** @var string The base URL for API requests. */
     private $endpoint;

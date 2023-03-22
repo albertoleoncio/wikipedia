@@ -1,12 +1,13 @@
 <?php
+require_once './bin/globals.php';
+header('Content-type: application/xml');
 
 /**
- * A classe PotdRss é responsável por buscar as imagens do dia (POTD) mais recentes que foram publicadas via bot no Twitter, 
- * extrair as informações de texto da imagem da página "Imagem em Destaque" da Wikipédia, buscar informações adicionais sobre a imagem,
- * como o nome do arquivo, o tamanho e o tipo do arquivo, e buscar metadados adicionais da imagem através da API do
- * MediaWiki. As informações são devolvidas em um RSS ATOM.
- *
- * @package PotdRss
+ * A classe PotdRss é responsável por buscar as imagens do dia (POTD) mais recentes que foram 
+ * publicadas via bot no Twitter, extrair as informações de texto da imagem da página "Imagem 
+ * em Destaque" da Wikipédia, buscar informações adicionais sobre a imagem, como o nome do 
+ * arquivo, o tamanho e o tipo do arquivo, e buscar metadados adicionais da imagem através da 
+ * API do MediaWiki. As informações são devolvidas em um RSS ATOM.
  */
 class PotdRss {
 
@@ -241,7 +242,5 @@ class PotdRss {
 }
 
 //Executa script
-require_once './bin/globals.php';
 $potdRss = new PotdRss();
-header('Content-type: application/xml');
 echo $potdRss->run();

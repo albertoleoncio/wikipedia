@@ -3,17 +3,11 @@ require_once './bin/globals.php';
 require_once './bin/api2.php';
 date_default_timezone_set('UTC');
 
-class BloqBotRequests {
-
-    /**
-     * Construtor da classe BloqBotRequests. Inicializa a API com as credenciais fornecidas.
-     * @param string $apiUrl O URL da API do MediaWiki.
-     * @param string $usernameBQ O nome de usuário para autenticação na API.
-     * @param string $passwordBQ A senha para autenticação na API.
-     */
-    public function __construct($apiUrl, $usernameBQ, $passwordBQ) {
-        $this->api = new WikiAphpi($apiUrl, $usernameBQ, $passwordBQ);
-    }
+/**
+ * Classe responsável pela análise e fechamento de pedidos de bloqueio/proteção na Wikipédia em
+ * português. 
+ */
+class BloqBotRequests extends WikiAphpi {
 
     /**
      * Verifica se uma seção possui uma marcação de "<!--{{Respondido", indicando que ainda não foi respondida
@@ -77,7 +71,7 @@ class BloqBotRequests {
             'letitle'   => $page
         ];
 
-        $queryResult = $this->api->see($info_params);
+        $queryResult = $this->see($info_params);
         return $queryResult['query']['logevents']['0'] ?? false;
     }
 
@@ -195,7 +189,7 @@ class BloqBotRequests {
         ];
 
         //Executa API
-        $api = $this->api->see($params);
+        $api = $this->see($params);
 
         //Coleta subarray com bloqueios
         $info = $api['query']['blocks'] ?? false;
@@ -302,7 +296,7 @@ class BloqBotRequests {
                 $blockLog, 
                 $this->calculateBlockTime($blockLog)
             );
-            echo $this->api->edit($text, $section, true, "bot: Fechando pedido cumprido", $page);
+            echo $this->edit($text, $section, true, "bot: Fechando pedido cumprido", $page);
         }
     }
 
@@ -321,7 +315,7 @@ class BloqBotRequests {
             echo " e já finalizada. Fechando...";
             $text = $this->replaceInitialSection($text);
             $text = $this->replaceFinalProtectSection($text, $protectLog);
-            echo $this->api->edit($text, $section, true, "bot: Fechando pedido cumprido", $page);
+            echo $this->edit($text, $section, true, "bot: Fechando pedido cumprido", $page);
         }
     }
 
@@ -333,7 +327,7 @@ class BloqBotRequests {
      */
     public function run($page, $type) {
         echo "\n\nIniciando página $page";
-        $sections = $this->api->getSections($page);
+        $sections = $this->getSections($page);
         unset($sections[array_key_first($sections)]);
         foreach ($sections as $section => $text) {
             echo "\nProcessando seção ".$section;
