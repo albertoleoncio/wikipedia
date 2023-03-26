@@ -39,14 +39,14 @@ class PotdRss {
 
     /**
      * Busca o conteúdo textual da página de "Imagem em destaque" da Wikipédia.
-     * @param array $image Um array contendo informações sobre a imagem da qual se deseja obter o texto.
+     * @param string $dayTitle Título da imagem do dia (Ex: 1 de janeiro de 2020).
      * @return string O conteúdo textual da imagem.
      */
-    private function fetchTextData($image) {
+    private function fetchTextData($dayTitle) {
         $text_params = [
             'action' => 'parse',
             'format' => 'php',
-            'page'   => 'Wikipédia:Imagem_em_destaque/' . $image
+            'page'   => 'Wikipédia:Imagem_em_destaque/' . $dayTitle
         ];
         $content = $this->url . http_build_query($text_params);
         $content = unserialize(file_get_contents($content));

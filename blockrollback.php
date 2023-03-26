@@ -150,10 +150,10 @@ class BadRollback extends WikiAphpi {
 
             //Insere registro na array
             if ($verify !== false) {
-            	$user = $log['user'];
+            	$logid = $log['logid'];
             	$target = $this->getNameFromUserPage($log['title']);
-            	$incident = "\n{{subst:Incidente/Bloqbot|$user|$verify|$target|{$log['logid']}}}\n";
-            	$notify[$user] = $incident;
+            	$incident = "\n{{subst:Incidente/Bloqbot|{$log['user']}|$verify|$target|$logid}}\n";
+            	$notify[$logid] = $incident;
             }
         }
 

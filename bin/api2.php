@@ -176,9 +176,10 @@ abstract class WikiAphpi {
      * Get the content of a page
      *
      * @param strint $page Page to be readed.
+     * @param strint $section Section to be readed.
      * @return string Content of the page.
      */
-    public function get($page) {
+    public function get($page, $section = false) {
         global $endPoint;
 
         //Prepara parâmetros básicos para envio ao API
@@ -191,6 +192,7 @@ abstract class WikiAphpi {
             "formatversion" => "2",
             "format"        => "php"
         ];
+        if ($section) $params['rvsection'] = $section;
         $resultApi = $this->sendCurlRequest($params, false);
         $result = $resultApi["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"]["content"] ?? false;
 
@@ -233,7 +235,7 @@ abstract class WikiAphpi {
             $main = $result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"] ?? false;
 
             if ($main === false) {
-                throw new Exception(print_r($main, true));
+                throw new Exception(print_r($result, true));
             }
 
             if (isset($main["nosuchsection"])) {
@@ -472,6 +474,21 @@ abstract class WikiAphpi {
             throw new Exception(print_r($see['error'], true));
         }
         return $see;
+    }
+
+
+    /**
+     * Generic function to do actions that require POST
+     *
+     * @param array $params Parameters to be send to the API
+     * @return array API's response
+     */
+    public function do($params) {
+        $do = $this->sendCurlRequest($params, true);
+        if (isset($do['error'])) {
+            throw new Exception(print_r($do['error'], true));
+        }
+        return $do;
     }
 
 }
