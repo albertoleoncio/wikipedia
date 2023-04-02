@@ -50,6 +50,9 @@ abstract class WikiAphpi {
         $url = $this->endpoint;
         $ch = curl_init();
 
+        // making sure to request the right format
+        $params['format'] = 'php';
+
         // set the request type and parameters
         if ($isPost) {
             curl_setopt($ch, CURLOPT_POST, 1);

@@ -1,329 +1,427 @@
-<?php
+<pre><?php
 require_once './bin/globals.php';
-
-//Define fuso horário como UTC
-date_default_timezone_set('UTC');
-
-//Define data atual
-$today = strtotime('today');
-
-//Define $dados como uma array
-$dados = array();
-
-//Login
-require_once './bin/api.php';
-loginAPI($usernameSQ, $passwordSQ);
-
-////////////////////////////////////////////////////////////////////////////////////////
-//
-//	LISTA DE VARIÁVEIS EM $dados e OUTRAS VARIÁVEIS
-//
-//	 $dados: array armazenadora das informações
-//		[1]: texto da proposição
-//		[2]: título do artigo-chave da proposição
-//		[3]: nome de usuário do proponente
-//		[4]: texto da proposição mais antiga para arquivamento
-//		[5]: discussão da proposição para arquivamento
-//
-//	      A: página de propostas aprovadas
-//	      B: predefinição da página principal
-//	      C: página de discussão do artigo-chave
-//	      D: página de discussão do usuário
-//	      E: proposições recentes
-//	      F: arquivo de discussão da proposição
-//		  G: envio da proposição ao Facebook e ao Twitter
-//
-////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////
-//
-//	Contador
-//
-////////////////////////////////////////////////////////////////////////////////////////
-
-//Recupera página do contador
-if (!get_headers("https://pt.wikipedia.org/w/api.php?action=purge&format=none&forcerecursivelinkupdate=1&titles=Wikip%C3%A9dia%3ASabia%20que%2FFrequ%C3%AAncia")) die ("Erro durante purge.");
-$htmlTime = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=expandtemplates&format=json&prop=wikitext&text=%7B%7BWikip%C3%A9dia%3ASabia_que%2FFrequ%C3%AAncia%7D%7D"), true)["expandtemplates"]["wikitext"];
-if ($htmlTime === FALSE) die("Nao foi possível recuperar os dados do contador.");
-
-//Limite de segurança
-if (is_numeric($htmlTime) === FALSE OR $htmlTime < 43200) {
-	die("'Wikipédia:Sabia que/Frequência' possui valor não numérico ou menor que 43200. Bloqueio de segurança.");
-}
-
-//Recupera horário da última alteração
-$get = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&list=usercontribs&uclimit=1&ucuser=SabiaQueBot&ucprop=timestamp");
-if ($get === FALSE) die("Nao foi possível recuperar os dados da API.");
-$antes = date("U",strtotime(json_decode($get, true)['query']['usercontribs']['0']['timestamp']));
-
-//Calcula diferença
-$dif = ($antes + $htmlTime) - time();
-
-//Continua atualização, ou retorna contagem regressiva e encerra o script
-if ($dif < 0) {
-	echo "Disponível para atualização.\n";
-} else {
-	echo "Contagem regressiva para atualização: ";
-	if ($dif > ($htmlTime / 2)) {
-		echo gmdate("j \d\i\a\, H:i:s", $dif - ($htmlTime / 2));
-	} else {
-		echo gmdate("H:i:s", $dif);
-	}
-	echo "\n";
-	die();
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////
-//
-//	A-1
-//
-////////////////////////////////////////////////////////////////////////////////////////
-
-//Define página
-$pageA = "Wikipédia:Sabia que/Propostas/Aprovadas";
-$htmlA = getAPI($pageA);
-
-//Explode código, dividindo por tópicos
-$htmlA_exploded = explode("\n==", $htmlA);
-
-//Recupera número de seções e encerra script caso só exista uma ou nenhuma proposição
-if (count($htmlA_exploded) <= 2) die("Não existem propostas para publicação.");
-
-//Coleta proposição
-preg_match_all('/\|texto ?= ?([^\n]*)/', $htmlA_exploded[1], $output1);
-if (!isset($output1[1][0])) die("Texto da proposição não encontrado.");
-$dados[1] = ltrim($output1[1][0],"…. ");
-
-//Coleta artigo-chave da proposição
-preg_match_all('/\'\'\'\[\[([^\]\|\#]*)|\[\[([^\|\]]*)\|\'\'\'[^\]\']*\'\'\'\]\]/', $output1[1][0], $output2);
-$dados[2] = $output2[2][0].$output2[1][0];
-if (!$dados[2]) die("Artigo-chave da proposição não encontrado.");
-
-//Coleta nome de proponente
-preg_match_all('/\* \'\'\'Proponente\'\'\' – [^\[]*\[\[[^:]*:([^|]*)/', $htmlA_exploded[1], $output3);
-if (!isset($output3[1][0])) die("Nome de proponente não encontrado.");
-$dados[3] = $output3[1][0];
-
-//Coleta discussão da proposição e elimina proposição a publicar
-$dados[5] = $htmlA_exploded[1];
-unset($htmlA_exploded[1]);
-
-//Remonta código da página
-$htmlA = implode("\n==", $htmlA_exploded);
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////
-//
-//	B
-//
-////////////////////////////////////////////////////////////////////////////////////////
-
-//Define página
-$pageB = "Predefinição:Sabia que";
-
-//Recupera codigo-fonte da página
-$htmlB = getAPI($pageB);
-
-//Explode código, dividindo por tópicos
-$htmlBe = explode("\n…", $htmlB);
-
-//Insere nova proposta com marcação de data, renumerando as demais
-array_splice($htmlBe, 1, 0, " ".rtrim($dados[1])."<!--".strtolower(utf8_encode(strftime('%B de %Y', $today)))."-->\n");
-
-//Explode último item da array, separando ultima proposição do rodapé da página
-$ultima = explode("<!-- FIM", $htmlBe[count($htmlBe)-1]);
-
-//Coleta texto da proposição para arquivamento
-$dados[4] = ltrim($ultima[0]);
-
-//Remonta rodapé da página
-$htmlBe[count($htmlBe)-1] = "<!-- FIM".$ultima[1];
-
-//Remonda último item da array
-$htmlBe[count($htmlBe)-2] = $htmlBe[count($htmlBe)-2]."\n".$htmlBe[count($htmlBe)-1];
-
-//Remove ultima proposição
-array_pop($htmlBe);
-
-//Remonta código da página
-$htmlB = implode("\n…",$htmlBe);
-
-//Grava página
-editAPI($htmlB, NULL, FALSE, "bot: (1/6) Inserindo SabiaQue", $pageB, $usernameSQ);
-
-
-////////////////////////////////////////////////////////////////////////////////////////
-//
-//	C
-//
-////////////////////////////////////////////////////////////////////////////////////////
-
-//Verifica se página é redirect
-$Page_renamed = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&titles=".urlencode($dados[2])."&redirects=1"), TRUE);
-if (isset($Page_renamed["query"]["redirects"])) {
-	$dados[2] = $Page_renamed["query"]["redirects"][0]["to"];
-}
-
-//Define página
-$pageC = "Discussão:".$dados[2];
-
-//Recupera dados da seção inicial da página de discussão do artigo-chave
-$htmlC = getsectionsAPI($pageC)['0'];
-
-//Verifica se a predefinição já existe. Se sim, insere nova predefinição no final da seção. Se não...
-if (strpos($htmlC, "SabiaQueDiscussão") == false) {
-	$htmlC = $htmlC."\n\n{{SabiaQueDiscussão\n|data1    = ".utf8_encode(strftime('%d de %B de %Y', $today))."\n|entrada1 = … ".$dados[1]."\n}}";
-} else {
-
-	//A partir do número máximo (10), verifica qual o maior número encontrado.
-	$n = 10;
-	while ($n > 0 AND strpos($htmlC, "entrada".$n) == FALSE) {$n--;}
-
-	//Caso n = 0, significa que a entrada mais recente não possui número (nesse caso, a proxima entrada é 2). Nos outros casos, a próxima entrada é a encontrada +1.
-	if ($n == 0) {$n = 2;} else {$n++;}
-
-	//Efetua inserção
-	$htmlC = str_replace("{{SabiaQueDiscussão", "{{SabiaQueDiscussão\n|data".$n."    = ".utf8_encode(strftime('%d de %B de %Y', $today))."\n|entrada".$n." = … ".$dados[1], $htmlC);
-}
-
-//Grava página
-editAPI($htmlC, 0, FALSE, "bot: (2/6) Inserindo SabiaQueDiscussão", $pageC, $usernameSQ);
-
-////////////////////////////////////////////////////////////////////////////////////////
-//
-//	E
-//
-////////////////////////////////////////////////////////////////////////////////////////
-
-//Define página e recupera seções da página
-$pageE = "Wikipédia:Sabia que/Arquivo/Recentes";
-$htmlE = getsectionsAPI($pageE);
-
-//Cria mapa das seções, para que o nome do mês indique qual seção seja editada
-$htmlE_map = array();
-for ($i=0; $i < count($htmlE); $i++) { 
-	preg_match_all('/=* ?([^= ]*?) =*\n/', $htmlE[$i], $month_name);
-	if (isset($month_name['1']['0'])) $htmlE_map[$month_name['1']['0']] = $i;
-}
-
-//Explode proposição para arquivar, separando-o da data de duplicação
-$recente = explode("<!--", $dados[4]);
-
-//Isola o nome do mês de publicação
-$recente[1] = ucfirst(explode(' ',trim($recente[1]))[0]);
-
-//Verifica se a seção com o nome do mês já existe. A partir disso, monta código da seção
-if (array_key_exists($recente[1], $htmlE_map)) {
-	$htmlE[1] = preg_replace('/==\n/', "==\n*… ".$recente[0]."\n", $htmlE[1]);
-	$section = 1;
-} else {
-	$htmlE[0] = $htmlE[0]."==== ".$recente[1]." ====\n*… ".$recente[0]."\n";
-	$section = 0;
-}
-
-//Grava página
-editAPI($htmlE[$section], $section, FALSE, "bot: (3/6) Inserindo Arquivo/Recentes", $pageE, $usernameSQ);
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////
-//
-//	F
-//
-////////////////////////////////////////////////////////////////////////////////////////
-
-//Define página
-$pageF = "Wikipédia:Sabia que/Propostas/Arquivo/".utf8_encode(strftime('%Y/%m', $today));
-
-//Recupera codigo-fonte da página
-$htmlF = getAPI($pageF);
-
-//Monta código do arquivo
-$htmlF = $htmlF."\n\n==".$dados[5]."{{ADC|sim|".utf8_encode(strftime('%d de %B de %Y', $today))."|~~~}}";
-
-//Grava página
-editAPI($htmlF, NULL, FALSE, "bot: (4/6) Inserindo Propostas/Arquivo", $pageF, $usernameSQ);
-	
-
-
-////////////////////////////////////////////////////////////////////////////////////////
-//
-//	A-2
-//
-////////////////////////////////////////////////////////////////////////////////////////
-
-//Grava página
-editAPI($htmlA, NULL, FALSE, "bot: (5/6) Arquivando proposição publicada", $pageA, $usernameSQ);
-
-
-////////////////////////////////////////////////////////////////////////////////////////
-//
-//	D
-//
-////////////////////////////////////////////////////////////////////////////////////////
-
-//Define página
-$pageD = "Usuário Discussão:".$dados[3];
-
-//Verifica se página é redirect
-$User_renamed = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&titles=".urlencode($pageD)."&redirects=1"), TRUE);
-if (isset($User_renamed["query"]["redirects"])) {
-	$pageD = $User_renamed["query"]["redirects"][0]["to"];
-}
-
-//Recupera codigo-fonte da página
-$htmlD = getAPI($pageD);
-
-//Monta código da ParabénsSQ
-$htmlD = $htmlD."{{subst:ParabénsSQ|artigo=''[[".$dados[2]."]]''|data=".utf8_encode(strftime('%d de %B de %Y', $today))."|curiosidade=…".$dados[1]."|arquivo=".utf8_encode(strftime('%Y/%m', $today))."}} --~~~~";
-
-//Grava página
-editAPI($htmlD, NULL, FALSE, "bot: (6/6) Inserindo ParabénsSQ", $pageD, $usernameSQ);
-
-////////////////////////////////////////////////////////////////////////////////////////
-//
-//	G
-//
-////////////////////////////////////////////////////////////////////////////////////////
-
-//Monta status para envio ao Twitter
-$twitter_status = "Você sabia que...\n\n…".preg_replace('/[\[\]\']/', '', preg_replace('/\[\[[^\|\]]*\|([^\]]*)\]\]/', '$1', $dados[1]))."\n\nLeia mais na Wikipédia: https://pt.wikipedia.org/wiki/".rawurlencode($dados[2]);
-
-//Envia Tweet
+require_once './bin/api2.php';
 require_once "tpar/twitteroauth/autoload.php";
 use Abraham\TwitterOAuth\TwitterOAuth;
-define('CONSUMER_KEY', $twitter_consumer_key);
-define('CONSUMER_SECRET', $twitter_consumer_secret);
-$twitter_conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, $twitter_access_token, $twitter_access_token_secret);
-$post_tweets = $twitter_conn->post("statuses/update", ["status" => $twitter_status]);
+date_default_timezone_set('UTC');
 
-//Salva na página
-editAPI($twitter_status, NULL, FALSE, "bot: (log) Registro de última proposição inserida", "User:SabiaQueBot/log", $usernameSQ);
+class SabiaQue extends WikiAphpi {
+
+    /**
+     * Purges the "Wikipédia:Sabia que/Frequência" page to clear cached data.
+     * @throws Exception if the purge API call fails or the page is not purged.
+     */
+    private function purgeFrequencyPage() {
+        $purge_params = [
+            'action' => 'purge',
+            'format' => 'php',
+            'titles' => 'Wikipédia:Sabia que/Frequência',
+            'forcerecursivelinkupdate' => '1'
+        ];
+
+        // Execute API
+        $purge = $this->do($purge_params);
+
+        // Check if the page was purged successfully
+        if (!isset($purge["purge"]['0']["purged"])) {
+            throw new Exception(print_r($purge, true));
+        }
+    }
+
+    /**
+     * Retrieve the current value of the "Wikipédia:Sabia que/Frequência" template, which determines
+     * the minimum interval (in seconds) between two consecutive "Sabia que" facts in the Portuguese
+     * Wikipedia main page.
+     * @throws Exception If the retrieved value is not numeric or is less than 43200 seconds (12 hours).
+     * @return int The value of the "Wikipédia:Sabia que/Frequência" template.
+     */
+    private function getFrequency() {
+        $frequency_params = [
+            'action'    => 'expandtemplates',
+            'format'    => 'php',
+            'prop'      => 'wikitext',
+            'text'      => '{{Wikipédia:Sabia que/Frequência}}'
+        ];
+        $frequency = $this->see($frequency_params)["expandtemplates"]["wikitext"];
+        if (!is_numeric($frequency) || $frequency < 43200) {
+            throw new Exception("'Wikipédia:Sabia que/Frequência' possui valor não numérico ou menor que 43200. Bloqueio de segurança.");
+        }
+        return $frequency;
+    }
+
+    /**
+     * Retrieves the timestamp of the last contribution made by the "SabiaQueBot" user.
+     * @return int The timestamp of the last published contribution, in Unix time format.
+     */
+    private function getLastPublishedTime() {
+        $lastPublished_params = [
+            'action'    => 'query',
+            'format'    => 'php',
+            'list'      => 'usercontribs',
+            'uclimit'   => '1',
+            'ucuser'    => 'SabiaQueBot',
+            'ucprop'    => 'timestamp'
+        ];
+        $lastPublishedTimestamp = $this->see($lastPublished_params)['query']['usercontribs']['0']['timestamp'];
+        $lastPublishedTime = date("U", strtotime($lastPublishedTimestamp));
+        return $lastPublishedTime;
+    }
+
+    /**
+     * Check if the deadline for publishing a new Sabia Que fact has been met.
+     * @return int Seconds until deadline.
+     */
+    private function isDeadlineMet() {
+        $this->purgeFrequencyPage();
+        $frequency = $this->getFrequency();
+        $lastPublishedTime = $this->getLastPublishedTime();
+        $deadline = $lastPublishedTime + $frequency - time();
+        if ($deadline < 0) {
+            return 0;
+        } else {
+            return $deadline;
+        }
+    }
+
+    /**
+     * Extracts the nomination text from a proposition using a regular expression.
+     * @param string $proposition The proposition to extract the text from.
+     * @param string $regex The regular expression pattern to use for matching the text.
+     * @return string The extracted nomination text.
+     * @throws Exception if the text is not found in the proposition.
+     */
+    private function regexNewNomination($proposition, $regex) {
+        // Match the regular expression pattern against the proposition
+        preg_match_all($regex, $proposition, $result);
+        
+        // Combine the matched text groups into a single string
+        $text = $result['1']['0'] ?? '';
+        $text .= $result['2']['0'] ?? '';
+        
+        // If no text is found, throw an exception
+        if (empty($text)) {
+            throw new Exception("Texto não encontrado.");
+        }
+        
+        // Return the extracted nomination text
+        return ltrim($text,"…. ");
+    }
+
+    /**
+     * Extracts information about a new nomination from the approved's proposition list.
+     * @param string $page The page name containing the new nomination.
+     * @return array An array containing the following elements:
+     *               - string $new The new fact being nominated.
+     *               - string $article The Wikipedia article where the new fact refers to.
+     *               - string $nominator The user who made the nomination.
+     *               - string $proposition The full text of the nomination proposition.
+     */
+    private function extractNewNominationInfo($page) {
+        //Get the contents from the first section of the page excluding header
+        $proposition = $this->get($page, '1');
+
+        $new = $this->regexNewNomination(
+            $proposition, 
+            '/\|texto ?= ?([^\n]*)/'
+        );
+        $article = $this->regexNewNomination(
+            $proposition, 
+            '/\'\'\'\[\[([^\]\|\#]*)|\[\[([^\|\]]*)\|\'\'\'[^\]\']*\'\'\'\]\]/'
+        );
+        $nominator = $this->regexNewNomination(
+            $proposition,
+            '/\* \'\'\'Proponente\'\'\' – [^\[]*\[\[[^:]*:([^|]*)/'
+        );
+        return [$new, $article, $nominator, $proposition];
+    }
 
 
-////////////////////////////////////////////////////////////////////////////////////////
-//
-//	Seção provisória, até a ativação da função de gravar página
-//
-////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * Compiles a new Sabia Que nomination into an HTML template and returns the old and new versions of the template.
+     * @param string $new The new nomination text.
+     * @param string $page The page containing the Sabia Que HTML template.
+     * @return array An array containing the old and new versions of the Sabia Que HTML template.
+     */
+    private function compileTemplate($new, $page) {
+        // Get the current Sabia Que template.
+        $html = $this->get($page);
 
-//print_r($dados);
-/*echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Wikip%C3%A9dia:Sabia_que/Propostas/Aprovadas&action=edit">LINK</a>
-	<textarea rows="4" cols="50">'.htmlentities($htmlA).'</textarea>';
-echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Predefini%C3%A7%C3%A3o:Sabia_que&action=edit">LINK</a>
-	<textarea rows="4" cols="50">'.htmlentities($htmlB).'</textarea>';
-echo '<hr><a href="https://pt.wikipedia.org/wiki/Discuss%C3%A3o:'.$dados[2].'?action=edit&section=0">LINK</a>
-	<textarea rows="4" cols="50">'.htmlentities($htmlC).'</textarea>';
-echo '<hr><a href="https://pt.wikipedia.org/wiki/Usu%C3%A1rio_Discuss%C3%A3o:'.$dados[3].'?action=edit&section=new">LINK</a>
-	<textarea rows="4" cols="50">'.htmlentities($htmlD).'</textarea>';
-echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Wikipédia:Sabia que/Arquivo/Recentes&action=edit&section='.$section.'">LINK</a>
-	<textarea rows="4" cols="50">'.htmlentities($htmlE[$section]).'</textarea>';
-echo '<hr><a href="https://pt.wikipedia.org/w/index.php?title=Wikipédia:Sabia que/Propostas/Arquivo/'.utf8_encode(strftime('%Y/%m', $today)).'&action=edit&section=new">LINK</a>
-	<textarea rows="4" cols="50">'.htmlentities($htmlF).'</textarea>';*/
-?>
+        // Split the template into an array of lines.
+        $html = explode("\n…", $html);
 
+        // Add the new Sabia Que nomination text with timestamp to the template.
+        array_splice($html, 1, 0, " ".rtrim($new)."<!--".strtolower(utf8_encode(strftime('%B de %Y')))."-->\n");
+
+        // Split the last line of the template at the end tag and get the oldest Sabia Que fact.
+        $ultima = explode("<!-- FIM", $html[count($html)-1]);
+        $old = ltrim($ultima[0]);
+
+        // Remove the oldest Sabia Que fact from the last line of the template.
+        $html[count($html)-1] = "<!-- FIM".$ultima[1];
+
+        // Append the last two lines of the template into one line.
+        $html[count($html)-2] = $html[count($html)-2]."\n".$html[count($html)-1];
+
+        // Remove the oldest Sabia Que fact from the template.
+        array_pop($html);
+
+        // Join the lines of the template into a single string.
+        $html = implode("\n…",$html);
+
+        // Return the old and new versions of the Sabia Que template.
+        return [$old, $html];
+    }
+
+
+    /**
+     * Compiles the text to be added to the article talk page.
+     * @param string $article The name of the article.
+     * @param string $new The new Sabia Que nomination text.
+     * @return array An array with the compiled text and the name of the talk page.
+     */
+    private function compileArticleTalk($article, $new) {
+        // Get the redirect (if any) for the article name
+        $redirect_params = [
+            'action'    => 'query',
+            'format'    => 'php',
+            'titles'    => $article,
+            'redirects' => 1
+        ];
+        $Page_renamed = $this->see($redirect_params);
+        if (isset($Page_renamed["query"]["redirects"])) {
+            $article = $Page_renamed["query"]["redirects"][0]["to"];
+        }
+
+        // Get the article talk page
+        $page = "Discussão:{$article}";
+        $html = $this->getSections($page)['0'];
+        $timestamp = utf8_encode(strftime('%d de %B de %Y'));
+
+        // Checks if the template already exists. If yes, insert a new template at the end of the section. If not...
+        if (strpos($html, "SabiaQueDiscussão") == false) {
+            $html .= "\n\n";
+            $html .= "{{SabiaQueDiscussão\n";
+            $html .= "|data1    = {$timestamp}\n";
+            $html .= "|entrada1 = … {$new}\n";
+            $html .= "}}";
+        } else {
+
+            //From the maximum number (10), check which is the highest number found.
+            $n = 10;
+            while ($n > 0 AND strpos($html, "entrada{$n}") == FALSE) {
+                $n--;
+            }
+            
+            //If n = 0, it means that the most recent entry has no number (in this case, the next entry is 2). 
+            //In other cases, the next entry is the found number +1.
+            if ($n == 0) {
+                $n = 2;
+            } else {
+                $n++;
+            }
+
+            //Insert the fact in the template
+            $newHtml  = "{{SabiaQueDiscussão\n";
+            $newHtml .= "|data{$n}    = {$timestamp}\n";
+            $newHtml .= "|entrada{$n} = … {$new}";
+            $html = str_replace(
+                "{{SabiaQueDiscussão",
+                $newHtml,
+                $html
+            );
+        }
+
+        return [$html, $page];
+    }
+
+
+    /**
+     * Compiles the recent section of the main page with a new nomination.
+     * @param string $old The text of the nomination being replaced.
+     * @param string $page The title of the main page.
+     * @return array An array containing the new text for the recent section and the index of the section in the page's HTML.
+     */
+    private function compileRecent($old, $page) {
+        // Get the sections of the main page
+        $html = $this->getSections($page);
+
+        // Create a map of the sections, using the month name as the key
+        $map = array();
+        foreach ($html as $i => $section) {
+            preg_match_all('/=* ?([^= ]*?) =*\n/', $section, $monthNameMap);
+            if (isset($monthNameMap['1']['0'])) {
+                $map[$monthNameMap['1']['0']] = $i;
+            }
+        }
+
+        // Split the old nomination text from the publication date
+        $recente = explode("<!--", $old);
+
+        // Get the name of the month for the nomination
+        $monthName = ucfirst(explode(' ', trim($recente['1']))['0']);
+        $oldFact = $recente['0'];
+
+        // Check if a section with the month name already exists and update it, or create a new section for the month
+        if (array_key_exists($monthName, $map)) {
+            $html[$map[$monthName]] = preg_replace(
+                '/==\n/', 
+                "==\n*… {$oldFact}\n", 
+                $html[$map[$monthName]]
+            );
+            $section = $map[$monthName];
+        } else {
+            $html['0'] .= "==== {$monthName} ====\n";
+            $html['0'] .= "*… {$oldFact}\n";
+            $section = 0;
+        }
+
+        // Return the new text and the index of the section
+        return [$html[$section], $section];
+    }
+
+
+
+    /**
+     * Compiles the content and page name for a congratulatory message to the nominator
+     * of a newly approved article to be added to their user talk page.
+     * @param string $nominator The username of the nominator.
+     * @param string $article The article of the newly approved fact.
+     * @param string $new The content of the newly approved fact.
+     * @return array An array with the compiled message content and page name.
+     */
+    private function compileNominatorTalkPage($nominator, $article, $new) {
+        // Define the page name.
+        $page = "Usuário Discussão:".$nominator;
+
+        // Get the redirect (if any) for the user name
+        $redirect_params = [
+            'action'    => 'query',
+            'format'    => 'php',
+            'titles'    => $page,
+            'redirects' => 1
+        ];
+        $Page_renamed = $this->see($redirect_params);
+        if (isset($Page_renamed["query"]["redirects"])) {
+            $page = $Page_renamed["query"]["redirects"][0]["to"];
+        }
+
+        // Compile the congratulatory message content.
+        $html  = "{{subst:ParabénsSQ\n";
+        $html .= "|artigo=''[[{$article}]]''\n";
+        $html .= "|data=".utf8_encode(strftime('%d de %B de %Y'))."\n";
+        $html .= "|curiosidade=…{$new}\n";
+        $html .= "|arquivo=".utf8_encode(strftime('%Y/%m'))."\n";
+        $html .= "}} --~~~~";
+
+        // Return the compiled message content and page name.
+        return [$html, $page];
+    }
+
+    /**
+     * Composes the archive section for the current month with the given proposition.
+     * @param string $proposition The proposition to be included in the archive.
+     * @return array An array containing the composed HTML and the name of the archive page.
+     */
+    private function composeArchive($proposition) {
+        $page = "Wikipédia:Sabia que/Propostas/Arquivo/".utf8_encode(strftime('%Y/%m'));
+        $html = "\n\n==$proposition{{ADC|sim|".utf8_encode(strftime('%d de %B de %Y'))."|~~~}}";
+        return [$html, $page];
+    }
+
+    /**
+     * Posts a tweet on Twitter using the TwitterOAuth library.
+     * @param string $text The text of the tweet.
+     * @param string $article The name of the article to include in the tweet.
+     * @return array An array containing the tweet text and the ID of the posted tweet.
+     */
+    private function doTweet($text, $article) {
+        $tweet  = "Você sabia que...\n\n…";
+        $tweet .= preg_replace(
+            '/[\[\]\']/', 
+            '', 
+            preg_replace(
+                '/\[\[[^\|\]]*\|([^\]]*)\]\]/', 
+                '$1', 
+                $text
+            )
+        );
+        $tweet .= "\n\nLeia mais na Wikipédia: https://pt.wikipedia.org/wiki/".rawurlencode($article);
+
+        $twitter_conn = new TwitterOAuth(
+            $twitter_consumer_key, 
+            $twitter_consumer_secret, 
+            $twitter_access_token, 
+            $twitter_access_token_secret
+        );
+        $post = $twitter_conn->post(
+            "statuses/update", 
+            ["status" => $tweet]
+        );
+
+        return [$tweet, $post->id];
+    }
+    
+
+    /**
+     * Runs the "Sabia que" publication process.
+     * If the deadline has not been met, returns early.
+     * This method extracts the new fact information from the "Wikipédia:Sabia que/Propostas/Aprovadas" page,
+     * compiles the necessary code for the "Sabia que" template, the article talk page, the recent archive, the nominator's talk page,
+     * and the "Sabia que" archive, and edits the respective pages with the compiled code.
+     *
+     * @var $approvedNominationPage: a string representing the page name where approved nominations are stored
+     * @var $templatePage: a string representing the page name where the Sabia que template is located
+     * @var $recentPage: a string representing the page name where the recent Sabia que facts are stored after publication at the template
+     * @var $logPage: a string representing the page name where the recent Sabia que tweet are stored after publication
+     * @var $newFact: a string representing the newly approved Sabia que fact
+     * @var $article: a string representing the article name associated with the new Sabia que fact
+     * @var $nominator: a string representing the username of the person who nominated the new Sabia que fact
+     * @var $nomination: a string representing the entire text of the nomination
+     * @var $oldFact: a string representing the old Sabia que fact from the template that will be placed in the recent Sabia que page
+     * @var $templateCode: a string representing the updated Sabia que template code with the new fact inserted and old fact removed
+     * @var $articleTalkCode: a string representing the code to be inserted into the talk page of the article associated with the new Sabia que fact
+     * @var $articleTalkPage: a string representing the talk page of the article associated with the new Sabia que fact
+     * @var $recentCode: a int representing the updated code for the recent Sabia que facts page's section with the new fact inserted
+     * @var $recentSection: a string representing the section name in the recent Sabia que facts page where the new fact will be edited
+     * @var $nominatorMessage: a string representing the message to be sent to the user who nominated the new Sabia que fact
+     * @var $nominatorTalkPage: a string representing the talk page of the user who nominated the new Sabia que fact
+     * @var $archiveCode: a string representing the code to be inserted into the Sabia que archive page with the new fact and its nomination details
+     * @var $archivePage: a string representing the page name where the Sabia que archive is located
+     * @var $tweet: a string representing the published tweet about the new Sabia que fact
+     * @var $tweetID: a int representing the published tweet ID
+     *
+     * @return void
+    */
+    public function run() {
+        $deadline = $this->isDeadlineMet();
+        if ($deadline !== 0) {
+            echo "$deadline segundos até o prazo de publicação";
+            return;
+        }
+
+        $approvedNominationPage = "Wikipédia:Sabia que/Propostas/Aprovadas";
+        $templatePage = "Predefinição:Sabia que";
+        $recentPage = "Wikipédia:Sabia que/Arquivo/Recentes";
+        $logPage = "User:SabiaQueBot/log";
+
+        list($newFact, $article, $nominator, $nomination) = $this->extractNewNominationInfo($approvedNominationPage);
+
+        list($oldFact,          $templateCode)      = $this->compileTemplate(           $newFact,   $templatePage);
+        list($articleTalkCode,  $articleTalkPage)   = $this->compileArticleTalk(        $article,   $newFact);
+        list($recentCode,       $recentSection)     = $this->compileRecent(             $oldFact,   $recentPage);
+        list($nominatorMessage, $nominatorTalkPage) = $this->compileNominatorTalkPage(  $nominator, $article, $newFact);
+        list($archiveCode,      $archivePage)       = $this->composeArchive(            $nomination);
+        list($tweet,            $tweetID)           = $this->doTweet(                   $newFact,   $article);
+
+        $this->edit($templateCode,      NULL,           FALSE, "bot: (1/6) Inserindo SabiaQue", $templatePage);
+        $this->edit($articleTalkCode,   0,              FALSE, "bot: (2/6) Inserindo SabiaQueDiscussão", $articleTalkPage);
+        $this->edit($recentCode,        $recentSection, FALSE, "bot: (3/6) Inserindo Arquivo/Recentes", $recentPage);
+        $this->edit($archiveCode,       'append',       FALSE, "bot: (4/6) Inserindo Propostas/Arquivo", $archivePage);
+        $this->edit('',                 1,              FALSE, "bot: (5/6) Arquivando proposição publicada", $approvedNominationPage);
+        $this->edit($nominatorMessage,  NULL,           FALSE, "bot: (6/6) Inserindo ParabénsSQ", $nominatorTalkPage);
+        $this->edit($tweet,             NULL,           FALSE, "bot: (log) Registro de última proposição inserida", $logPage);
+    }
+}
+
+$api = new SabiaQue('https://pt.wikipedia.org/w/api.php', $usernameSQ, $passwordSQ);
+$api->run();
