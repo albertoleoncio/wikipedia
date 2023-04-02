@@ -100,7 +100,7 @@ class SabiaQue extends WikiAphpi {
         
         // If no text is found, throw an exception
         if (empty($text)) {
-            throw new Exception("Texto não encontrado.");
+            throw new Exception("Texto não encontrado: [{$regex}]");
         }
         
         // Return the extracted nomination text
@@ -122,7 +122,7 @@ class SabiaQue extends WikiAphpi {
 
         $new = $this->regexNewNomination(
             $proposition, 
-            '/\|texto ?= ?([^\n]*)/'
+            '/\| ?texto *= ?([^\n]*)/'
         );
         $article = $this->regexNewNomination(
             $proposition, 
@@ -172,6 +172,27 @@ class SabiaQue extends WikiAphpi {
         return [$old, $html];
     }
 
+    /**
+     * Checks whether a page exists on the wiki.
+     * @param string $page The title of the page to check.
+     * @return bool Returns `true` if the page exists, `false` otherwise.
+     */
+    private function isPageCreated($page) {
+        $params = [
+            'action'        => 'query',
+            'format'        => 'php',
+            'titles'        => $page,
+            "formatversion" => "2"
+        ];
+        $api = $this->see($params);
+        $missing = $api['query']['pages']['0']['missing'] ?? false;
+        if ($missing === true) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
 
     /**
      * Compiles the text to be added to the article talk page.
@@ -193,10 +214,14 @@ class SabiaQue extends WikiAphpi {
         }
 
         // Get the article talk page
-        $page = "Discussão:{$article}";
-        $html = $this->getSections($page)['0'];
         $timestamp = utf8_encode(strftime('%d de %B de %Y'));
-
+        $page = "Discussão:{$article}";
+        if ($this->isPageCreated($page)) {
+            $html = $this->get($page, 0);
+        } else {
+            $html = '';
+        }
+        
         // Checks if the template already exists. If yes, insert a new template at the end of the section. If not...
         if (strpos($html, "SabiaQueDiscussão") == false) {
             $html .= "\n\n";
@@ -324,7 +349,7 @@ class SabiaQue extends WikiAphpi {
      */
     private function composeArchive($proposition) {
         $page = "Wikipédia:Sabia que/Propostas/Arquivo/".utf8_encode(strftime('%Y/%m'));
-        $html = "\n\n==$proposition{{ADC|sim|".utf8_encode(strftime('%d de %B de %Y'))."|~~~}}";
+        $html = "\n\n$proposition{{ADC|sim|".utf8_encode(strftime('%d de %B de %Y'))."|~~~}}";
         return [$html, $page];
     }
 
@@ -332,9 +357,10 @@ class SabiaQue extends WikiAphpi {
      * Posts a tweet on Twitter using the TwitterOAuth library.
      * @param string $text The text of the tweet.
      * @param string $article The name of the article to include in the tweet.
+     * @param array $tokens An array with keys and tokens of the Twitter API
      * @return array An array containing the tweet text and the ID of the posted tweet.
      */
-    private function doTweet($text, $article) {
+    private function doTweet($text, $article, $tokens) {
         $tweet  = "Você sabia que...\n\n…";
         $tweet .= preg_replace(
             '/[\[\]\']/', 
@@ -347,12 +373,7 @@ class SabiaQue extends WikiAphpi {
         );
         $tweet .= "\n\nLeia mais na Wikipédia: https://pt.wikipedia.org/wiki/".rawurlencode($article);
 
-        $twitter_conn = new TwitterOAuth(
-            $twitter_consumer_key, 
-            $twitter_consumer_secret, 
-            $twitter_access_token, 
-            $twitter_access_token_secret
-        );
+        $twitter_conn = new TwitterOAuth(...$tokens);
         $post = $twitter_conn->post(
             "statuses/update", 
             ["status" => $tweet]
@@ -390,9 +411,10 @@ class SabiaQue extends WikiAphpi {
      * @var $tweet: a string representing the published tweet about the new Sabia que fact
      * @var $tweetID: a int representing the published tweet ID
      *
+     * @param array $tokens An array with keys and tokens of the Twitter API
      * @return void
     */
-    public function run() {
+    public function run($tokens) {
         $deadline = $this->isDeadlineMet();
         if ($deadline !== 0) {
             echo "$deadline segundos até o prazo de publicação";
@@ -411,17 +433,23 @@ class SabiaQue extends WikiAphpi {
         list($recentCode,       $recentSection)     = $this->compileRecent(             $oldFact,   $recentPage);
         list($nominatorMessage, $nominatorTalkPage) = $this->compileNominatorTalkPage(  $nominator, $article, $newFact);
         list($archiveCode,      $archivePage)       = $this->composeArchive(            $nomination);
-        list($tweet,            $tweetID)           = $this->doTweet(                   $newFact,   $article);
+        list($tweet,            $tweetID)           = $this->doTweet(                   $newFact,   $article, $tokens);
 
         $this->edit($templateCode,      NULL,           FALSE, "bot: (1/6) Inserindo SabiaQue", $templatePage);
         $this->edit($articleTalkCode,   0,              FALSE, "bot: (2/6) Inserindo SabiaQueDiscussão", $articleTalkPage);
         $this->edit($recentCode,        $recentSection, FALSE, "bot: (3/6) Inserindo Arquivo/Recentes", $recentPage);
         $this->edit($archiveCode,       'append',       FALSE, "bot: (4/6) Inserindo Propostas/Arquivo", $archivePage);
         $this->edit('',                 1,              FALSE, "bot: (5/6) Arquivando proposição publicada", $approvedNominationPage);
-        $this->edit($nominatorMessage,  NULL,           FALSE, "bot: (6/6) Inserindo ParabénsSQ", $nominatorTalkPage);
+        $this->edit($nominatorMessage,  'append',       FALSE, "bot: (6/6) Inserindo ParabénsSQ", $nominatorTalkPage);
         $this->edit($tweet,             NULL,           FALSE, "bot: (log) Registro de última proposição inserida", $logPage);
     }
 }
 
+$tokens = [
+    $twitter_consumer_key, 
+    $twitter_consumer_secret, 
+    $twitter_access_token, 
+    $twitter_access_token_secret
+];
 $api = new SabiaQue('https://pt.wikipedia.org/w/api.php', $usernameSQ, $passwordSQ);
-$api->run();
+$api->run($tokens);
