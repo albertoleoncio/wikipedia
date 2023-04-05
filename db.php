@@ -2,46 +2,64 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-class WikipediaDiscussion {
-    private $conta;
-    private $sysop;
-    private $evidence;
-    private $defesa;
-    private $diff;
 
-    public function __construct($conta, $sysop, $evidence, $defesa, $diff) {
-        $this->conta = $conta;
-        $this->sysop = $sysop;
-        $this->evidence = $evidence;
-        $this->defesa = $defesa;
-        $this->diff = $diff;
-    }
+/**
+ * Interface for interacting with the Wikipedia API.
+ */
+interface WikipediaApiInterface {
 
-    private function getCurl($params) {
-        $ch = curl_init("https://pt.wikipedia.org/w/api.php?" . http_build_query($params));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $output = curl_exec($ch);
-        curl_close($ch);
-        $api = unserialize($output)["query"] ?? false;
-        if ($api === false) {
-            throw new Exception(print_r($output, true));
-        }
-        return $api;
-    }
+    /**
+     * Retrieves category search data from the Wikipedia API.
+     *
+     * @param string $conta The account name to search for.
+     * @return array The array of search results.
+     */
+    public function getCategorySearchData(string $conta): array;
 
-    private function getCategory() {
-        $conta  = $this->conta;
+    /**
+     * Retrieves prefix search data from the Wikipedia API.
+     *
+     * @param string $conta The account name to search for.
+     * @return array The array of search results.
+     */
+    public function getPrefixSearchData(string $conta): array;
+
+}
+
+
+/**
+ * Wikipedia API implementation
+ */
+class WikipediaApi implements WikipediaApiInterface {
+
+    /** @var string The base URL for the Wikipedia API */
+    private $baseUrl = 'https://pt.wikipedia.org/w/api.php?';
+
+    /**
+     * Retrieve category search data from the Wikipedia API
+     *
+     * @param string $conta The account name to search for
+     * @return array The search data returned by the API
+     */
+    public function getCategorySearchData(string $conta): array {
         $params = [
             "action"    => "query",
             "format"    => "php",
             "prop"      => "categories",
             "titles"    => "Wikipédia:Pedidos a administradores/Discussão de bloqueio/$conta"
         ];
-        return $this->getCurl($params)["pages"];
+        $url = $this->baseUrl . http_build_query($params);
+        $data = $this->makeApiRequest($url);
+        return $data['query']["pages"];
     }
 
-    private function getCount() {
-        $conta  = $this->conta;
+    /**
+     * Retrieve prefix search data from the Wikipedia API
+     *
+     * @param string $conta The account name to search for
+     * @return array The search data returned by the API
+     */
+    public function getPrefixSearchData(string $conta): array {
         $params = [
           "action"   => "query",
           "list"     => "prefixsearch",
@@ -49,14 +67,87 @@ class WikipediaDiscussion {
           "pssearch" => "Wikipédia:Pedidos a administradores/Discussão de bloqueio/$conta/",
           "format"   => "php"
         ];
-        return '/'.count($this->getCurl($params)["prefixsearch"]) + 1;
+        $url = $this->baseUrl . http_build_query($params);
+        $data = $this->makeApiRequest($url);
+        return $data['query']['prefixsearch'];
     }
 
-    private function doNewDB($subpage = '') {
-        $defesa     = $this->defesa;
-        $conta      = $this->conta;
-        $evidence   = $this->evidence;
-        $diff       = $this->diff;
+    /**
+     * Make an API request to the specified URL
+     *
+     * @param string $url The URL to request data from
+     * @return array The data returned by the API
+     */
+    private function makeApiRequest(string $url): array {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $output = curl_exec($ch);
+        curl_close($ch);
+        return unserialize($output);
+    }
+
+}
+
+/**
+ * Class WikipediaDiscussion
+ * This class represents a Wikipedia discussion about blocking a user.
+ */
+class WikipediaDiscussion {
+
+    /**
+     * The instance of the WikipediaApiInterface that is used to retrieve data from the Wikipedia API.
+     *
+     * @var WikipediaApiInterface
+     */
+    private $wikipediaApi;
+
+    /**
+     * WikipediaDiscussion constructor.
+     *
+     * @param WikipediaApiInterface $wikipediaApi The instance of the WikipediaApiInterface to use.
+     */
+    public function __construct(WikipediaApiInterface $wikipediaApi) {
+        $this->wikipediaApi = $wikipediaApi;
+    }
+
+    /**
+     * Retrieve the category data for a given account name.
+     *
+     * @param string $conta The account name to retrieve the category data for.
+     *
+     * @return array The category data.
+     */
+    private function getCategory($conta) {
+        $searchData = $this->wikipediaApi->getCategorySearchData($conta);
+        return $searchData;
+    }
+
+    /**
+     * Retrieve the count of prefix search data for a given account name.
+     *
+     * @param string $conta The account name to retrieve the prefix search data count for.
+     *
+     * @return string The count of prefix search data plus one.
+     */
+    private function getCount($conta) {
+        $searchData = $this->wikipediaApi->getPrefixSearchData($conta);
+        $count = count($searchData) + 1;
+        return "/$count";
+    }
+
+    /**
+     * Generate an array to create a new database page for a given account name, defense statement, evidence,
+     * diff of the defense statement and subpage (optional).
+     *
+     * @param string $conta The account name to generate the new discussion page for.
+     * @param string $defesa The defense statement for the new discussion page.
+     * @param string $evidence The evidence for the new discussion page.
+     * @param string $diff The diff of the defense statement
+     * @param string $subpage The optional subpage to generate the new discussion page for.
+     *
+     * @return array The array to create the new discussion page.
+     */
+    private function doNewDB($conta, $defesa, $evidence, $diff, $subpage = '') {
         $array      = [
             'type' => 'link',
             'text' => "Criar DB{$subpage}",
@@ -73,8 +164,15 @@ class WikipediaDiscussion {
         return $array;
     }
 
-    private function doAddList($subpage = '') {
-        $conta = $this->conta;
+    /**
+     * Generates a link to add a discussion page to the list of pending discussions on Wikipedia.
+     * 
+     * @param string $conta The name of the account to add to the list.
+     * @param string $subpage The subpage for the discussion (optional).
+     * 
+     * @return array The generated link as an array.
+     */
+    private function doAddList($conta, $subpage = '') {
         $array = [
             'type' => 'link',
             'text' => 'Publicar DB na lista de pedidos',
@@ -93,8 +191,15 @@ class WikipediaDiscussion {
         return $array;
     }
 
-    private function doGenerateMRConduta($subpage = '') {
-        $conta = $this->conta;
+    /**
+     * Generates the code to update the "MRConduta" template on Wikipedia with a new discussion.
+     * 
+     * @param string $conta The name of the account being discussed.
+     * @param string $subpage The subpage for the discussion (optional).
+     * 
+     * @return array The generated code as an array.
+     */
+    private function doGenerateMRConduta($conta, $subpage = '') {
         $text = file_get_contents("https://pt.wikipedia.org/w/index.php?title=Template:MRConduta&action=raw");
         $text = preg_replace(
             '/BloqueioAbertosTotal=(\d)/', 
@@ -115,6 +220,11 @@ class WikipediaDiscussion {
         return $array;
     }
 
+    /**
+     * Generates an array with parameters for a link to edit the "Template:MRConduta" page and replace the existing code with the new code.
+     * 
+     * @return array An array with parameters for a link to edit the "Template:MRConduta" page.
+     */
     private function doPasteMRConduta() {
         $array = [
             'type' => 'link',
@@ -127,8 +237,13 @@ class WikipediaDiscussion {
         return $array;
     }
 
-    private function doMoveOldDB() {
-        $conta = $this->conta;
+    /**
+     * Generates an array with parameters for a link to move the previous discussion page to a subpage.
+     * 
+     * @param string $conta The username of the blocked user.
+     * @return array An array with parameters for a link to move the previous discussion page to a subpage.
+     */
+    private function doMoveOldDB($conta) {
         $array = [
             'type' => 'link',
             'text' => 'Mover DB anterior para /1',
@@ -143,8 +258,13 @@ class WikipediaDiscussion {
         return $array;
     }
 
-    private function doGenerateDesambig() {
-        $conta = $this->conta;
+    /**
+     * Generates an array with parameters for a text area containing code to create a new disambiguation page for the blocked user.
+     * 
+     * @param string $conta The username of the blocked user.
+     * @return array An array with parameters for a text area containing code to create a new disambiguation page for the blocked user.
+     */
+    private function doGenerateDesambig($conta) {
         $array = [
             'type'      => 'textarea',
             'id'        => 'newdesambig',
@@ -154,8 +274,13 @@ class WikipediaDiscussion {
         return $array;
     }
 
-    private function doPasteDesambig() {
-        $conta = $this->conta;
+    /**
+     * Generates an array with parameters for a link to edit the disambiguation page and replace the existing code with the new code.
+     * 
+     * @param string $conta The username of the blocked user.
+     * @return array An array with parameters for a link to edit the disambiguation page.
+     */
+    private function doPasteDesambig($conta) {
         $array = [
             'type' => 'link',
             'text' => 'Colar (substituir) novo código para página de desambiguação',
@@ -167,9 +292,15 @@ class WikipediaDiscussion {
         return $array;
     }
 
-    private function doRequestMassMessage() {
-        $conta = $this->conta;
-        if ($this->sysop) {
+    /**
+     * Generates an array with the link and params to request/send a mass message for an user's unblocking.
+     *
+     * @param string $conta The name of the blocked user.
+     * @param bool $sysop A boolean indicating if the current user is a sysop or not.
+     * @return array An array with the link and params to request/send a mass message.
+     */
+    private function doRequestMassMessage($conta, $sysop) {
+        if ($sysop) {
             $array = [
                 'type'      => 'link',
                 'text'      => 'Enviar mensagens em massa',
@@ -205,8 +336,13 @@ class WikipediaDiscussion {
         return $array;
     }
 
-    private function doNotifyUser() {
-        $conta = $this->conta;
+    /**
+     * Generates a link for notifying a user about their discussion block.
+     *
+     * @param string $conta The username of the user to notify.
+     * @return array An array containing information about the link.
+     */
+    private function doNotifyUser($conta) {
         $array = [
             'type' => 'link',
             'text' => 'Enviar notificação ao usuário',
@@ -221,65 +357,77 @@ class WikipediaDiscussion {
         return $array;
     }
 
-    public function run() {
-        $result = $this->getCategory();
-        $echo = [];
-
-        if (isset($result['-1'])) {
-            $echo[] = $this->doNewDB();
-            $echo[] = $this->doAddList();
-            $echo[] = $this->doGenerateMRConduta();
-            $echo[] = $this->doPasteMRConduta();
-            $echo[] = $this->doRequestMassMessage();
-            $echo[] = $this->doNotifyUser();
-        } else {
-
-            $desambig = false;
-            $categories = end($result)['categories'];
-            foreach ($categories as $cat) {
-                if ($cat['title'] === 'Categoria:!Desambiguações de pedidos de discussão de bloqueio') {
-                    $desambig = true;
-                    break;
-                }
-            }
-
-            if (!$desambig) {
-                $echo[] = $this->doNewDB('/2');
-                $echo[] = $this->doAddList('/2');
-                $echo[] = $this->doGenerateMRConduta('/2');
-                $echo[] = $this->doPasteMRConduta();
-                $echo[] = $this->doMoveOldDB();
-                $echo[] = $this->doGenerateDesambig();
-                $echo[] = $this->doPasteDesambig();
-                $echo[] = $this->doRequestMassMessage();
-                $echo[] = $this->doNotifyUser();
-            } else {
-                $count = $this->getCount();
-                $echo[] = $this->doNewDB($count);
-                $echo[] = $this->doAddList($count);
-                $echo[] = $this->doGenerateMRConduta($count);
-                $echo[] = $this->doPasteMRConduta();
-                $echo[] = $this->doRequestMassMessage();
-                $echo[] = $this->doNotifyUser();
+    /**
+     * Check if a discussion page is a disambiguation page
+     * 
+     * @param array $result The API result from querying the discussion page
+     * @return bool True if the discussion page is a disambiguation page, false otherwise
+     */
+    private function isDesambig($result) {
+        $categories = end($result)['categories'];
+        foreach ($categories as $cat) {
+            if ($cat['title'] === 'Categoria:!Desambiguações de pedidos de discussão de bloqueio') {
+                return true;
             }
         }
+        return false;
+    }
+
+    /**
+     * Runs the script for a given user account, generating and returning the required actions to be taken as an array of strings.
+     * 
+     * @param string $conta The name of the user account to generate the actions for.
+     * @param bool $sysop Indicates if the user performing the action is a sysop or not.
+     * @param string $evidence The evidence string to be used in the new discussion page.
+     * @param string $defesa The defense string to be used in the new discussion page.
+     * @param string $diff The diff string to be used in the new discussion page.
+     * @return array The array containing the required actions as strings.
+    */
+    public function run($conta, $sysop, $evidence, $defesa, $diff) {
+        
+        $result = $this->getCategory($conta);
+        $isFirst = isset($result['-1']);
+        $isDesambig = !$isFirst && $this->isDesambig($result);
+
+        $index = $isFirst ? '' : ($isDesambig ? $this->getCount($conta) : '/2');
+
+        $echo = [];
+        $echo[] = $this->doNewDB($conta, $defesa, $evidence, $diff, $index);
+        $echo[] = $this->doAddList($conta, $index);
+        $echo[] = $this->doGenerateMRConduta($conta, $index);
+        $echo[] = $this->doPasteMRConduta();
+        if (!$isFirst && !$isDesambig) {
+            $echo[] = $this->doMoveOldDB($conta);
+            $echo[] = $this->doGenerateDesambig($conta);
+            $echo[] = $this->doPasteDesambig($conta);
+        }
+        $echo[] = $this->doRequestMassMessage($conta, $sysop);
+        $echo[] = $this->doNotifyUser($conta);
 
         return $echo;
     }
 }
 
-if ($_GET["conta"]) {
-    $discussion = new WikipediaDiscussion(
-        $_GET["conta"],
-        $_GET["sysop"] ?? '',
-        $_GET["evidence"] ?? '',
-        $_GET["defesa"] ?? '',
-        $_GET["diff"] ?? ''
-    );
-    $echo = $discussion->run();
+
+/**
+ * This code block instantiates the necessary classes and runs the `run()` method
+ * of the `WikipediaDiscussion` class with the provided parameters.
+ * 
+ * If the `conta` parameter is not set, the code block returns `false`.
+ */
+$conta =    filter_input(INPUT_GET, 'conta',    FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$sysop =    filter_input(INPUT_GET, 'sysop',    FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$evidence = filter_input(INPUT_GET, 'evidence', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$defesa =   filter_input(INPUT_GET, 'defesa',   FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$diff =     filter_input(INPUT_GET, 'diff',     FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+if ($conta) {
+    $wikipediaApi = new WikipediaApi();
+    $discussion = new WikipediaDiscussion($wikipediaApi);
+    $echo = $discussion->run($conta, $sysop, $evidence, $defesa, $diff);
 } else {
     $echo = false;
 }
+
 ?><!DOCTYPE html>
 <html lang="pt-BR">
     <head>
@@ -310,14 +458,14 @@ if ($_GET["conta"]) {
                                 <p class="w3-center w3-wide">NOME DO USUÁRIO</p>
                                 <p class="w3-text-grey">
                                     <input class="w3-input w3-padding-16 w3-border" 
-                                    value='<?=$_GET["conta"]??''?>' 
+                                    value='<?=$conta??''?>' 
                                     type="text" name="conta" placeholder="Usuário">
                                 </p>
                                 <br>
                                 <p class="w3-center w3-wide">VOCÊ É ADMINISTRADOR?</p>
                                 <p>
                                     <input name="sysop" class="w3-check" type="checkbox"
-                                    <?=(@$_GET["sysop"])?"checked":''?>>
+                                    <?=(@$sysop)?"checked":''?>>
                                     <label>Sim</label>
                                 </p>
                                 <br>
@@ -325,19 +473,19 @@ if ($_GET["conta"]) {
                                 <p>
                                     <textarea class="w3-input w3-padding-16 w3-border" 
                                     id="evidence" name="evidence" rows="4" cols="50" 
-                                    placeholder="Insira aqui as evidências para a solicitação do bloqueio. Utilize [[wikicode]] e não esqueça de assinar com ~~~~."><?=$_GET["evidence"]??''?></textarea>
+                                    placeholder="Insira aqui as evidências para a solicitação do bloqueio. Utilize [[wikicode]] e não esqueça de assinar com ~~~~."><?=$evidence??''?></textarea>
                                 </p>
                                 <br>
                                 <p class="w3-center w3-wide">DEFESA:</p>
                                 <p>
-                                    <textarea class="w3-input w3-padding-16 w3-border" id="defesa" name="defesa" rows="4" cols="50" placeholder="Insira aqui a defesa, caso fornecida, acompanhada do diff abaixo. Caso contrário, deixe ambos os campos em branco."><?=$_GET["defesa"]??''?></textarea>
+                                    <textarea class="w3-input w3-padding-16 w3-border" id="defesa" name="defesa" rows="4" cols="50" placeholder="Insira aqui a defesa, caso fornecida, acompanhada do diff abaixo. Caso contrário, deixe ambos os campos em branco."><?=$defesa??''?></textarea>
                                 </p>
                                 <br>
                                 <p class="w3-center w3-wide">DIFF DA DEFESA:</p>
                                 <p class="w3-text-grey">
                                     <input class="w3-input w3-padding-16 w3-border" 
                                     type="text" name="diff" placeholder="67890123" 
-                                    value="<?=$_GET["diff"]??''?>">
+                                    value="<?=$diff??''?>">
                                 </p>
                                 <p>
                                     <button class="w3-button w3-block w3-black w3-margin-top" type="submit">Preparar lista de links</button>
@@ -352,9 +500,15 @@ if ($_GET["conta"]) {
                                     <p>Preencha o formulário ao lado</p>
                                 <?php else: ?> 
                                     <p class='w3-center w3-wide'>DISCUSSÃO DE BLOQUEIO</p>
-                                    <h3 class='w3-center'><b><?=$_GET["conta"]??''?></b></h3>
-                                    <small><b>Clique em cada link abaixo na ordem apresentada.</b> Ao clicar, uma nova janela será aberta para a edição da página. Em seguida, clique em "Publicar alterações".<br>Esta ferramenta está sujeita a erros, então não esqueça de verificar se as edições foram feitas corretamente.</small>
-                                    <br><br>
+                                    <h3 class='w3-center'><b><?=$conta??''?></b></h3>
+                                    <small>
+                                        <b>Clique em cada link abaixo na ordem apresentada.</b> 
+                                        Ao clicar, uma nova janela será aberta para a edição da página. Em seguida, clique em "Publicar alterações".
+                                        <br>
+                                        Esta ferramenta está sujeita a erros, então não esqueça de verificar se as edições foram feitas corretamente.
+                                    </small>
+                                    <br>
+                                    <br>
                                     <ul class='w3-ul w3-hoverable w3-border'>
                                     <?php foreach ($echo as $line): ?>
                                         <?php if ($line['type'] == 'link'): ?>
@@ -384,6 +538,8 @@ if ($_GET["conta"]) {
             </div>
         </div>
         <hr>
-        <a href="https://wikitech.wikimedia.org/wiki/Portal:Toolforge"><img src="https://tools-static.wmflabs.org/toolforge/banners/Powered-by-Toolforge-button.png" alt="Powered by Wikimedia Toolforge"></a>
+        <a href="https://wikitech.wikimedia.org/wiki/Portal:Toolforge">
+            <img src="https://tools-static.wmflabs.org/toolforge/banners/Powered-by-Toolforge-button.png" alt="Powered by Wikimedia Toolforge">
+        </a>
     </body>
 </html>
