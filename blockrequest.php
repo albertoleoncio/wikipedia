@@ -203,7 +203,7 @@ class BloqBotRequests extends WikiAphpi
         //Coleta subarray com bloqueios
         $info = $api['query']['blocks'] ?? false;
         if ($info === false) {
-            throw new Exception(print_r($api, true));
+            throw new ContentRetrievalException($api);
         }
 
         //Retorna informações do bloqueio ativo ou falso caso não exista

@@ -23,7 +23,7 @@ class Ead extends WikiAphpi
         $response = $this->see($queryParams);
         $currentArticle = $response['expandtemplates']['wikitext'] ?? false;
         if (!$currentArticle) {
-            throw new Exception(print_r($response, true));
+            throw new ContentRetrievalException($response);
         }
         return $currentArticle;
     }

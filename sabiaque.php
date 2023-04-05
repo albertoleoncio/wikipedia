@@ -26,7 +26,7 @@ class SabiaQue extends WikiAphpi
 
         // Check if the page was purged successfully
         if (!isset($purge["purge"]['0']["purged"])) {
-            throw new Exception(print_r($purge, true));
+            throw new ContentRetrievalException($purge);
         }
     }
 

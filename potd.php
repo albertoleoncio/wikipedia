@@ -45,12 +45,12 @@ class Potd extends WikiAphpi
         $content = unserialize(file_get_contents($content));
         $text = $content["parse"]["text"]["*"] ?? false;
         if (!$text) {
-            throw new Exception(print_r($content, true));
+            throw new ContentRetrievalException($content);
         }
         preg_match_all('/(?<=<a href="\/wiki\/Ficheiro:)[^"]*/', $text, $regex);
         $filename = urldecode($regex["0"]["0"]);
         if (!$filename) {
-            throw new Exception(print_r($regex, true));
+            throw new ContentRetrievalException($regex);
         }
         return $filename;
     }
@@ -72,7 +72,7 @@ class Potd extends WikiAphpi
         $api = $this->see($api_params);
         $meta = $api["query"]["pages"]["-1"]["imageinfo"]["0"]["extmetadata"] ?? false;
         if (!$meta) {
-            throw new Exception(print_r($filename, true));
+            throw new ContentRetrievalException($filename);
         }
         return $meta;
     }

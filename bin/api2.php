@@ -1,5 +1,24 @@
 <?php
 
+/**
+ * Custom exception class for when content cannot be retrieved
+ */
+class ContentRetrievalException extends Exception
+{
+
+/**
+     * Constructor for ContentRetrievalException.
+     *
+     * @param mixed $resultApi The result of the API request.
+     * @return void
+     */
+    public function __construct($resultApi)
+    {
+        $message = 'Content retrieval failed: ' . print_r($resultApi, true);
+        parent::__construct($message);
+    }
+}
+
 
 /**
  * The WikiAphpi class provides an interface for interacting with MediaWiki API.
@@ -78,14 +97,14 @@ abstract class WikiAphpi
         // execute the curl request and handle any errors
         $result = curl_exec($ch);
         if ($result === false) {
-            throw new Exception("Error sending curl request: " . curl_error($ch));
+            throw new ContentRetrievalException(curl_error($ch));
         }
 
         // close the curl handle and return the result
         curl_close($ch);
         $result2 = @unserialize($result);
         if ($result2 === false) {
-            throw new Exception("Error unserializing. API' format is PHP?");
+            throw new InvalidArgumentException("Error unserializing. API' format is PHP?");
         }
 
         return $result2;
@@ -111,7 +130,7 @@ abstract class WikiAphpi
         $logged_data = $logged_api["query"]["userinfo"] ?? false;
 
         if ($logged_data === false) {
-            throw new Exception(print_r($logged_api, true));
+            throw new ContentRetrievalException($logged_api);
         }
 
         //Retorna caso já exista sessão válida
@@ -131,7 +150,7 @@ abstract class WikiAphpi
 
         //Interrompe script caso ocorra erro na obtenção do token de login
         if ($token === false) {
-            throw new Exception(print_r($token_api, true));
+            throw new ContentRetrievalException($token_api);
         }
 
         //Executa login
@@ -147,7 +166,7 @@ abstract class WikiAphpi
 
         //Interrompe script caso login não tenha ocorrido
         if ($logged_username === false) {
-            throw new Exception(print_r($login_api, true));
+            throw new ContentRetrievalException($login_api);
         }
 
         //Retorna nome de usuário logado
@@ -173,7 +192,7 @@ abstract class WikiAphpi
 
         //Interrompe script caso ocorra erro na obtenção do token
         if ($result === false) {
-            throw new Exception(print_r($resultApi, true));
+            throw new ContentRetrievalException($resultApi);
         }
 
         return $result;
@@ -207,7 +226,7 @@ abstract class WikiAphpi
 
         //Interrompe script caso ocorra erro na obtenção do token
         if ($result === false) {
-            throw new Exception(print_r($resultApi, true));
+            throw new ContentRetrievalException($resultApi);
         }
 
         return $result;
@@ -245,7 +264,7 @@ abstract class WikiAphpi
             $main = $result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"] ?? false;
 
             if ($main === false) {
-                throw new Exception(print_r($result, true));
+                throw new ContentRetrievalException($result);
             }
 
             if (isset($main["nosuchsection"])) {
@@ -313,7 +332,7 @@ abstract class WikiAphpi
         //Retorna número da revisão
         $result = $resultApi['edit']["newrevid"] ?? false;
         if ($result === false) {
-            throw new Exception(print_r($resultApi, true));
+            throw new ContentRetrievalException($resultApi);
         }
         return $result;
     }
@@ -340,7 +359,7 @@ abstract class WikiAphpi
 
         //Retorna número da revisão
         if ($result === false) {
-            throw new Exception(print_r($resultApi, true));
+            throw new ContentRetrievalException($resultApi);
         }
 
         //Retorna número do log
@@ -373,7 +392,7 @@ abstract class WikiAphpi
         //Get max upload size
         $siteinfo["maxuploadsize"] = $siteinfo_api["query"]["general"]["maxuploadsize"] ?? false;
         if ($siteinfo["maxuploadsize"] === false) {
-            throw new Exception(print_r($siteinfo_api, true));
+            throw new ContentRetrievalException($siteinfo_api);
         }
 
         //Get valid extensions
@@ -381,7 +400,7 @@ abstract class WikiAphpi
             $siteinfo["fileextensions"][] = $ext["ext"];
         }
         if (!isset($siteinfo["fileextensions"])) {
-            throw new Exception(print_r($siteinfo_api, true));
+            throw new ContentRetrievalException($siteinfo_api);
         }
 
         //Verifications about the file
@@ -413,7 +432,7 @@ abstract class WikiAphpi
 
         //Retorna número da revisão
         if ($result === false) {
-            throw new Exception(print_r($resultApi, true));
+            throw new ContentRetrievalException($resultApi);
         }
 
         //Retorna nome do arquivo
@@ -470,7 +489,7 @@ abstract class WikiAphpi
 
         //Retorna resultado da API
         if (!isset($result["options"])) {
-            throw new Exception(print_r($resultApi, true));
+            throw new ContentRetrievalException($resultApi);
         }
 
         return true;
@@ -487,7 +506,7 @@ abstract class WikiAphpi
     {
         $see = $this->sendCurlRequest($params, false);
         if (isset($see['error'])) {
-            throw new Exception(print_r($see['error'], true));
+            throw new ContentRetrievalException($see['error']);
         }
         return $see;
     }
@@ -503,7 +522,7 @@ abstract class WikiAphpi
     {
         $do = $this->sendCurlRequest($params, true);
         if (isset($do['error'])) {
-            throw new Exception(print_r($do['error'], true));
+            throw new ContentRetrievalException($do['error']);
         }
         return $do;
     }
