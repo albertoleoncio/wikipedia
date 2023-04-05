@@ -12,7 +12,7 @@
     deleteAPI($page, $reason, $userAPI)
     runAPI($params, $userAPI)
 
-    
+
     Maior parte dos códigos derivada de:
     MediaWiki API Demos
     MIT license
@@ -414,7 +414,7 @@ function optionsAPI($name, $data, $userAPI) {
 
         return $read;
 
-    //Modo gravação    
+    //Modo gravação
     } else {
 
         //Coleta token para edição

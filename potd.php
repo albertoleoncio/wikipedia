@@ -115,7 +115,7 @@ class Potd extends WikiAphpi {
         $twitterStatus = "Imagem do dia em $pendingPost. Veja mais informações em https://pt.wikipedia.org/wiki/WP:Imagem_em_destaque/" . rawurlencode($pendingPost);
         $twitterReply = "Autor: $artistName (Licença: $licenseShortName - $licenseUrl)";
 
-        return [$twitterStatus, $twitterReply]; 
+        return [$twitterStatus, $twitterReply];
     }
 
     /**
@@ -158,9 +158,9 @@ class Potd extends WikiAphpi {
 
 //Executa script
 $tokens = [
-    $twitter_consumer_key, 
-    $twitter_consumer_secret, 
-    $twitter_access_token, 
+    $twitter_consumer_key,
+    $twitter_consumer_secret,
+    $twitter_access_token,
     $twitter_access_token_secret
 ];
 $api = new Potd('https://pt.wikipedia.org/w/api.php', $username, $password);

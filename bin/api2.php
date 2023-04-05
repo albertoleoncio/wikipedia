@@ -6,7 +6,7 @@
  *
  * This abstract class implements common methods for accessing and modifying data
  * on a MediaWiki website using its API. It is designed to be extended by concrete
- * classes that implement specific functionality. Authentication is required through 
+ * classes that implement specific functionality. Authentication is required through
  * a endpoint, username and password, performing a login operation upon instantiation.
  */
 abstract class WikiAphpi {

@@ -165,7 +165,7 @@ if ($artigo_titulo) {
 			//Verifica se usuário está na lista de descadastro, encerrando loop em caso positivo
 			if (in_array($user['name'], $optout)) continue;
 
-			//Verifica se usuário está inativo e contabiliza os dias após a ultima edição. 
+			//Verifica se usuário está inativo e contabiliza os dias após a ultima edição.
 			//Se a opção de exclusão dos inativos for selecionada, encerra loop de acordo com a opção
 			if ((date("U", strtotime($usercontribs['usercontribs']["0"]['timestamp'])) + 7776000) < time()) {
 				$days_inactive = round((time() - date("U", strtotime($usercontribs['usercontribs']["0"]['timestamp']))) / 86400);

@@ -4,7 +4,7 @@ require_once './bin/api2.php';
 
 /**
  * Classe responsável pela notificação de incidentes relacionados aos reversores da Wikipédia
- * em português que porventura realizaram bloqueios fora dos parâmetros autorizados pela 
+ * em português que porventura realizaram bloqueios fora dos parâmetros autorizados pela
  * política local.
  */
 class BadRollback extends WikiAphpi {
@@ -26,7 +26,7 @@ class BadRollback extends WikiAphpi {
         foreach ($rollbackers_API as $user) {
             $rollbackers_IDs[] = $user['userid'];
         }
-        
+
         return $rollbackers_IDs;
     }
 
@@ -144,7 +144,7 @@ class BadRollback extends WikiAphpi {
             if (!in_array($log['userid'], $rollbackersIDs)) {
                 continue;
             }
-            
+
             //Verifica parâmetros do registro
             $verify = $this->verifyLog($log);
 
@@ -193,7 +193,7 @@ class BadRollback extends WikiAphpi {
 	/**
 	 * Executa o processo de compilação de notificações e salva no log e na página de incidentes.
 	 * Este método é responsável por compilar notificações de incidentes envolvendo reversores na Wikipédia e salvar
-	 * esses incidentes em duas páginas: a página de incidentes e a página de log para evitar duplicidade. 
+	 * esses incidentes em duas páginas: a página de incidentes e a página de log para evitar duplicidade.
 	 * Para isso, a função chama as funções auxiliares `compileNotifications()`, `saveIncidentLogs()` e `saveIncidents()`.
 	 * @return void
 	 */

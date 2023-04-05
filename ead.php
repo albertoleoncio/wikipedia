@@ -67,7 +67,7 @@ class Ead extends WikiAphpi {
      * a log page, and publishing a tweet and updating the log page if necessary.
      * @param array $tokens An array containing the Twitter API access token, access token secret,
      *                      consumer key, and consumer secret, in this order.
-     * @return array An array containing the ID of the tweet posted and the title of the featured article 
+     * @return array An array containing the ID of the tweet posted and the title of the featured article
      *               (or the log page if the article has not changed since the last run).
      */
     public function run($tokens) {
@@ -91,9 +91,9 @@ class Ead extends WikiAphpi {
 
 //Run script
 $tokens = [
-    $twitter_consumer_key, 
-    $twitter_consumer_secret, 
-    $twitter_access_token, 
+    $twitter_consumer_key,
+    $twitter_consumer_secret,
+    $twitter_access_token,
     $twitter_access_token_secret
 ];
 $api = new Ead('https://pt.wikipedia.org/w/api.php', $username, $password);

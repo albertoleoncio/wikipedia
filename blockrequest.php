@@ -5,7 +5,7 @@ date_default_timezone_set('UTC');
 
 /**
  * Classe responsável pela análise e fechamento de pedidos de bloqueio/proteção na Wikipédia em
- * português. 
+ * português.
  */
 class BloqBotRequests extends WikiAphpi {
 
@@ -16,8 +16,8 @@ class BloqBotRequests extends WikiAphpi {
      */
     private function isSectionAnswered($text) {
         preg_match_all(
-            "/<!--\n?{{Respondido/", 
-            $text, 
+            "/<!--\n?{{Respondido/",
+            $text,
             $regex
         );
         if (!isset($regex['0']['0'])) {
@@ -33,23 +33,23 @@ class BloqBotRequests extends WikiAphpi {
     */
     private function descriptionToWikitext($text) {
         $sub1 = array(
-            "[", 
-            "edit=", 
-            "move=", 
-            "create=", 
-            "autoconfirmed", 
-            "extendedconfirmed", 
-            "editautoreviewprotected", 
+            "[",
+            "edit=",
+            "move=",
+            "create=",
+            "autoconfirmed",
+            "extendedconfirmed",
+            "editautoreviewprotected",
             "sysop"
         );
         $sub2 = array(
-            "\n:*[", 
-            "Editar: ", 
-            "Mover: ", 
-            "Criar: ", 
-            "[[Ficheiro:Wikipedia_Autoconfirmed.svg|20px]] [[Wikipédia:Autoconfirmados|Autoconfirmado]]", 
-            "[[Ficheiro:Usuario_Autoverificado.svg|20px]] [[Wikipédia:Autoconfirmados estendidos|Autoconfirmados estendidos]]", 
-            "[[Ficheiro:Wikipedia_Autopatrolled.svg|20px]] [[Wikipédia:Autorrevisores|Autorrevisor]]", 
+            "\n:*[",
+            "Editar: ",
+            "Mover: ",
+            "Criar: ",
+            "[[Ficheiro:Wikipedia_Autoconfirmed.svg|20px]] [[Wikipédia:Autoconfirmados|Autoconfirmado]]",
+            "[[Ficheiro:Usuario_Autoverificado.svg|20px]] [[Wikipédia:Autoconfirmados estendidos|Autoconfirmados estendidos]]",
+            "[[Ficheiro:Wikipedia_Autopatrolled.svg|20px]] [[Wikipédia:Autorrevisores|Autorrevisor]]",
             "[[Ficheiro:Wikipedia_Administrator.svg|20px]] [[Wikipédia:Administradores|Administrador]]"
         );
         return str_replace($sub1, $sub2, $text);
@@ -77,7 +77,7 @@ class BloqBotRequests extends WikiAphpi {
 
     /**
      * Obtém o título da seção de acordo com seu wikitexto
-     * @param string $text O código-fonte da página. 
+     * @param string $text O código-fonte da página.
      * @return string O título da seção.
      */
     private function getSectionTitle($text) {
@@ -117,7 +117,7 @@ class BloqBotRequests extends WikiAphpi {
             'logid' => $info['logid'],
             'time' => utf8_encode(
                 strftime(
-                    "%Hh%Mmin de %d de %B de %Y", 
+                    "%Hh%Mmin de %d de %B de %Y",
                     strtotime($info['timestamp'])
                 )
             )
@@ -154,7 +154,7 @@ class BloqBotRequests extends WikiAphpi {
 
     /**
      * Extrai a data e a hora da assinatura do solicitante e retorna um timestamp Unix.
-     * A função procura pela marcação de tempo no formato "dd de mês de yyyy (UTC)". 
+     * A função procura pela marcação de tempo no formato "dd de mês de yyyy (UTC)".
      * Em seguida, converte a data e hora para um timestamp Unix e retorna o valor.
      * @param string $code O código da seção que contém a assinatura.
      * @return int Retorna um timestamp Unix representando a data e hora da assinatura.
@@ -208,8 +208,8 @@ class BloqBotRequests extends WikiAphpi {
      */
     private function replaceInitialSection($text) {
         return preg_replace(
-            '/<!--\n?{{Respondido[^>]*>/', 
-            '{{Respondido2|feito|texto=', 
+            '/<!--\n?{{Respondido[^>]*>/',
+            '{{Respondido2|feito|texto=',
             $text
         );
     }
@@ -227,8 +227,8 @@ class BloqBotRequests extends WikiAphpi {
         $botLink = ":--[[User:BloqBot|BloqBot]] <small>~~~~~</small>}}";
 
         $newText = preg_replace(
-            '/<!--:{{proteção[^>]*>/', 
-            ":{{subst:feito|Feito}}. Proteção realizada em {$logLink} por {$userLink} com o(s) seguinte(s) parâmetro(s): {$params}\n{$botLink}", 
+            '/<!--:{{proteção[^>]*>/',
+            ":{{subst:feito|Feito}}. Proteção realizada em {$logLink} por {$userLink} com o(s) seguinte(s) parâmetro(s): {$params}\n{$botLink}",
             $text
         );
 
@@ -244,8 +244,8 @@ class BloqBotRequests extends WikiAphpi {
      */
     private function replaceFinalBlockSection($text, $blockLog, $tempo) {
         $newText = preg_replace(
-            '/<!--\n?:{{subst:(Bloqueio )?[Ff]eito[^>]*>/', 
-            ":{{subst:Bloqueio feito|por=".$blockLog['by']."|".$tempo."}}. [[User:BloqBot|BloqBot]] ~~~~~}}", 
+            '/<!--\n?:{{subst:(Bloqueio )?[Ff]eito[^>]*>/',
+            ":{{subst:Bloqueio feito|por=".$blockLog['by']."|".$tempo."}}. [[User:BloqBot|BloqBot]] ~~~~~}}",
             $text
         );
 
@@ -277,7 +277,7 @@ class BloqBotRequests extends WikiAphpi {
     /**
      * Processa a seção para determinar se ela precisa ser fechada, extraindo o nome da
      * conta a partir do título da seção. Se a conta referente for encontrada com um
-     * bloqueio ativo e o prazo de bloqueio for maior que 25 horas, 
+     * bloqueio ativo e o prazo de bloqueio for maior que 25 horas,
      * a seção será marcada como respondida e fechada.
      * @param string $text O conteúdo da seção a ser processada.
      * @param int $section O número da seção a ser processada.
@@ -292,8 +292,8 @@ class BloqBotRequests extends WikiAphpi {
             echo " e já finalizada. Fechando...";
             $text = $this->replaceInitialSection($text);
             $text = $this->replaceFinalBlockSection(
-                $text, 
-                $blockLog, 
+                $text,
+                $blockLog,
                 $this->calculateBlockTime($blockLog)
             );
             echo $this->edit($text, $section, true, "bot: Fechando pedido cumprido", $page);

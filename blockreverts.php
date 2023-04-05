@@ -84,8 +84,8 @@ foreach ($notify as $case) {
 			'header' => "Content-Type:application/x-www-form-urlencoded\r\n",
 			'content' => http_build_query(
 				array(
-					'chat_id' => -1001169425230, 
-					'parse_mode' => 'MarkdownV2', 
+					'chat_id' => -1001169425230,
+					'parse_mode' => 'MarkdownV2',
 					'text' => "[\[Δ".$case["id"]."\]](https://pt.wikipedia.org/wiki/Special:diff/".$case["id"]."): [".$case["target"]."](https://pt.wikipedia.org/wiki/User:".$case["target"].") revertido por [".$case["user"]."](https://pt.wikipedia.org/wiki/User:".$case["user"].") em [".$case["title"]."](https://pt.wikipedia.org/wiki/".$case["title"].")\."
 				)
 			)

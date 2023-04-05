@@ -63,7 +63,7 @@ foreach ($ead_api as $article) {
 		"title" 		=> $article["slots"]["main"]["*"],
 		"description"	=> $article["slots"]["main"]["*"]." é um artigo de destaque na Wikipédia!\n\nIsso significa que foi identificado como um dos melhores artigos produzidos pela comunidade da Wikipédia.\n\nO que achou? Ainda tem como melhorar?\n\n#wikipedia #ptwikipedia #ptwiki #conhecimentolivre #artigodedestaque",
 		"instagram" => busca_imagem(rawurlencode($article["slots"]["main"]["*"])),
-		"link" 			=> "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($article["slots"]["main"]["*"]), 
+		"link" 			=> "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($article["slots"]["main"]["*"]),
 		"timestamp" 	=> date('D, d M Y H:i:s O',strtotime($article["timestamp"])),
 		"guid"			=> $article["revid"]
 	);

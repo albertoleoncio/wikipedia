@@ -119,10 +119,10 @@ $wikitext .= "|}<noinclude>{{documentação}}</noinclude>";
 
 //Grava página
 editAPI(
-    $wikitext, 
-    null, 
-    false, 
-    "bot: Atualizando progressos", 
-    "Predefinição:Progressos recentes", 
+    $wikitext,
+    null,
+    false,
+    "bot: Atualizando progressos",
+    "Predefinição:Progressos recentes",
     $username
 );

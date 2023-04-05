@@ -80,7 +80,7 @@ foreach ($htmlA as $key => $section) {
 		} else {								//8 horas com discordos e concordos
 			if ($concordo / ($concordo + $discordo) >= 0.75) {
 				echo("OOX</b>");
-				$approved = true; 
+				$approved = true;
 			} else {
 				echo("OXX</b>");
 				$declined = true;
@@ -137,14 +137,14 @@ foreach ($htmlA as $key => $section) {
 		$image = end(unserialize($image)["query"]["pages"]);
 		if (isset($image["lastrevid"])) {
 			$htmlB = preg_replace(
-				'/<imagemap>[^>]*?<\/imagemap>/', 
-				"<imagemap>\nFicheiro:".$section_image["1"]["0"]."|125x175px|borda|direita\ndefault [[".$section_article."]]\n</imagemap>", 
+				'/<imagemap>[^>]*?<\/imagemap>/',
+				"<imagemap>\nFicheiro:".$section_image["1"]["0"]."|125x175px|borda|direita\ndefault [[".$section_article."]]\n</imagemap>",
 				$htmlB
 			);
 		} else {
 			$htmlB = preg_replace(
-				'/<imagemap>[^>]*?<\/imagemap>/', 
-				"<imagemap>\nFicheiro:Globe-with-clock-2.svg|125x175px|borda|direita\ndefault [[".$section_article."]]\n</imagemap>", 
+				'/<imagemap>[^>]*?<\/imagemap>/',
+				"<imagemap>\nFicheiro:Globe-with-clock-2.svg|125x175px|borda|direita\ndefault [[".$section_article."]]\n</imagemap>",
 				$htmlB
 			);
 		}

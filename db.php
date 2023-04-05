@@ -163,10 +163,10 @@ class WikipediaDiscussion {
 
     /**
      * Generates a link to add a discussion page to the list of pending discussions on Wikipedia.
-     * 
+     *
      * @param string $conta The name of the account to add to the list.
      * @param string $subpage The subpage for the discussion (optional).
-     * 
+     *
      * @return array The generated link as an array.
      */
     private function doAddList($conta, $subpage = '') {
@@ -190,22 +190,22 @@ class WikipediaDiscussion {
 
     /**
      * Generates the code to update the "MRConduta" template on Wikipedia with a new discussion.
-     * 
+     *
      * @param string $conta The name of the account being discussed.
      * @param string $subpage The subpage for the discussion (optional).
-     * 
+     *
      * @return array The generated code as an array.
      */
     private function doGenerateMRConduta($conta, $subpage = '') {
         $text = file_get_contents("https://pt.wikipedia.org/w/index.php?title=Template:MRConduta&action=raw");
         $text = preg_replace(
-            '/BloqueioAbertosTotal=(\d)/', 
+            '/BloqueioAbertosTotal=(\d)/',
             'BloqueioAbertosTotal={{subst:#expr:$1+1}}',
             $text
         );
         $text = str_replace(
-            "|BloqueioConcluídosTotal", 
-            "* [[Wikipédia:Pedidos a administradores/Discussão de bloqueio/{$conta}{$subpage}|$conta]]\n|BloqueioConcluídosTotal", 
+            "|BloqueioConcluídosTotal",
+            "* [[Wikipédia:Pedidos a administradores/Discussão de bloqueio/{$conta}{$subpage}|$conta]]\n|BloqueioConcluídosTotal",
             $text
         );
         $array = [
@@ -219,7 +219,7 @@ class WikipediaDiscussion {
 
     /**
      * Generates an array with parameters for a link to edit the "Template:MRConduta" page and replace the existing code with the new code.
-     * 
+     *
      * @return array An array with parameters for a link to edit the "Template:MRConduta" page.
      */
     private function doPasteMRConduta() {
@@ -236,7 +236,7 @@ class WikipediaDiscussion {
 
     /**
      * Generates an array with parameters for a link to move the previous discussion page to a subpage.
-     * 
+     *
      * @param string $conta The username of the blocked user.
      * @return array An array with parameters for a link to move the previous discussion page to a subpage.
      */
@@ -257,7 +257,7 @@ class WikipediaDiscussion {
 
     /**
      * Generates an array with parameters for a text area containing code to create a new disambiguation page for the blocked user.
-     * 
+     *
      * @param string $conta The username of the blocked user.
      * @return array An array with parameters for a text area containing code to create a new disambiguation page for the blocked user.
      */
@@ -273,7 +273,7 @@ class WikipediaDiscussion {
 
     /**
      * Generates an array with parameters for a link to edit the disambiguation page and replace the existing code with the new code.
-     * 
+     *
      * @param string $conta The username of the blocked user.
      * @return array An array with parameters for a link to edit the disambiguation page.
      */
@@ -356,7 +356,7 @@ class WikipediaDiscussion {
 
     /**
      * Check if a discussion page is a disambiguation page
-     * 
+     *
      * @param array $result The API result from querying the discussion page
      * @return bool True if the discussion page is a disambiguation page, false otherwise
      */
@@ -372,7 +372,7 @@ class WikipediaDiscussion {
 
     /**
      * Runs the script for a given user account, generating and returning the required actions to be taken as an array of strings.
-     * 
+     *
      * @param string $conta The name of the user account to generate the actions for.
      * @param bool $sysop Indicates if the user performing the action is a sysop or not.
      * @param string $evidence The evidence string to be used in the new discussion page.
@@ -381,7 +381,7 @@ class WikipediaDiscussion {
      * @return array The array containing the required actions as strings.
     */
     public function run($conta, $sysop, $evidence, $defesa, $diff) {
-        
+
         $result = $this->getCategory($conta);
         $isFirst = isset($result['-1']);
         $isDesambig = !$isFirst && $this->isDesambig($result);
@@ -409,7 +409,7 @@ class WikipediaDiscussion {
 /**
  * This code block instantiates the necessary classes and runs the `run()` method
  * of the `WikipediaDiscussion` class with the provided parameters.
- * 
+ *
  * If the `conta` parameter is not set, the code block returns `false`.
  */
 $conta =    filter_input(INPUT_GET, 'conta',    FILTER_SANITIZE_FULL_SPECIAL_CHARS);
@@ -454,8 +454,8 @@ if ($conta) {
                             <div class="w3-container w3-padding-48 w3-card">
                                 <p class="w3-center w3-wide">NOME DO USUÁRIO</p>
                                 <p class="w3-text-grey">
-                                    <input class="w3-input w3-padding-16 w3-border" 
-                                    value='<?=$conta??''?>' 
+                                    <input class="w3-input w3-padding-16 w3-border"
+                                    value='<?=$conta??''?>'
                                     type="text" name="conta" placeholder="Usuário">
                                 </p>
                                 <br>
@@ -468,8 +468,8 @@ if ($conta) {
                                 <br>
                                 <p class="w3-center w3-wide">EVIDÊNCIAS:</p>
                                 <p>
-                                    <textarea class="w3-input w3-padding-16 w3-border" 
-                                    id="evidence" name="evidence" rows="4" cols="50" 
+                                    <textarea class="w3-input w3-padding-16 w3-border"
+                                    id="evidence" name="evidence" rows="4" cols="50"
                                     placeholder="Insira aqui as evidências para a solicitação do bloqueio. Utilize [[wikicode]] e não esqueça de assinar com ~~~~."><?=$evidence??''?></textarea>
                                 </p>
                                 <br>
@@ -480,8 +480,8 @@ if ($conta) {
                                 <br>
                                 <p class="w3-center w3-wide">DIFF DA DEFESA:</p>
                                 <p class="w3-text-grey">
-                                    <input class="w3-input w3-padding-16 w3-border" 
-                                    type="text" name="diff" placeholder="67890123" 
+                                    <input class="w3-input w3-padding-16 w3-border"
+                                    type="text" name="diff" placeholder="67890123"
                                     value="<?=$diff??''?>">
                                 </p>
                                 <p>
@@ -495,11 +495,11 @@ if ($conta) {
                             <ul class='w3-ul w3-hoverable w3-border'>
                                 <?php if (!$echo): ?>
                                     <p>Preencha o formulário ao lado</p>
-                                <?php else: ?> 
+                                <?php else: ?>
                                     <p class='w3-center w3-wide'>DISCUSSÃO DE BLOQUEIO</p>
                                     <h3 class='w3-center'><b><?=$conta??''?></b></h3>
                                     <small>
-                                        <b>Clique em cada link abaixo na ordem apresentada.</b> 
+                                        <b>Clique em cada link abaixo na ordem apresentada.</b>
                                         Ao clicar, uma nova janela será aberta para a edição da página. Em seguida, clique em "Publicar alterações".
                                         <br>
                                         Esta ferramenta está sujeita a erros, então não esqueça de verificar se as edições foram feitas corretamente.
@@ -509,25 +509,25 @@ if ($conta) {
                                     <ul class='w3-ul w3-hoverable w3-border'>
                                     <?php foreach ($echo as $line): ?>
                                         <?php if ($line['type'] == 'link'): ?>
-                                            <li 
-                                            class="w3-padding-small w3-left-align" 
-                                            style="cursor: pointer;" 
+                                            <li
+                                            class="w3-padding-small w3-left-align"
+                                            style="cursor: pointer;"
                                             onclick="window.open(
                                                 'https://pt.wikipedia.org/w/index.php?<?=http_build_query($line['params'])?>'
                                             )"><?=$line['text']?></li>
-                                        <?php else: ?> 
+                                        <?php else: ?>
                                             <li class="w3-padding-small w3-left-align">
-                                                <textarea 
+                                                <textarea
                                                 readonly rows='1' cols='2' id='<?=$line['id']?>'
-                                                style='resize: none; margin-bottom: -8px;' 
+                                                style='resize: none; margin-bottom: -8px;'
                                                 ><?=$line['text']?></textarea>
-                                                <button 
+                                                <button
                                                 onclick="copyclip('<?=$line['id']?>')"
                                                 ><?=$line['button']?></button>
                                             </li>
-                                        <?php endif; ?> 
-                                    <?php endforeach; ?> 
-                                <?php endif; ?> 
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </ul>
                         </div>
                     </div>

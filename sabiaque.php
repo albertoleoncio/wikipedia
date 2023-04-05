@@ -93,16 +93,16 @@ class SabiaQue extends WikiAphpi {
     private function regexNewNomination($proposition, $regex) {
         // Match the regular expression pattern against the proposition
         preg_match_all($regex, $proposition, $result);
-        
+
         // Combine the matched text groups into a single string
         $text = $result['1']['0'] ?? '';
         $text .= $result['2']['0'] ?? '';
-        
+
         // If no text is found, throw an exception
         if (empty($text)) {
             throw new Exception("Texto não encontrado: [{$regex}]");
         }
-        
+
         // Return the extracted nomination text
         return ltrim($text,"…. ");
     }
@@ -121,11 +121,11 @@ class SabiaQue extends WikiAphpi {
         $proposition = $this->get($page, '1');
 
         $new = $this->regexNewNomination(
-            $proposition, 
+            $proposition,
             '/\| ?texto *= ?([^\n]*)/'
         );
         $article = $this->regexNewNomination(
-            $proposition, 
+            $proposition,
             '/\'\'\'\[\[([^\]\|\#]*)|\[\[([^\|\]]*)\|\'\'\'[^\]\']*\'\'\'\]\]/'
         );
         $nominator = $this->regexNewNomination(
@@ -221,7 +221,7 @@ class SabiaQue extends WikiAphpi {
         } else {
             $html = '';
         }
-        
+
         // Checks if the template already exists. If yes, insert a new template at the end of the section. If not...
         if (strpos($html, "SabiaQueDiscussão") == false) {
             $html .= "\n\n";
@@ -236,8 +236,8 @@ class SabiaQue extends WikiAphpi {
             while ($n > 0 AND strpos($html, "entrada{$n}") == FALSE) {
                 $n--;
             }
-            
-            //If n = 0, it means that the most recent entry has no number (in this case, the next entry is 2). 
+
+            //If n = 0, it means that the most recent entry has no number (in this case, the next entry is 2).
             //In other cases, the next entry is the found number +1.
             if ($n == 0) {
                 $n = 2;
@@ -289,8 +289,8 @@ class SabiaQue extends WikiAphpi {
         // Check if a section with the month name already exists and update it, or create a new section for the month
         if (array_key_exists($monthName, $map)) {
             $html[$map[$monthName]] = preg_replace(
-                '/==\n/', 
-                "==\n*… {$oldFact}\n", 
+                '/==\n/',
+                "==\n*… {$oldFact}\n",
                 $html[$map[$monthName]]
             );
             $section = $map[$monthName];
@@ -363,11 +363,11 @@ class SabiaQue extends WikiAphpi {
     private function doTweet($text, $article, $tokens) {
         $tweet  = "Você sabia que...\n\n…";
         $tweet .= preg_replace(
-            '/[\[\]\']/', 
-            '', 
+            '/[\[\]\']/',
+            '',
             preg_replace(
-                '/\[\[[^\|\]]*\|([^\]]*)\]\]/', 
-                '$1', 
+                '/\[\[[^\|\]]*\|([^\]]*)\]\]/',
+                '$1',
                 $text
             )
         );
@@ -375,13 +375,13 @@ class SabiaQue extends WikiAphpi {
 
         $twitter_conn = new TwitterOAuth(...$tokens);
         $post = $twitter_conn->post(
-            "statuses/update", 
+            "statuses/update",
             ["status" => $tweet]
         );
 
         return [$tweet, $post->id];
     }
-    
+
 
     /**
      * Runs the "Sabia que" publication process.
@@ -446,9 +446,9 @@ class SabiaQue extends WikiAphpi {
 }
 
 $tokens = [
-    $twitter_consumer_key, 
-    $twitter_consumer_secret, 
-    $twitter_access_token, 
+    $twitter_consumer_key,
+    $twitter_consumer_secret,
+    $twitter_access_token,
     $twitter_access_token_secret
 ];
 $api = new SabiaQue('https://pt.wikipedia.org/w/api.php', $usernameSQ, $passwordSQ);

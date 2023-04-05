@@ -99,7 +99,7 @@ if ($_GET["user"]) {
 		      		</div>
 		      		<div class="w3-half">
 		      			<div class="w3-container w3-padding-48 w3-card">
-		      				<?php 
+		      				<?php
 		      				if ($_GET["user"]) {
 	  							if (isset($idade)){
 	  								$percent = floor( (count($userquery) * 100) / 300 );

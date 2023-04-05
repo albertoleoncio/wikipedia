@@ -107,8 +107,8 @@ foreach ($data as $iso => $variation) {
 	foreach ($list_existentes[$iso] as $existente) {
 		if (!in_array($existente, $list_cats[$iso])) {
 			deleteAPI(
-				"MediaWiki:Editnotice-0-".$existente, 
-				"G1 - [[WP:ER#ERg1|Eliminação técnica]] (bot: Eliminando editnotice desnecessário)", 
+				"MediaWiki:Editnotice-0-".$existente,
+				"G1 - [[WP:ER#ERg1|Eliminação técnica]] (bot: Eliminando editnotice desnecessário)",
 				$usernameEN
 			);
 			sleep(10);
@@ -122,11 +122,11 @@ foreach ($data as $iso => $variation) {
 		if ($variation["afluir"] == "MediaWiki:Editnotice-0-".$item_cat) continue;
 		if (!in_array($item_cat, $list_existentes[$iso])) {
 			editAPI(
-				"{{:".$variation["afluir"]."}}", 
-				NULL, 
-				TRUE, 
-				"bot: Criando editnotice", 
-				"MediaWiki:Editnotice-0-".$item_cat, 
+				"{{:".$variation["afluir"]."}}",
+				NULL,
+				TRUE,
+				"bot: Criando editnotice",
+				"MediaWiki:Editnotice-0-".$item_cat,
 				$usernameEN
 			);
 			sleep(10);

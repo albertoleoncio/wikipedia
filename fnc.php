@@ -114,7 +114,7 @@ foreach ($list_approved as $approved) {
 
 	//Insere dados na array
 	$refname = isset($nome["0"]["0"]) ? trim($nome["0"]["0"]) : false;
-	if(!empty($refname)) { 
+	if(!empty($refname)) {
 		$general_list[$refname] = [
 			"area" => @trim($area["0"]["0"]),
 			"dominio1" => @trim($dominio1["0"]["0"]),
@@ -125,7 +125,7 @@ foreach ($list_approved as $approved) {
 			"timestamp" => @trim($timestamp["0"]["0"])
 		];
 
-		for ($i=1; $i < 6; $i++) { 
+		for ($i=1; $i < 6; $i++) {
 			if(!empty($general_list[$refname]["dominio".$i])) {
 				$blacklist_params = [
 					"action" 	=> "spamblacklist",

@@ -96,7 +96,7 @@ editAPI($wikiCode, 0, true, "bot: Atualizando estatísticas", $page, $username);
 //
 ////////////////////////////////////////////////////////////////////////////////////////
 
-//Formata string de dia compatível com predefinição 
+//Formata string de dia compatível com predefinição
 $dia_atualização = date("d-m-Y",$timestamp);
 
 //Formata string de nova linha para atualização

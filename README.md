@@ -8,7 +8,7 @@ Scripts para alguns bots da Wikipédia, dentre outras coisas.
 
 Operador dos bots: https://pt.wikipedia.org/wiki/Usuário:Albertoleoncio
 
-Bots: 
+Bots:
 
 - https://pt.wikipedia.org/wiki/User:AlbeROBOT
 - https://pt.wikipedia.org/wiki/User:SabiaQueBot
