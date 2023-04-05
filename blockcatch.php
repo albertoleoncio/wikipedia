@@ -121,7 +121,8 @@ unlink("./cookie.inc");
 //
 ////////////////////////////////////////////////////////////////////////////////////////
 
-function getLoginToken() {
+function getLoginToken()
+{
 	global $endPoint;
 
 	$params1 = [
@@ -141,7 +142,8 @@ function getLoginToken() {
 	return json_decode($output, true)["query"]["tokens"]["logintoken"];
 }
 
-function loginRequest($logintoken, $bot_user, $bot_pass) {
+function loginRequest($logintoken, $bot_user, $bot_pass)
+{
 	global $endPoint;
 
 	$params2 = [
@@ -163,7 +165,8 @@ function loginRequest($logintoken, $bot_user, $bot_pass) {
 	curl_close($ch);
 }
 
-function getCSRFToken() {
+function getCSRFToken()
+{
 	global $endPoint;
 
 	$params3 = [
@@ -182,7 +185,8 @@ function getCSRFToken() {
 	return json_decode($output, true)["query"]["tokens"]["csrftoken"];
 }
 
-function block($csrftoken, $user_block) {
+function block($csrftoken, $user_block)
+{
 	global $endPoint;
 
 	$params4 = [

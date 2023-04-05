@@ -64,7 +64,8 @@ $artigo_titulo = str_replace('_', ' ', $artigo_titulo) ?: false;
 <?php
 
 //Função para usar API do MediaWiki
-function api_get($params) {
+function api_get($params)
+{
 	$ch1 = curl_init( "https://pt.wikipedia.org/w/api.php?" . http_build_query( $params ) );
 	curl_setopt( $ch1, CURLOPT_RETURNTRANSFER, true );
 	$data = curl_exec( $ch1 );

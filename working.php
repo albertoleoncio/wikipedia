@@ -7,7 +7,8 @@ require_once './bin/api.php';
 loginAPI($username, $password);
 
 //Funções
-function api_get($params) {
+function api_get($params)
+{
     global $username;
     $ch1 = curl_init( "https://pt.wikisource.org/w/api.php?" . http_build_query( $params ) );
     curl_setopt( $ch1, CURLOPT_RETURNTRANSFER, true );

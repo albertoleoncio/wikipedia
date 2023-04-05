@@ -7,13 +7,15 @@ require_once './bin/api2.php';
  * em português que porventura realizaram bloqueios fora dos parâmetros autorizados pela
  * política local.
  */
-class BadRollback extends WikiAphpi {
+class BadRollback extends WikiAphpi
+{
 
     /**
      * Levanta lista de reversores
      * @return array Lista de IDs de usuários reversores
      */
-    private function getRollbackers() {
+    private function getRollbackers()
+    {
         $params = [
           'action'  => 'query',
           'format'  => 'php',
@@ -34,7 +36,8 @@ class BadRollback extends WikiAphpi {
      * Levanta lista de bloqueios ocorridos nos últimos minutos
      * @return array Lista de eventos e seus detalhes
      */
-    public function getRecentBlocks() {
+    public function getRecentBlocks()
+    {
         $params = [
             'action'    => 'query',
             'format'    => 'php',
@@ -54,7 +57,8 @@ class BadRollback extends WikiAphpi {
      * @param string $username Nome do usuário
      * @return bool Verdadeiro se for autoconfirmado, falso caso contrário ou caso seja IP
      */
-    private function isUserAutoConfirmed($username) {
+    private function isUserAutoConfirmed($username)
+    {
         $params = [
             'action'    => 'query',
             'format'    => 'php',
@@ -71,7 +75,8 @@ class BadRollback extends WikiAphpi {
      * @param string $pagename Página do usuário
      * @return string Nome do usuário
      */
-    private function getNameFromUserPage($pagename) {
+    private function getNameFromUserPage($pagename)
+    {
         $name = explode(':', $pagename, 2);
         return $name["1"];
     }
@@ -81,7 +86,8 @@ class BadRollback extends WikiAphpi {
      * @param array $log Parâmetros de log
      * @return mixed String com erro detectado ou falso caso contrário
      */
-    private function verifyLog($log) {
+    private function verifyLog($log)
+    {
 
         //Verifica se alvo é autoconfirmado
         $target = $this->getNameFromUserPage($log['title']);
@@ -113,7 +119,8 @@ class BadRollback extends WikiAphpi {
      * Recupera lista de incidentes já notificados
      * @return array IDs de log
      */
-    private function getNotified() {
+    private function getNotified()
+    {
         $list = $this->get('User:BloqBot/rev');
         $list = explode("\n", $list);
         return $list;
@@ -126,7 +133,8 @@ class BadRollback extends WikiAphpi {
      * @param array $notified Lista de IDs dos incidentes já lançados
      * @return array Incidentes a serem lançados
      */
-    private function compileNotifications($logs, $rollbackersIDs, $notified) {
+    private function compileNotifications($logs, $rollbackersIDs, $notified)
+    {
         $notify = [];
 
         //Processa cada registro de bloqueio
@@ -164,7 +172,8 @@ class BadRollback extends WikiAphpi {
 	 * Salva os incidentes na página de notificação de incidentes.
 	 * @param array $notifications Array contendo as notificações dos incidentes.
 	 */
-	private function saveIncidents($notifications) {
+	private function saveIncidents($notifications)
+	{
 	    $notifications = implode('', $notifications);
 	    $this->edit(
 	        $notifications,
@@ -179,7 +188,8 @@ class BadRollback extends WikiAphpi {
 	 * Salva os números dos logs dos incidentes.
 	 * @param array $notifications Array contendo as notificações dos incidentes.
 	 */
-	private function saveIncidentLogs($notifications) {
+	private function saveIncidentLogs($notifications)
+	{
 	    $logs = implode("\n", array_keys($notifications));
 	    $this->edit(
 	        "\n$logs",
@@ -197,7 +207,8 @@ class BadRollback extends WikiAphpi {
 	 * Para isso, a função chama as funções auxiliares `compileNotifications()`, `saveIncidentLogs()` e `saveIncidents()`.
 	 * @return void
 	 */
-	public function run() {
+	public function run()
+	{
 	    $notifications = $this->compileNotifications(
 	        $this->getRecentBlocks(),
 	        $this->getRollbackers(),

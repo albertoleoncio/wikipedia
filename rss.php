@@ -7,7 +7,8 @@ header('Content-type: application/xml');
 //
 /////////
 
-function busca_imagem ($article) {
+function busca_imagem ($article)
+{
 	//Busca imagem
 	$address = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&prop=pageimages&piprop=name&titles=".$article);
 	$address = end(unserialize($address)["query"]["pages"]);

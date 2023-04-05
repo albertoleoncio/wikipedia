@@ -5,13 +5,15 @@ require_once "tpar/twitteroauth/autoload.php";
 use Abraham\TwitterOAuth\TwitterOAuth;
 date_default_timezone_set('UTC');
 
-class SabiaQue extends WikiAphpi {
+class SabiaQue extends WikiAphpi
+{
 
     /**
      * Purges the "Wikipédia:Sabia que/Frequência" page to clear cached data.
      * @throws Exception if the purge API call fails or the page is not purged.
      */
-    private function purgeFrequencyPage() {
+    private function purgeFrequencyPage()
+    {
         $purge_params = [
             'action' => 'purge',
             'format' => 'php',
@@ -35,7 +37,8 @@ class SabiaQue extends WikiAphpi {
      * @throws Exception If the retrieved value is not numeric or is less than 43200 seconds (12 hours).
      * @return int The value of the "Wikipédia:Sabia que/Frequência" template.
      */
-    private function getFrequency() {
+    private function getFrequency()
+    {
         $frequency_params = [
             'action'    => 'expandtemplates',
             'format'    => 'php',
@@ -53,7 +56,8 @@ class SabiaQue extends WikiAphpi {
      * Retrieves the timestamp of the last contribution made by the "SabiaQueBot" user.
      * @return int The timestamp of the last published contribution, in Unix time format.
      */
-    private function getLastPublishedTime() {
+    private function getLastPublishedTime()
+    {
         $lastPublished_params = [
             'action'    => 'query',
             'format'    => 'php',
@@ -71,7 +75,8 @@ class SabiaQue extends WikiAphpi {
      * Check if the deadline for publishing a new Sabia Que fact has been met.
      * @return int Seconds until deadline.
      */
-    private function isDeadlineMet() {
+    private function isDeadlineMet()
+    {
         $this->purgeFrequencyPage();
         $frequency = $this->getFrequency();
         $lastPublishedTime = $this->getLastPublishedTime();
@@ -90,7 +95,8 @@ class SabiaQue extends WikiAphpi {
      * @return string The extracted nomination text.
      * @throws Exception if the text is not found in the proposition.
      */
-    private function regexNewNomination($proposition, $regex) {
+    private function regexNewNomination($proposition, $regex)
+    {
         // Match the regular expression pattern against the proposition
         preg_match_all($regex, $proposition, $result);
 
@@ -116,7 +122,8 @@ class SabiaQue extends WikiAphpi {
      *               - string $nominator The user who made the nomination.
      *               - string $proposition The full text of the nomination proposition.
      */
-    private function extractNewNominationInfo($page) {
+    private function extractNewNominationInfo($page)
+    {
         //Get the contents from the first section of the page excluding header
         $proposition = $this->get($page, '1');
 
@@ -142,7 +149,8 @@ class SabiaQue extends WikiAphpi {
      * @param string $page The page containing the Sabia Que HTML template.
      * @return array An array containing the old and new versions of the Sabia Que HTML template.
      */
-    private function compileTemplate($new, $page) {
+    private function compileTemplate($new, $page)
+    {
         // Get the current Sabia Que template.
         $html = $this->get($page);
 
@@ -177,7 +185,8 @@ class SabiaQue extends WikiAphpi {
      * @param string $page The title of the page to check.
      * @return bool Returns `true` if the page exists, `false` otherwise.
      */
-    private function isPageCreated($page) {
+    private function isPageCreated($page)
+    {
         $params = [
             'action'        => 'query',
             'format'        => 'php',
@@ -200,7 +209,8 @@ class SabiaQue extends WikiAphpi {
      * @param string $new The new Sabia Que nomination text.
      * @return array An array with the compiled text and the name of the talk page.
      */
-    private function compileArticleTalk($article, $new) {
+    private function compileArticleTalk($article, $new)
+    {
         // Get the redirect (if any) for the article name
         $redirect_params = [
             'action'    => 'query',
@@ -266,7 +276,8 @@ class SabiaQue extends WikiAphpi {
      * @param string $page The title of the main page.
      * @return array An array containing the new text for the recent section and the index of the section in the page's HTML.
      */
-    private function compileRecent($old, $page) {
+    private function compileRecent($old, $page)
+    {
         // Get the sections of the main page
         $html = $this->getSections($page);
 
@@ -314,7 +325,8 @@ class SabiaQue extends WikiAphpi {
      * @param string $new The content of the newly approved fact.
      * @return array An array with the compiled message content and page name.
      */
-    private function compileNominatorTalkPage($nominator, $article, $new) {
+    private function compileNominatorTalkPage($nominator, $article, $new)
+    {
         // Define the page name.
         $page = "Usuário Discussão:".$nominator;
 
@@ -347,7 +359,8 @@ class SabiaQue extends WikiAphpi {
      * @param string $proposition The proposition to be included in the archive.
      * @return array An array containing the composed HTML and the name of the archive page.
      */
-    private function composeArchive($proposition) {
+    private function composeArchive($proposition)
+    {
         $page = "Wikipédia:Sabia que/Propostas/Arquivo/".utf8_encode(strftime('%Y/%m'));
         $html = "\n\n$proposition{{ADC|sim|".utf8_encode(strftime('%d de %B de %Y'))."|~~~}}";
         return [$html, $page];
@@ -360,7 +373,8 @@ class SabiaQue extends WikiAphpi {
      * @param array $tokens An array with keys and tokens of the Twitter API
      * @return array An array containing the tweet text and the ID of the posted tweet.
      */
-    private function doTweet($text, $article, $tokens) {
+    private function doTweet($text, $article, $tokens)
+    {
         $tweet  = "Você sabia que...\n\n…";
         $tweet .= preg_replace(
             '/[\[\]\']/',
@@ -414,7 +428,8 @@ class SabiaQue extends WikiAphpi {
      * @param array $tokens An array with keys and tokens of the Twitter API
      * @return void
     */
-    public function run($tokens) {
+    public function run($tokens)
+    {
         $deadline = $this->isDeadlineMet();
         if ($deadline !== 0) {
             echo "$deadline segundos até o prazo de publicação";

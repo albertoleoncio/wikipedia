@@ -9,7 +9,8 @@
  * classes that implement specific functionality. Authentication is required through
  * a endpoint, username and password, performing a login operation upon instantiation.
  */
-abstract class WikiAphpi {
+abstract class WikiAphpi
+{
 
     /** @var string The base URL for API requests. */
     private $endpoint;
@@ -27,7 +28,8 @@ abstract class WikiAphpi {
      * @param string $userAPI The username to use for API requests.
      * @param string $passAPI The password to use for API requests.
      */
-    public function __construct($endpoint, $userAPI, $passAPI) {
+    public function __construct($endpoint, $userAPI, $passAPI)
+    {
         $this->endpoint = $endpoint;
         $this->userAPI = $userAPI;
         $this->passAPI = $passAPI;
@@ -46,7 +48,8 @@ abstract class WikiAphpi {
      * @return array The response from the curl request.
      * @throws Exception if there is an error sending the curl request.
      */
-    private function sendCurlRequest($params, $isPost, $headers = false) {
+    private function sendCurlRequest($params, $isPost, $headers = false)
+    {
         $url = $this->endpoint;
         $ch = curl_init();
 
@@ -94,7 +97,8 @@ abstract class WikiAphpi {
      *
      * @return string The username of the logged-in user.
      */
-    private function login() {
+    private function login()
+    {
         //Verifica maxlag e usuário atual com base no cookie armazenado
         $logged_params = [
             "action"    => "query",
@@ -156,7 +160,8 @@ abstract class WikiAphpi {
      *
      * @return string The CSRF token.
      */
-    private function getCsrfToken() {
+    private function getCsrfToken()
+    {
         //Coleta token
         $params = [
             "action"    => "query",
@@ -182,7 +187,8 @@ abstract class WikiAphpi {
      * @param strint $section Section to be readed.
      * @return string Content of the page.
      */
-    public function get($page, $section = false) {
+    public function get($page, $section = false)
+    {
         global $endPoint;
 
         //Prepara parâmetros básicos para envio ao API
@@ -214,7 +220,8 @@ abstract class WikiAphpi {
      * @param strint $page Page to be readed.
      * @return array Content of the page.
      */
-    public function getSections($page) {
+    public function getSections($page)
+    {
 
         $section = 0;
         $validsection = true;
@@ -263,7 +270,8 @@ abstract class WikiAphpi {
      * @param type $page Page to be edited.
      * @return int The revision ID.
      */
-    public function edit($text, $section, $minor, $summary, $page) {
+    public function edit($text, $section, $minor, $summary, $page)
+    {
 
         //Prepara parâmetros básicos para envio ao API
         $params = [
@@ -318,7 +326,8 @@ abstract class WikiAphpi {
      * @param string $reason The reason for deleting the page.
      * @return bool True on success, false on failure.
      */
-    public function delete($page, $reason) {
+    public function delete($page, $reason)
+    {
         $params = [
             "action"        => "delete",
             "title"         => $page,
@@ -348,7 +357,8 @@ abstract class WikiAphpi {
      * @param string $page Name of file on wiki.
      * @return string Name of file on wiki.
      */
-    public function upload($text, $location, $summary, $page) {
+    public function upload($text, $location, $summary, $page)
+    {
 
         //Get siteinfo
         $params_siteinfo = [
@@ -417,7 +427,8 @@ abstract class WikiAphpi {
      * @param string $name Name of the option
      * @return string The content of the option
      */
-    public function readOption($name) {
+    public function readOption($name)
+    {
 
         $params = [
             "action"        => "query",
@@ -439,7 +450,8 @@ abstract class WikiAphpi {
      * @param string $data Content of the option
      * @return bool True if saved
      */
-    public function writeOption($name, $data) {
+    public function writeOption($name, $data)
+    {
 
 
         $params = [
@@ -471,7 +483,8 @@ abstract class WikiAphpi {
      * @param array $params Parameters to be send to the API
      * @return array API's response
      */
-    public function see($params) {
+    public function see($params)
+    {
         $see = $this->sendCurlRequest($params, false);
         if (isset($see['error'])) {
             throw new Exception(print_r($see['error'], true));
@@ -486,7 +499,8 @@ abstract class WikiAphpi {
      * @param array $params Parameters to be send to the API
      * @return array API's response
      */
-    public function do($params) {
+    public function do($params)
+    {
         $do = $this->sendCurlRequest($params, true);
         if (isset($do['error'])) {
             throw new Exception(print_r($do['error'], true));

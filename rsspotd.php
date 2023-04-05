@@ -9,12 +9,14 @@ header('Content-type: application/xml');
  * arquivo, o tamanho e o tipo do arquivo, e buscar metadados adicionais da imagem através da
  * API do MediaWiki. As informações são devolvidas em um RSS ATOM.
  */
-class PotdRss {
+class PotdRss
+{
 
     /**
      * Construtor da classe responsável por realizar chamadas à API do Wikipedia em Português.
      */
-    public function __construct() {
+    public function __construct()
+    {
         $this->url = 'https://pt.wikipedia.org/w/api.php?';
     }
 
@@ -22,7 +24,8 @@ class PotdRss {
      * Recupera os dados da imagem do dia (POTD) recentes já publicadas no Twitter
      * @return array contendo os títulos das últimas 5 imagens do dia
      */
-    private function fetchPotdData() {
+    private function fetchPotdData()
+    {
         $potd_params = [
             'action'  => 'query',
             'format'  => 'php',
@@ -42,7 +45,8 @@ class PotdRss {
      * @param string $dayTitle Título da imagem do dia (Ex: 1 de janeiro de 2020).
      * @return string O conteúdo textual da imagem.
      */
-    private function fetchTextData($dayTitle) {
+    private function fetchTextData($dayTitle)
+    {
         $text_params = [
             'action' => 'parse',
             'format' => 'php',
@@ -62,7 +66,8 @@ class PotdRss {
      * @param string $text O texto contendo a tag de imagem da qual deseja-se extrair o conteúdo.
      * @return string O conteúdo do atributo "alt" da tag de imagem.
      */
-    private function extractContent($text) {
+    private function extractContent($text)
+    {
         preg_match_all('/(?<=<img alt=")[^"]*/', $text, $content);
         $alt = $content["0"]["0"] ?? false;
         if (!$alt) {
@@ -77,7 +82,8 @@ class PotdRss {
      * @param string $text O texto que contém a imagem.
      * @return string O nome do arquivo de imagem.
      */
-    private function extractFilename($text) {
+    private function extractFilename($text)
+    {
         preg_match_all('/(?<=<a href="\/wiki\/Ficheiro:)[^"]*/', $text, $content);
         $filename = urldecode($content["0"]["0"]);
         if (!$filename) {
@@ -94,7 +100,8 @@ class PotdRss {
      ** int $size: O tamanho do arquivo em bytes.
      ** string $type: O tipo do conteúdo da imagem (MIME type).
      */
-    private function fetchFileInfo($filename) {
+    private function fetchFileInfo($filename)
+    {
         $ch = curl_init("https://pt.wikipedia.org/wiki/Especial:Redirecionar/file/$filename?width=1000");
         curl_setopt($ch, CURLOPT_NOBODY, 1);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
@@ -113,7 +120,8 @@ class PotdRss {
      * @param string $filename O nome do arquivo de imagem.
      * @return array Uma matriz contendo os metadados da imagem.
      */
-    private function fetchImageMeta($filename) {
+    private function fetchImageMeta($filename)
+    {
         $api_params = [
             'action'  => 'query',
             'format'  => 'php',
@@ -136,7 +144,8 @@ class PotdRss {
      * @param array $imageInfo Contendo as informações da imagem, incluindo o texto, nome do arquivo e metadados.
      * @return string Descrição da imagem no formato de texto
      */
-    private function buildDescription($dayTitle, $imageInfo) {
+    private function buildDescription($dayTitle, $imageInfo)
+    {
 
         return "Imagem do dia em {$dayTitle}: {$this->extractContent($imageInfo['text'])}\nAutor: "
             . trim(strip_tags($imageInfo['meta']["Artist"]["value"]))
@@ -152,7 +161,8 @@ class PotdRss {
      * @param array $image Array com informações do log da Imagem do Dia
      * @return array Array com as informações formatadas para o RSS.
      */
-    private function buildRssItem($thisDay) {
+    private function buildRssItem($thisDay)
+    {
         $dayTitle = $thisDay["slots"]["main"]["*"];
         $imageInfo = $this->fetchImageInfo($dayTitle);
         $description = $this->buildDescription($dayTitle, $imageInfo);
@@ -178,7 +188,8 @@ class PotdRss {
      * @param string $dayTitle Título da imagem do dia (Ex: 1 de janeiro de 2020).
      * @return array Contendo as informações da imagem, incluindo o texto, nome do arquivo e metadados.
      */
-    private function fetchImageInfo($dayTitle) {
+    private function fetchImageInfo($dayTitle)
+    {
         $text = $this->fetchTextData($dayTitle);
         $filename = $this->extractFilename($text);
         $meta = $this->fetchImageMeta($filename);
@@ -196,7 +207,8 @@ class PotdRss {
      * @param array $potd Dados da imagem do dia.
      * @return string O feed RSS gerado.
      */
-    private function buildRss($potd) {
+    private function buildRss($potd)
+    {
         $rss = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8" ?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"></rss>');
         $rss->addChild('channel');
         $rss->channel->addChild('title', 'WikiPT - POTD');
@@ -228,7 +240,8 @@ class PotdRss {
     * Executa a geração do feed RSS com as informações do "Imagem do Dia" da Wikipédia em português.
     * @return string Retorna o conteúdo do feed RSS gerado.
     */
-    public function run() {
+    public function run()
+    {
         $potd = $this->fetchPotdData();
         $items = [];
 

@@ -7,14 +7,16 @@ date_default_timezone_set('UTC');
  * Classe responsável pela análise e fechamento de pedidos de bloqueio/proteção na Wikipédia em
  * português.
  */
-class BloqBotRequests extends WikiAphpi {
+class BloqBotRequests extends WikiAphpi
+{
 
     /**
      * Verifica se uma seção possui uma marcação de "<!--{{Respondido", indicando que ainda não foi respondida
      * @param string $text O texto da seção a ser verificada
      * @return bool Retorna true se a seção não possuir a marcação "<!--{{Respondido", caso contrário retorna false
      */
-    private function isSectionAnswered($text) {
+    private function isSectionAnswered($text)
+    {
         preg_match_all(
             "/<!--\n?{{Respondido/",
             $text,
@@ -31,7 +33,8 @@ class BloqBotRequests extends WikiAphpi {
      * @param string $text O texto de descrição do evento de proteção a ser convertido.
      * @return string O texto de descrição wikificado.
     */
-    private function descriptionToWikitext($text) {
+    private function descriptionToWikitext($text)
+    {
         $sub1 = array(
             "[",
             "edit=",
@@ -61,7 +64,8 @@ class BloqBotRequests extends WikiAphpi {
      * @param string $page O título da página.
      * @return mixed Retorna um array associativa com as informações de registro ou falso se não houver nenhum evento de proteção na página.
     */
-    private function getProtectionEventInfo($page) {
+    private function getProtectionEventInfo($page)
+    {
         $info_params = [
             'action'    => 'query',
             'format'    => 'php',
@@ -80,7 +84,8 @@ class BloqBotRequests extends WikiAphpi {
      * @param string $text O código-fonte da página.
      * @return string O título da seção.
      */
-    private function getSectionTitle($text) {
+    private function getSectionTitle($text)
+    {
         $lines = explode("\n", $text);
 
         $page = trim($lines['0'], "= ") ?? false;
@@ -103,7 +108,8 @@ class BloqBotRequests extends WikiAphpi {
      * Retorna false caso não encontre informações de proteção.
      * @throws Exception Caso não seja possível identificar o nome da página.
     */
-    private function getProtectionInfo($title) {
+    private function getProtectionInfo($title)
+    {
 
         $info = $this->getProtectionEventInfo($title);
         if (!$info) {
@@ -131,7 +137,8 @@ class BloqBotRequests extends WikiAphpi {
      * @return string O número correspondente do mês (com dois dígitos).
      * @throws Exception Se o nome do mês não for reconhecido.
      */
-    private function convertMonthNameToNumber($m) {
+    private function convertMonthNameToNumber($m)
+    {
         $months = [
             'janeiro'   => '01',
             'fevereiro' => '02',
@@ -159,7 +166,8 @@ class BloqBotRequests extends WikiAphpi {
      * @param string $code O código da seção que contém a assinatura.
      * @return int Retorna um timestamp Unix representando a data e hora da assinatura.
      */
-    private function requestTimestamp($code) {
+    private function requestTimestamp($code)
+    {
         preg_match_all(
             '/(\d{1,2})h(\d{1,2})min de (\d{1,2}) de ([^ ]*) de (\d{1,4}) \(UTC\)/',
             $code,
@@ -180,7 +188,8 @@ class BloqBotRequests extends WikiAphpi {
      * @param string $user Nome do usuário
      * @return array|false Caso exista bloqueio ativo ou não
      */
-    private function isUserBlocked($user) {
+    private function isUserBlocked($user)
+    {
         $params = [
             "action"  => "query",
             "format"  => "php",
@@ -206,7 +215,8 @@ class BloqBotRequests extends WikiAphpi {
      * @param string $text Texto da seção
      * @return string Texto modificado
      */
-    private function replaceInitialSection($text) {
+    private function replaceInitialSection($text)
+    {
         return preg_replace(
             '/<!--\n?{{Respondido[^>]*>/',
             '{{Respondido2|feito|texto=',
@@ -220,7 +230,8 @@ class BloqBotRequests extends WikiAphpi {
      * @param array $protectLog Array contendo o registro da proteção
      * @return string Texto modificado
      */
-    private function replaceFinalProtectSection($text, $protectLog) {
+    private function replaceFinalProtectSection($text, $protectLog)
+    {
         $logLink = "[[Special:Redirect/logid/{$protectLog['logid']}|{$protectLog['time']} (UTC)]]";
         $userLink = "[[User:{$protectLog['user']}|{$protectLog['user']}]]";
         $params = $protectLog['description'];
@@ -242,7 +253,8 @@ class BloqBotRequests extends WikiAphpi {
      * @param string $tempo O prazo do bloqueio aplicado.
      * @return string Texto modificado
      */
-    private function replaceFinalBlockSection($text, $blockLog, $tempo) {
+    private function replaceFinalBlockSection($text, $blockLog, $tempo)
+    {
         $newText = preg_replace(
             '/<!--\n?:{{subst:(Bloqueio )?[Ff]eito[^>]*>/',
             ":{{subst:Bloqueio feito|por=".$blockLog['by']."|".$tempo."}}. [[User:BloqBot|BloqBot]] ~~~~~}}",
@@ -257,7 +269,8 @@ class BloqBotRequests extends WikiAphpi {
      * @param array $blockLog Um registro de bloqueio com informações sobre o bloqueio.
      * @return string Uma string que descreve o tempo restante até o término do bloqueio, ou "tempo indeterminado" se o bloqueio for permanente.
      */
-    private function calculateBlockTime($blockLog) {
+    private function calculateBlockTime($blockLog)
+    {
         if ($blockLog['expiry'] == "infinity") {
             return "tempo indeterminado";
         } else {
@@ -283,7 +296,8 @@ class BloqBotRequests extends WikiAphpi {
      * @param int $section O número da seção a ser processada.
      * @param string $page O nome da página de pedidos.
      */
-    private function processBlockingSection($text, $section, $page) {
+    private function processBlockingSection($text, $section, $page)
+    {
         $blockLog = $this->isUserBlocked($this->getSectionTitle($text));
         if ($blockLog !== false) {
             if ($blockLog['expiry'] != "infinity" AND (strtotime($blockLog['expiry']) - strtotime($blockLog['timestamp']) < 90000)){
@@ -309,7 +323,8 @@ class BloqBotRequests extends WikiAphpi {
      * @param int $section O número da seção a ser processada.
      * @param string $page O nome da página de pedidos.
      */
-    private function processProtectingSection($text, $section, $page) {
+    private function processProtectingSection($text, $section, $page)
+    {
         $protectLog = $this->getProtectionInfo($this->getSectionTitle($text));
         if ($protectLog && $this->requestTimestamp($text) > $protectLog['timestamp']) {
             echo " e já finalizada. Fechando...";
@@ -325,7 +340,8 @@ class BloqBotRequests extends WikiAphpi {
      * determinar se ela deve ser fechada. As seções são fechadas se o pedido correspondente tiver sido cumprido.
      * @param string $page O nome da página de pedidos a ser processada.
      */
-    public function run($page, $type) {
+    public function run($page, $type)
+    {
         echo "\n\nIniciando página $page";
         $sections = $this->getSections($page);
         unset($sections[array_key_first($sections)]);

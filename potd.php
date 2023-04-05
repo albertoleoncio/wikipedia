@@ -5,13 +5,15 @@ require_once './tpar/twitteroauth/autoload.php';
 
 use Abraham\TwitterOAuth\TwitterOAuth;
 
-class Potd extends WikiAphpi {
+class Potd extends WikiAphpi
+{
 
     /**
      * Verifica se a última POTD postada corresponde a POTD atual da Wikipédia.
      * @return string|false Título da imagem do dia pendente (Ex: 1 de janeiro de 2020) ou falso
      */
-    private function verifyPendingPost()    {
+    private function verifyPendingPost()
+    {
         $atual_params = [
             'action'  => 'expandtemplates',
             'format'  => 'php',
@@ -32,7 +34,8 @@ class Potd extends WikiAphpi {
      * @param string $dayTitle Título da imagem do dia (Ex: 1 de janeiro de 2020).
      * @return string O nome do arquivo de imagem.
      */
-    private function fetchFilename($dayTitle) {
+    private function fetchFilename($dayTitle)
+    {
         $text_params = [
             'action' => 'parse',
             'format' => 'php',
@@ -57,7 +60,8 @@ class Potd extends WikiAphpi {
      * @param string $filename O nome do arquivo de imagem.
      * @return array Uma matriz contendo os metadados da imagem.
      */
-    private function fetchImageMeta($filename) {
+    private function fetchImageMeta($filename)
+    {
         $api_params = [
             'action'  => 'query',
             'format'  => 'php',
@@ -79,7 +83,8 @@ class Potd extends WikiAphpi {
      * @return string O endereço local do arquivo.
      * @throws Exception Se o arquivo não puder ser salvo.
     */
-    private function fetchAndSaveFile($filename) {
+    private function fetchAndSaveFile($filename)
+    {
         preg_match_all('/(?<=\.)\w*?$/', $filename, $extension);
         $file = file_get_contents("https://pt.wikipedia.org/wiki/Especial:Redirecionar/file/$filename?width=1000");
         $path = './potd.'.$extension['0']['0'];
@@ -94,7 +99,8 @@ class Potd extends WikiAphpi {
      * @param string $pendingPost O título do post que contém a imagem
      * @return array Um array contendo o endereço local do arquivo da imagem e seus metadados
      */
-    private function prepareImage($pendingPost) {
+    private function prepareImage($pendingPost)
+    {
         $imageFilename = $this->fetchFilename($pendingPost);
         $imagePath = $this->fetchAndSaveFile($imageFilename);
         $imageMeta = $this->fetchImageMeta($imageFilename);
@@ -107,7 +113,8 @@ class Potd extends WikiAphpi {
      * @param array $imageMeta Os metadados da imagem
      * @return array Um array contendo o status e a resposta para o tweet
      */
-    private function composeTweets($pendingPost, $imageMeta) {
+    private function composeTweets($pendingPost, $imageMeta)
+    {
         $artistName = strip_tags($imageMeta['Artist']['value']);
         $licenseShortName = strip_tags($imageMeta['LicenseShortName']['value']);
         $licenseUrl = strip_tags($imageMeta['LicenseUrl']['value']);
@@ -126,7 +133,8 @@ class Potd extends WikiAphpi {
      * @param string $imagePath O endereço local do arquivo da imagem a ser postada
      * @return array Um array contendo o ID do status e o ID da resposta para o tweet
      */
-    private function postToTwitter($tokens, $twitterStatus, $twitterReply, $imagePath) {
+    private function postToTwitter($tokens, $twitterStatus, $twitterReply, $imagePath)
+    {
         $twitter = new TwitterOAuth(...$tokens);
 
         $media  = $twitter->upload('media/upload', ['media' => $imagePath]);
@@ -141,7 +149,8 @@ class Potd extends WikiAphpi {
      * @param array $tokens Um array com os tokens da API do Twitter.
      * @return array|null Um array com os IDs do tweet criado e sua resposta, ou null se não houver postagem pendente.
      */
-    public function run($tokens) {
+    public function run($tokens)
+    {
         $pendingPost = $this->verifyPendingPost();
         if (!$pendingPost) {
             return null;

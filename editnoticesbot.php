@@ -6,7 +6,8 @@ require_once './bin/api.php';
 loginAPI($usernameEN, $passwordEN);
 
 //Funções
-function api_get($params) {
+function api_get($params)
+{
 	global $usernameEN;
 	$ch1 = curl_init( "https://pt.wikipedia.org/w/api.php?" . http_build_query( $params ) );
 	curl_setopt( $ch1, CURLOPT_RETURNTRANSFER, true );

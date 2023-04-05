@@ -27,7 +27,8 @@ interface WikipediaApiInterface {
 /**
  * Wikipedia API implementation
  */
-class WikipediaApi implements WikipediaApiInterface {
+class WikipediaApi implements WikipediaApiInterface
+{
 
     /** @var string The base URL for the Wikipedia API */
     private $baseUrl = 'https://pt.wikipedia.org/w/api.php?';
@@ -38,7 +39,8 @@ class WikipediaApi implements WikipediaApiInterface {
      * @param string $conta The account name to search for
      * @return array The search data returned by the API
      */
-    public function getCategorySearchData(string $conta): array {
+    public function getCategorySearchData(string $conta): array
+    {
         $params = [
             "action"    => "query",
             "format"    => "php",
@@ -56,7 +58,8 @@ class WikipediaApi implements WikipediaApiInterface {
      * @param string $conta The account name to search for
      * @return array The search data returned by the API
      */
-    public function getPrefixSearchData(string $conta): array {
+    public function getPrefixSearchData(string $conta): array
+    {
         $params = [
           "action"   => "query",
           "list"     => "prefixsearch",
@@ -75,7 +78,8 @@ class WikipediaApi implements WikipediaApiInterface {
      * @param string $url The URL to request data from
      * @return array The data returned by the API
      */
-    private function makeApiRequest(string $url): array {
+    private function makeApiRequest(string $url): array
+    {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $output = curl_exec($ch);
@@ -89,7 +93,8 @@ class WikipediaApi implements WikipediaApiInterface {
  * Class WikipediaDiscussion
  * This class represents a Wikipedia discussion about blocking a user.
  */
-class WikipediaDiscussion {
+class WikipediaDiscussion
+{
 
     /**
      * The instance of the WikipediaApiInterface that is used to retrieve data from the Wikipedia API.
@@ -103,7 +108,8 @@ class WikipediaDiscussion {
      *
      * @param WikipediaApiInterface $wikipediaApi The instance of the WikipediaApiInterface to use.
      */
-    public function __construct(WikipediaApiInterface $wikipediaApi) {
+    public function __construct(WikipediaApiInterface $wikipediaApi)
+    {
         $this->wikipediaApi = $wikipediaApi;
     }
 
@@ -114,7 +120,8 @@ class WikipediaDiscussion {
      *
      * @return array The category data.
      */
-    private function getCategory($conta) {
+    private function getCategory($conta)
+    {
         $searchData = $this->wikipediaApi->getCategorySearchData($conta);
         return $searchData;
     }
@@ -126,7 +133,8 @@ class WikipediaDiscussion {
      *
      * @return string The count of prefix search data plus one.
      */
-    private function getCount($conta) {
+    private function getCount($conta)
+    {
         $searchData = $this->wikipediaApi->getPrefixSearchData($conta);
         $count = count($searchData) + 1;
         return "/$count";
@@ -144,7 +152,8 @@ class WikipediaDiscussion {
      *
      * @return array The array to create the new discussion page.
      */
-    private function doNewDB($conta, $defesa, $evidence, $diff, $subpage = '') {
+    private function doNewDB($conta, $defesa, $evidence, $diff, $subpage = '')
+    {
         $array      = [
             'type' => 'link',
             'text' => "Criar DB{$subpage}",
@@ -169,7 +178,8 @@ class WikipediaDiscussion {
      *
      * @return array The generated link as an array.
      */
-    private function doAddList($conta, $subpage = '') {
+    private function doAddList($conta, $subpage = '')
+    {
         $array = [
             'type' => 'link',
             'text' => 'Publicar DB na lista de pedidos',
@@ -196,7 +206,8 @@ class WikipediaDiscussion {
      *
      * @return array The generated code as an array.
      */
-    private function doGenerateMRConduta($conta, $subpage = '') {
+    private function doGenerateMRConduta($conta, $subpage = '')
+    {
         $text = file_get_contents("https://pt.wikipedia.org/w/index.php?title=Template:MRConduta&action=raw");
         $text = preg_replace(
             '/BloqueioAbertosTotal=(\d)/',
@@ -222,7 +233,8 @@ class WikipediaDiscussion {
      *
      * @return array An array with parameters for a link to edit the "Template:MRConduta" page.
      */
-    private function doPasteMRConduta() {
+    private function doPasteMRConduta()
+    {
         $array = [
             'type' => 'link',
             'text' => 'Colar (substituir) novo código no painel',
@@ -240,7 +252,8 @@ class WikipediaDiscussion {
      * @param string $conta The username of the blocked user.
      * @return array An array with parameters for a link to move the previous discussion page to a subpage.
      */
-    private function doMoveOldDB($conta) {
+    private function doMoveOldDB($conta)
+    {
         $array = [
             'type' => 'link',
             'text' => 'Mover DB anterior para /1',
@@ -261,7 +274,8 @@ class WikipediaDiscussion {
      * @param string $conta The username of the blocked user.
      * @return array An array with parameters for a text area containing code to create a new disambiguation page for the blocked user.
      */
-    private function doGenerateDesambig($conta) {
+    private function doGenerateDesambig($conta)
+    {
         $array = [
             'type'      => 'textarea',
             'id'        => 'newdesambig',
@@ -277,7 +291,8 @@ class WikipediaDiscussion {
      * @param string $conta The username of the blocked user.
      * @return array An array with parameters for a link to edit the disambiguation page.
      */
-    private function doPasteDesambig($conta) {
+    private function doPasteDesambig($conta)
+    {
         $array = [
             'type' => 'link',
             'text' => 'Colar (substituir) novo código para página de desambiguação',
@@ -296,7 +311,8 @@ class WikipediaDiscussion {
      * @param bool $sysop A boolean indicating if the current user is a sysop or not.
      * @return array An array with the link and params to request/send a mass message.
      */
-    private function doRequestMassMessage($conta, $sysop) {
+    private function doRequestMassMessage($conta, $sysop)
+    {
         if ($sysop) {
             $array = [
                 'type'      => 'link',
@@ -339,7 +355,8 @@ class WikipediaDiscussion {
      * @param string $conta The username of the user to notify.
      * @return array An array containing information about the link.
      */
-    private function doNotifyUser($conta) {
+    private function doNotifyUser($conta)
+    {
         $array = [
             'type' => 'link',
             'text' => 'Enviar notificação ao usuário',
@@ -360,7 +377,8 @@ class WikipediaDiscussion {
      * @param array $result The API result from querying the discussion page
      * @return bool True if the discussion page is a disambiguation page, false otherwise
      */
-    private function isDesambig($result) {
+    private function isDesambig($result)
+    {
         $categories = end($result)['categories'];
         foreach ($categories as $cat) {
             if ($cat['title'] === 'Categoria:!Desambiguações de pedidos de discussão de bloqueio') {
@@ -380,7 +398,8 @@ class WikipediaDiscussion {
      * @param string $diff The diff string to be used in the new discussion page.
      * @return array The array containing the required actions as strings.
     */
-    public function run($conta, $sysop, $evidence, $defesa, $diff) {
+    public function run($conta, $sysop, $evidence, $defesa, $diff)
+    {
 
         $result = $this->getCategory($conta);
         $isFirst = isset($result['-1']);

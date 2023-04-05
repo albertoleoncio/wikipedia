@@ -21,7 +21,8 @@
 
 if (!isset($endPoint)) $endPoint = $api_url;
 
-function loginAPI($userAPI , $passAPI) {
+function loginAPI($userAPI , $passAPI)
+{
     global $endPoint;
 
     //Verifica maxlag e usuário atual com base no cookie armazenado
@@ -93,7 +94,8 @@ function loginAPI($userAPI , $passAPI) {
 
 }
 
-function editAPI($text , $section , $minor , $summary , $page, $userAPI) {
+function editAPI($text , $section , $minor , $summary , $page, $userAPI)
+{
     global $endPoint;
 
     //Coleta token para edição
@@ -166,7 +168,8 @@ function editAPI($text , $section , $minor , $summary , $page, $userAPI) {
     if (isset($output["newrevid"])) return $output["newrevid"];
 }
 
-function getAPI($page) {
+function getAPI($page)
+{
     global $endPoint;
 
     //Prepara parâmetros básicos para envio ao API
@@ -192,7 +195,8 @@ function getAPI($page) {
     return $result["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"]["content"] ?? false;
 }
 
-function getsectionsAPI($page) {
+function getsectionsAPI($page)
+{
     global $endPoint;
 
     $section = 0;
@@ -239,7 +243,8 @@ function getsectionsAPI($page) {
 
 }
 
-function uploadAPI ($text, $location, $summary, $page, $userAPI) {
+function uploadAPI ($text, $location, $summary, $page, $userAPI)
+{
     global $endPoint;
 
     //Get token
@@ -322,7 +327,8 @@ function uploadAPI ($text, $location, $summary, $page, $userAPI) {
     echo ("</pre>");
 }
 
-function deleteAPI($page, $reason, $userAPI) {
+function deleteAPI($page, $reason, $userAPI)
+{
     global $endPoint;
 
     $params3 = [
@@ -373,7 +379,8 @@ function deleteAPI($page, $reason, $userAPI) {
     if (isset($output["logid"])) return $output["logid"];
 }
 
-function runAPI($params, $userAPI) {
+function runAPI($params, $userAPI)
+{
     global $endPoint;
 
     $ch = curl_init();
@@ -389,7 +396,8 @@ function runAPI($params, $userAPI) {
     return $output;
 }
 
-function optionsAPI($name, $data, $userAPI) {
+function optionsAPI($name, $data, $userAPI)
+{
     global $endPoint;
 
     //Modo leitura

@@ -4,14 +4,16 @@ require_once './bin/api2.php';
 require_once './tpar/twitteroauth/autoload.php';
 use Abraham\TwitterOAuth\TwitterOAuth;
 
-class Ead extends WikiAphpi {
+class Ead extends WikiAphpi
+{
 
     /**
     * Get the current featured article on the Portuguese Wikipedia.
     * @throws Exception if the API response does not contain the expected data
     * @return string the title of the current featured article
     */
-    private function getCurrentArticle() {
+    private function getCurrentArticle()
+    {
         $queryParams = [
             'action' => 'expandtemplates',
             'format' => 'php',
@@ -31,7 +33,8 @@ class Ead extends WikiAphpi {
      * @param string $logPage The title of the log page to retrieve.
      * @return string The content of the log page.
      */
-    private function getLastPublishedArticle($logPage) {
+    private function getLastPublishedArticle($logPage)
+    {
         return $this->get($logPage);
     }
 
@@ -41,7 +44,8 @@ class Ead extends WikiAphpi {
      * @param array $tokens An array containing the Twitter API consumer key, consumer secret, access token, and access token secret.
      * @return int The ID of the posted tweet on success.
      */
-    private function doTweet($currentArticle, $tokens) {
+    private function doTweet($currentArticle, $tokens)
+    {
         $twitter_status  = "{$currentArticle} é um artigo de destaque na Wikipédia!\n\n";
         $twitter_status .= "Isso significa que ele foi identificado como um dos melhores artigos produzidos pela comunidade da Wikipédia.\n\n";
         $twitter_status .= "O que achou? Ainda tem como melhorar?\n";
@@ -57,7 +61,8 @@ class Ead extends WikiAphpi {
      * @param string $logPage The title of the log page.
      * @return bool Returns true on success or false on failure.
      */
-    private function doLog($currentArticle, $logPage) {
+    private function doLog($currentArticle, $logPage)
+    {
         return $this->edit($currentArticle, 0, true, "bot: Atualizando EAD", $logPage);
     }
 
@@ -70,7 +75,8 @@ class Ead extends WikiAphpi {
      * @return array An array containing the ID of the tweet posted and the title of the featured article
      *               (or the log page if the article has not changed since the last run).
      */
-    public function run($tokens) {
+    public function run($tokens)
+    {
 
 
         $logPage = 'Usuário(a):AlbeROBOT/EAD';
