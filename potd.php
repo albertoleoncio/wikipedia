@@ -14,6 +14,8 @@ class Potd extends WikiAphpi
      */
     private function verifyPendingPost()
     {
+        $logPage = 'User:AlbeROBOT/POTD';
+
         $atual_params = [
             'action'  => 'expandtemplates',
             'format'  => 'php',
@@ -21,10 +23,11 @@ class Potd extends WikiAphpi
             'text'    => "{{CURRENTDAY}} de {{CURRENTMONTHNAME}} de {{CURRENTYEAR}}"
         ];
         $atual = $this->see($atual_params)['expandtemplates']['wikitext'];
-        $ultimo = $this->get('User:AlbeROBOT/POTD');
+        $ultimo = $this->get($logPage);
         if ($atual == $ultimo) {
             return false;
         }
+        $this->edit($atual, null, true, "bot: Atualizando POTD", $logPage);
         return $atual;
     }
 
@@ -41,8 +44,7 @@ class Potd extends WikiAphpi
             'format' => 'php',
             'page'   => 'Wikipédia:Imagem_em_destaque/' . $dayTitle
         ];
-        $content = $this->url . http_build_query($text_params);
-        $content = unserialize(file_get_contents($content));
+        $content = $this->see($text_params);
         $text = $content["parse"]["text"]["*"] ?? false;
         if (!$text) {
             throw new ContentRetrievalException($content);
@@ -117,7 +119,7 @@ class Potd extends WikiAphpi
     {
         $artistName = strip_tags($imageMeta['Artist']['value']);
         $licenseShortName = strip_tags($imageMeta['LicenseShortName']['value']);
-        $licenseUrl = strip_tags($imageMeta['LicenseUrl']['value']);
+        $licenseUrl = strip_tags($imageMeta['LicenseUrl']['value'] ?? '');
 
         $twitterStatus = "Imagem do dia em $pendingPost. Veja mais informações em https://pt.wikipedia.org/wiki/WP:Imagem_em_destaque/" . rawurlencode($pendingPost);
         $twitterReply = "Autor: $artistName (Licença: $licenseShortName - $licenseUrl)";
