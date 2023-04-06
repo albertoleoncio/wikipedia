@@ -1,117 +1,13 @@
 <?php
+require_once './bin/globals.php';
+require_once 'WikiAphpi/main.php';
 
 /**
- * Interface for interacting with the Wikipedia API.
- */
-interface WikipediaApiInterface {
-
-    /**
-     * Retrieves category search data from the Wikipedia API.
-     *
-     * @param string $conta The account name to search for.
-     * @return array The array of search results.
-     */
-    public function getCategorySearchData(string $conta): array;
-
-    /**
-     * Retrieves prefix search data from the Wikipedia API.
-     *
-     * @param string $conta The account name to search for.
-     * @return array The array of search results.
-     */
-    public function getPrefixSearchData(string $conta): array;
-
-}
-
-
-/**
- * Wikipedia API implementation
- */
-class WikipediaApi implements WikipediaApiInterface
-{
-
-    /** @var string The base URL for the Wikipedia API */
-    private $baseUrl = 'https://pt.wikipedia.org/w/api.php?';
-
-    /**
-     * Retrieve category search data from the Wikipedia API
-     *
-     * @param string $conta The account name to search for
-     * @return array The search data returned by the API
-     */
-    public function getCategorySearchData(string $conta): array
-    {
-        $params = [
-            "action"    => "query",
-            "format"    => "php",
-            "prop"      => "categories",
-            "titles"    => "Wikipédia:Pedidos a administradores/Discussão de bloqueio/$conta"
-        ];
-        $url = $this->baseUrl . http_build_query($params);
-        $data = $this->makeApiRequest($url);
-        return $data['query']["pages"];
-    }
-
-    /**
-     * Retrieve prefix search data from the Wikipedia API
-     *
-     * @param string $conta The account name to search for
-     * @return array The search data returned by the API
-     */
-    public function getPrefixSearchData(string $conta): array
-    {
-        $params = [
-          "action"   => "query",
-          "list"     => "prefixsearch",
-          "pslimit"  => "max",
-          "pssearch" => "Wikipédia:Pedidos a administradores/Discussão de bloqueio/$conta/",
-          "format"   => "php"
-        ];
-        $url = $this->baseUrl . http_build_query($params);
-        $data = $this->makeApiRequest($url);
-        return $data['query']['prefixsearch'];
-    }
-
-    /**
-     * Make an API request to the specified URL
-     *
-     * @param string $url The URL to request data from
-     * @return array The data returned by the API
-     */
-    private function makeApiRequest(string $url): array
-    {
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $output = curl_exec($ch);
-        curl_close($ch);
-        return unserialize($output);
-    }
-
-}
-
-/**
- * Class WikipediaDiscussion
+ * Class BlockingDiscussion
  * This class represents a Wikipedia discussion about blocking a user.
  */
-class WikipediaDiscussion
+class BlockingDiscussion extends WikiAphpiUnlogged
 {
-
-    /**
-     * The instance of the WikipediaApiInterface that is used to retrieve data from the Wikipedia API.
-     *
-     * @var WikipediaApiInterface
-     */
-    private $wikipediaApi;
-
-    /**
-     * WikipediaDiscussion constructor.
-     *
-     * @param WikipediaApiInterface $wikipediaApi The instance of the WikipediaApiInterface to use.
-     */
-    public function __construct(WikipediaApiInterface $wikipediaApi)
-    {
-        $this->wikipediaApi = $wikipediaApi;
-    }
 
     /**
      * Retrieve the category data for a given account name.
@@ -122,8 +18,14 @@ class WikipediaDiscussion
      */
     private function getCategory($conta)
     {
-        $searchData = $this->wikipediaApi->getCategorySearchData($conta);
-        return $searchData;
+        $params = [
+            "action"    => "query",
+            "format"    => "php",
+            "prop"      => "categories",
+            "titles"    => "Wikipédia:Pedidos a administradores/Discussão de bloqueio/$conta"
+        ];
+        $data = $this->see($params);
+        return $data['query']["pages"];
     }
 
     /**
@@ -135,8 +37,15 @@ class WikipediaDiscussion
      */
     private function getCount($conta)
     {
-        $searchData = $this->wikipediaApi->getPrefixSearchData($conta);
-        $count = count($searchData) + 1;
+        $params = [
+          "action"   => "query",
+          "list"     => "prefixsearch",
+          "pslimit"  => "max",
+          "pssearch" => "Wikipédia:Pedidos a administradores/Discussão de bloqueio/$conta/",
+          "format"   => "php"
+        ];
+        $data = $this->see($params);
+        $count = count($data['query']['prefixsearch']) + 1;
         return "/$count";
     }
 
@@ -427,7 +336,7 @@ class WikipediaDiscussion
 
 /**
  * This code block instantiates the necessary classes and runs the `run()` method
- * of the `WikipediaDiscussion` class with the provided parameters.
+ * of the `BlockingDiscussion` class with the provided parameters.
  *
  * If the `conta` parameter is not set, the code block returns `false`.
  */
@@ -437,8 +346,7 @@ $evidence = filter_input(INPUT_GET, 'evidence', FILTER_SANITIZE_FULL_SPECIAL_CHA
 $defesa =   filter_input(INPUT_GET, 'defesa',   FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $diff =     filter_input(INPUT_GET, 'diff',     FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 if ($conta) {
-    $wikipediaApi = new WikipediaApi();
-    $discussion = new WikipediaDiscussion($wikipediaApi);
+    $discussion = new BlockingDiscussion('https://pt.wikipedia.org/w/api.php');
     $echo = $discussion->run($conta, $sysop, $evidence, $defesa, $diff);
 } else {
     $echo = false;

@@ -1,5 +1,6 @@
 <?php
 require_once './bin/globals.php';
+require_once 'WikiAphpi/main.php';
 header('Content-type: application/xml');
 
 /**
@@ -9,16 +10,8 @@ header('Content-type: application/xml');
  * arquivo, o tamanho e o tipo do arquivo, e buscar metadados adicionais da imagem através da
  * API do MediaWiki. As informações são devolvidas em um RSS ATOM.
  */
-class PotdRss
+class PotdRss extends WikiAphpiUnlogged
 {
-
-    /**
-     * Construtor da classe responsável por realizar chamadas à API do Wikipedia em Português.
-     */
-    public function __construct()
-    {
-        $this->url = 'https://pt.wikipedia.org/w/api.php?';
-    }
 
     /**
      * Recupera os dados da imagem do dia (POTD) recentes já publicadas no Twitter
@@ -35,8 +28,7 @@ class PotdRss
             'rvslots' => 'main',
             'rvlimit' => 5
         ];
-        $potd_api = $this->url . http_build_query($potd_params);
-        $potd_api = unserialize(file_get_contents($potd_api))["query"]["pages"]["6720820"]["revisions"];
+        $potd_api = $this->see($potd_params)["query"]["pages"]["6720820"]["revisions"];
         return $potd_api;
     }
 
@@ -52,8 +44,7 @@ class PotdRss
             'format' => 'php',
             'page'   => 'Wikipédia:Imagem_em_destaque/' . $dayTitle
         ];
-        $content = $this->url . http_build_query($text_params);
-        $content = unserialize(file_get_contents($content));
+        $content = $this->see($text_params);
         $text = $content["parse"]["text"]["*"] ?? false;
         if (!$text) {
             throw new Exception(print_r($content, true));
@@ -129,8 +120,7 @@ class PotdRss
             'iiprop'  => 'extmetadata',
             'titles'  => 'Ficheiro:' . $filename
         ];
-        $api = $this->url . http_build_query($api_params);
-        $api = unserialize(file_get_contents($api));
+        $api = $this->see($api_params);
         $meta = $api["query"]["pages"]["-1"]["imageinfo"]["0"]["extmetadata"] ?? false;
         if (!$meta) {
             throw new Exception(print_r($filename, true));
@@ -152,7 +142,7 @@ class PotdRss
             . " (Licença: "
             . strip_tags($imageInfo['meta']["LicenseShortName"]["value"])
             . " - "
-            . strip_tags($imageInfo['meta']["LicenseUrl"]["value"])
+            . strip_tags($imageInfo['meta']["LicenseUrl"]["value"] ?? '')
             . ")\nVeja mais informações no link.\n\n#wikipedia #ptwikipedia #ptwiki #conhecimentolivre #fotododia #imagemdodia #wikicommons";
     }
 
@@ -255,5 +245,5 @@ class PotdRss
 }
 
 //Executa script
-$potdRss = new PotdRss();
+$potdRss = new PotdRss('https://pt.wikipedia.org/w/api.php');
 echo $potdRss->run();

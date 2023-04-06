@@ -1,13 +1,13 @@
 <pre><?php
 require_once './bin/globals.php';
-require_once './bin/api2.php';
+require_once 'WikiAphpi/main.php';
 date_default_timezone_set('UTC');
 
 /**
  * Classe responsável pela análise e fechamento de pedidos de bloqueio/proteção na Wikipédia em
  * português.
  */
-class BloqBotRequests extends WikiAphpi
+class BloqBotRequests extends WikiAphpiLogged
 {
 
     /**

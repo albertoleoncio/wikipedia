@@ -1,10 +1,10 @@
 <pre><?php
 require_once './bin/globals.php';
-require_once './bin/api2.php';
+require_once 'WikiAphpi/main.php';
 require_once './tpar/twitteroauth/autoload.php';
 use Abraham\TwitterOAuth\TwitterOAuth;
 
-class Ead extends WikiAphpi
+class Ead extends WikiAphpiLogged
 {
 
     /**
@@ -77,8 +77,6 @@ class Ead extends WikiAphpi
      */
     public function run($tokens)
     {
-
-
         $logPage = 'Usuário(a):AlbeROBOT/EAD';
         $lastArticle = $this->getLastPublishedArticle($logPage);
         $currentArticle = $this->getCurrentArticle();

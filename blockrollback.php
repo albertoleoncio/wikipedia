@@ -1,13 +1,13 @@
 <pre><?php
 require_once './bin/globals.php';
-require_once './bin/api2.php';
+require_once 'WikiAphpi/main.php';
 
 /**
  * Classe responsável pela notificação de incidentes relacionados aos reversores da Wikipédia
  * em português que porventura realizaram bloqueios fora dos parâmetros autorizados pela
  * política local.
  */
-class BadRollback extends WikiAphpi
+class BadRollback extends WikiAphpiLogged
 {
 
     /**

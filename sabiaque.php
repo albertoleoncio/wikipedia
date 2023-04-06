@@ -1,11 +1,11 @@
 <pre><?php
 require_once './bin/globals.php';
-require_once './bin/api2.php';
+require_once 'WikiAphpi/main.php';
 require_once "tpar/twitteroauth/autoload.php";
 use Abraham\TwitterOAuth\TwitterOAuth;
 date_default_timezone_set('UTC');
 
-class SabiaQue extends WikiAphpi
+class SabiaQue extends WikiAphpiLogged
 {
 
     /**
@@ -14,7 +14,7 @@ class SabiaQue extends WikiAphpi
      */
     private function purgeFrequencyPage()
     {
-        $purge_params = [
+        $purgeParams = [
             'action' => 'purge',
             'format' => 'php',
             'titles' => 'Wikipédia:Sabia que/Frequência',
@@ -22,7 +22,7 @@ class SabiaQue extends WikiAphpi
         ];
 
         // Execute API
-        $purge = $this->do($purge_params);
+        $purge = $this->do($purgeParams);
 
         // Check if the page was purged successfully
         if (!isset($purge["purge"]['0']["purged"])) {
@@ -34,20 +34,20 @@ class SabiaQue extends WikiAphpi
      * Retrieve the current value of the "Wikipédia:Sabia que/Frequência" template, which determines
      * the minimum interval (in seconds) between two consecutive "Sabia que" facts in the Portuguese
      * Wikipedia main page.
-     * @throws Exception If the retrieved value is not numeric or is less than 43200 seconds (12 hours).
+     * @throws InvalidArgumentException If the retrieved value is not numeric or is less than 43200 seconds (12 hours).
      * @return int The value of the "Wikipédia:Sabia que/Frequência" template.
      */
     private function getFrequency()
     {
-        $frequency_params = [
+        $frequencyParams = [
             'action'    => 'expandtemplates',
             'format'    => 'php',
             'prop'      => 'wikitext',
             'text'      => '{{Wikipédia:Sabia que/Frequência}}'
         ];
-        $frequency = $this->see($frequency_params)["expandtemplates"]["wikitext"];
+        $frequency = $this->see($frequencyParams)["expandtemplates"]["wikitext"];
         if (!is_numeric($frequency) || $frequency < 43200) {
-            throw new Exception("'Wikipédia:Sabia que/Frequência' possui valor não numérico ou menor que 43200. Bloqueio de segurança.");
+            throw new InvalidArgumentException("'Wikipédia:Sabia que/Frequência' possui valor não numérico ou menor que 43200. Bloqueio de segurança.");
         }
         return $frequency;
     }
@@ -58,7 +58,7 @@ class SabiaQue extends WikiAphpi
      */
     private function getLastPublishedTime()
     {
-        $lastPublished_params = [
+        $lastPublishedParams = [
             'action'    => 'query',
             'format'    => 'php',
             'list'      => 'usercontribs',
@@ -66,9 +66,8 @@ class SabiaQue extends WikiAphpi
             'ucuser'    => 'SabiaQueBot',
             'ucprop'    => 'timestamp'
         ];
-        $lastPublishedTimestamp = $this->see($lastPublished_params)['query']['usercontribs']['0']['timestamp'];
-        $lastPublishedTime = date("U", strtotime($lastPublishedTimestamp));
-        return $lastPublishedTime;
+        $lastPublishedTimestamp = $this->see($lastPublishedParams)['query']['usercontribs']['0']['timestamp'];
+        return date("U", strtotime($lastPublishedTimestamp));
     }
 
     /**
@@ -106,11 +105,11 @@ class SabiaQue extends WikiAphpi
 
         // If no text is found, throw an exception
         if (empty($text)) {
-            throw new Exception("Texto não encontrado: [{$regex}]");
+            throw new InvalidArgumentException("Texto não encontrado: [{$regex}]");
         }
 
         // Return the extracted nomination text
-        return ltrim($text,"…. ");
+        return ltrim($text, "…. ");
     }
 
     /**
@@ -174,7 +173,7 @@ class SabiaQue extends WikiAphpi
         array_pop($html);
 
         // Join the lines of the template into a single string.
-        $html = implode("\n…",$html);
+        $html = implode("\n…", $html);
 
         // Return the old and new versions of the Sabia Que template.
         return [$old, $html];
@@ -195,11 +194,7 @@ class SabiaQue extends WikiAphpi
         ];
         $api = $this->see($params);
         $missing = $api['query']['pages']['0']['missing'] ?? false;
-        if ($missing === true) {
-            return false;
-        } else {
-            return true;
-        }
+        return boolval($missing);
     }
 
 
@@ -212,13 +207,13 @@ class SabiaQue extends WikiAphpi
     private function compileArticleTalk($article, $new)
     {
         // Get the redirect (if any) for the article name
-        $redirect_params = [
+        $redirectParams = [
             'action'    => 'query',
             'format'    => 'php',
             'titles'    => $article,
             'redirects' => 1
         ];
-        $Page_renamed = $this->see($redirect_params);
+        $Page_renamed = $this->see($redirectParams);
         if (isset($Page_renamed["query"]["redirects"])) {
             $article = $Page_renamed["query"]["redirects"][0]["to"];
         }
@@ -331,13 +326,13 @@ class SabiaQue extends WikiAphpi
         $page = "Usuário Discussão:".$nominator;
 
         // Get the redirect (if any) for the user name
-        $redirect_params = [
+        $redirectParams = [
             'action'    => 'query',
             'format'    => 'php',
             'titles'    => $page,
             'redirects' => 1
         ];
-        $Page_renamed = $this->see($redirect_params);
+        $Page_renamed = $this->see($redirectParams);
         if (isset($Page_renamed["query"]["redirects"])) {
             $page = $Page_renamed["query"]["redirects"][0]["to"];
         }

@@ -1,11 +1,10 @@
 <pre><?php
 require_once './bin/globals.php';
-require_once './bin/api2.php';
+require_once 'WikiAphpi/main.php';
 require_once './tpar/twitteroauth/autoload.php';
-
 use Abraham\TwitterOAuth\TwitterOAuth;
 
-class Potd extends WikiAphpi
+class Potd extends WikiAphpiLogged
 {
 
     /**
