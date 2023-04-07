@@ -3,6 +3,7 @@ require_once 'interface.php';
 require_once 'exception.php';
 require_once 'see.php';
 require_once 'do.php';
+require_once 'mock.php';
 
 /**
  * Represents a class that implements the WikiAphpiInterface and provides functionality 
@@ -241,6 +242,19 @@ class WikiAphpiLogged implements WikiAphpiInterface
  */
 class WikiAphpiTest implements WikiAphpiInterface
 {
+    use WikiAphpiMock;
+
+    /**
+     * Constructor for WikiAphpi class with login.
+     *
+     * @param string $endpoint The base URL for API requests.
+     * @param string $userAPI The username to use for API requests.
+     * @param string $passAPI The password to use for API requests.
+     */
+    public function __construct($endpoint, $userAPI, $passAPI)
+    {
+        $this->endpoint = $endpoint;
+    }
 	
 	/**
      * Sends a curl request to the specified endpoint with the provided parameters.
@@ -254,9 +268,41 @@ class WikiAphpiTest implements WikiAphpiInterface
     public function performRequest(array $params, bool $isPost, bool $headers = false): array
     {
         $url = $this->endpoint;
-        
-        //TODO: something to return here when tested
+        $ch = curl_init();
 
-        return [];
+        // making sure to request the right format
+        $params['format'] = 'php';
+
+        // set the request type and parameters
+        if ($isPost) {
+            curl_close($ch);
+            return [];
+        } else {
+            $url .= "?" . http_build_query($params);
+        }
+
+        // optional for specific headers
+        if ($headers !== false) {
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        }
+
+        // set other curl options as needed
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        // execute the curl request and handle any errors
+        $result = curl_exec($ch);
+        if ($result === false) {
+            throw new ContentRetrievalException(curl_error($ch));
+        }
+
+        // close the curl handle and return the result
+        curl_close($ch);
+        $result2 = @unserialize($result);
+        if ($result2 === false) {
+            throw new InvalidArgumentException("Error unserializing. API' format is PHP?");
+        }
+
+        return $result2;
     }
 }
