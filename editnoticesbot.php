@@ -15,7 +15,7 @@ class EditNotices extends WikiAphpiLogged
     {
         $pageTitle = str_replace(['MediaWiki:Editnotice-0-', 'Discussão:'], '', $pageTitle);
         $pageTitle = str_replace('/', '-', $pageTitle);
-        
+
         return $pageTitle;
     }
 
@@ -81,7 +81,7 @@ class EditNotices extends WikiAphpiLogged
 
         $list = $this->getPageTitles($params, "embeddedin");
 
-        //The given page is automatically included in the returned 
+        //The given page is automatically included in the returned
         //list to avoid a false positive in the results.
         $list[] = $this->extractPageTitle($title);
 
@@ -118,7 +118,7 @@ class EditNotices extends WikiAphpiLogged
 
     /**
      * Delete the pages with the specified titles.
-     * Note: The bot will sleep for 10 seconds after  
+     * Note: The bot will sleep for 10 seconds after
      * each page deletion in accordance with the local bot policy.
      *
      * @param array $pagesToDelete The list of page titles to delete.
@@ -137,7 +137,7 @@ class EditNotices extends WikiAphpiLogged
 
     /**
      * Create new pages with the provided page titles using the provided edit notice data.
-     * Note: The bot will sleep for 10 seconds after 
+     * Note: The bot will sleep for 10 seconds after
      * each page creation in accordance with the local bot policy.
      *
      * @param array $pagesToCreate The list of page titles to create.

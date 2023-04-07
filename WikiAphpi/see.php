@@ -3,7 +3,7 @@
 /**
  * A trait that provides methods to read content from a MediaWiki API endpoint
  */
-trait WikiAphpiSee 
+trait WikiAphpiSee
 {
 	/**
      * Generic function to get logged info without any action

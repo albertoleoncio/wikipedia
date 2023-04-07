@@ -3,7 +3,7 @@
 /**
  * A trait that provides methods to perform actions by a MediaWiki API endpoint
  */
-trait WikiAphpiDo 
+trait WikiAphpiDo
 {
 
 	use WikiAphpiSee;

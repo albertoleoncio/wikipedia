@@ -3,7 +3,7 @@
 /**
  * A trait that provides methods to mock actions by a MediaWiki API endpoint
  */
-trait WikiAphpiMock 
+trait WikiAphpiMock
 {
     use WikiAphpiSee;
 

@@ -57,7 +57,7 @@ class EventosAtuais extends WikiAphpiLogged
     /**
      * Analyzes a proposal section and returns APPROVED if it is approved,
      * SKIP if it is not yet eligible for approval, or REJECTED if it is rejected.
-     * 
+     *
      * @param array $parsedSection An array containing parsed data of the proposal section
      * @return string Returns APPROVED if the proposal is approved, SKIP if it is not eligible for approval, or REJECTED if it is rejected
      */
@@ -219,11 +219,11 @@ class EventosAtuais extends WikiAphpiLogged
     private function doTweet($text, $article, $tokens)
     {
 		$tweet = preg_replace(
-			'/\'|\[\[[^\|\]]*\||\]|\[\[/', 
-			'', 
+			'/\'|\[\[[^\|\]]*\||\]|\[\[/',
+			'',
 			preg_replace(
-				'/ *<!--(.*?)--> */', 
-				'', 
+				'/ *<!--(.*?)--> */',
+				'',
 				$text
 			)
 		);
@@ -328,11 +328,11 @@ class EventosAtuais extends WikiAphpiLogged
 
             if ($proposalStatus === 'SKIP') {
                 continue;
-            } 
+            }
 
             if($proposalStatus === 'REJECTED') {
                 $this->declineNomination($text, $section, $nominationPage);
-            } 
+            }
 
             if($proposalStatus === 'APPROVED') {
                 $this->approveNomination($text, $section, $nominationPage, $parser, $tokens);

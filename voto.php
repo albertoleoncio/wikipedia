@@ -17,8 +17,8 @@ class Suffrage extends WikiAphpiUnlogged
      * by the user, respectively. If both $getDate and $getTime are provided, this function returns a timestamp string
      * representing that date and time. If only $getDate is provided, the function returns a timestamp string representing
      * the last second of that day. If only $getTime is provided, the function returns a timestamp string representing the
-     * current date and the time provided, adjusted for the UTC timezone and if the time provided is after the current UTC 
-     * time, the function will return a timestamp string representing the previous day with the time provided. If neither 
+     * current date and the time provided, adjusted for the UTC timezone and if the time provided is after the current UTC
+     * time, the function will return a timestamp string representing the previous day with the time provided. If neither
      * $getDate nor $getTime are provided, the function returns a timestamp string representing the current UTC date and time.
      *
      * @param string|null $getDate The date provided by the user, in YYYY-MM-DD format.
@@ -177,8 +177,8 @@ if ($getUser) {
                                 <p>Preencha o formulário ao lado</p>
                             <?php else: ?>
                                 <div class='w3-light-grey'>
-                                    <div 
-                                    class='w3-container w3-<?=($echo['0']>=300)?'green':'red'?> w3-center' 
+                                    <div
+                                    class='w3-container w3-<?=($echo['0']>=300)?'green':'red'?> w3-center'
                                     style='width:<?=floor($echo['0'] / 3)?>%'
                                     ><?=floor($echo['0'] / 3)?>%</div>
                                 </div>

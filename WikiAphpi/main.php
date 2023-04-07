@@ -6,9 +6,9 @@ require_once 'do.php';
 require_once 'mock.php';
 
 /**
- * Represents a class that implements the WikiAphpiInterface and provides functionality 
+ * Represents a class that implements the WikiAphpiInterface and provides functionality
  * for making requests to a MediaWiki API while being logged out.
- * @see see.php 
+ * @see see.php
  * @uses WikiAphpiSee
  */
 class WikiAphpiUnlogged implements WikiAphpiInterface
@@ -82,10 +82,10 @@ class WikiAphpiUnlogged implements WikiAphpiInterface
 }
 
 /**
- * Represents a class that implements the WikiAphpiInterface and provides functionality 
+ * Represents a class that implements the WikiAphpiInterface and provides functionality
  * for making requests to a MediaWiki API while being logged in.
- * @see see.php 
- * @see do.php 
+ * @see see.php
+ * @see do.php
  * @uses WikiAphpiSee
  * @uses WikiAphpiDo
  */
@@ -237,7 +237,7 @@ class WikiAphpiLogged implements WikiAphpiInterface
 }
 
 /**
- * Represents a class that implements the WikiAphpiInterface and mocks the functionality 
+ * Represents a class that implements the WikiAphpiInterface and mocks the functionality
  * for making requests to a MediaWiki API.
  */
 class WikiAphpiTest implements WikiAphpiInterface
