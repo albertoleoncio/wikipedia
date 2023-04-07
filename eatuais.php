@@ -1,244 +1,352 @@
 <pre><?php
 require_once './bin/globals.php';
-
-//Define fuso horário como UTC
-date_default_timezone_set('UTC');
-
-//Define data atual
-$timestamp_now = time();
-
-//Define $dados como uma array
-$dados = array();
-
-//Login
-require_once './bin/api.php';
-loginAPI($usernameEA, $passwordEA);
+require_once 'WikiAphpi/main.php';
 require_once "tpar/twitteroauth/autoload.php";
 use Abraham\TwitterOAuth\TwitterOAuth;
+date_default_timezone_set('UTC');
 
-//Define página de propostas
-$pageA = "Wikipédia:Eventos atuais/Propostas";
-$htmlA = getsectionsAPI($pageA);
+class EventosAtuais extends WikiAphpiLogged
+{
 
-//Loop para análise de cada seção
-foreach ($htmlA as $key => $section) {
+    /**
+     * Parses a proposal section and returns an array with the relevant information.
+     *
+     * @param string $sectionText The text of the proposal section to be parsed.
+     * @return array Returns an array with the following keys:
+     *  - 'concordo': the number of approvals in the section.
+     *  - 'discordo': the number of rejections in the section.
+     *  - 'elapsed': the time elapsed (in seconds) since the section was posted.
+     *  - 'image': the URL of the image associated with the section (if any).
+     *  - 'bot': the bot flag of the section ('s' for pending sections).
+     *  - 'texto': the main text of the section.
+     *  - 'article': the name of the article associated with the section.
+     * @throws Exception If any of the required keys is not set in the parsed array.
+     */
+    private function proposalParser($sectionText)
+    {
+        $section_sanitized = preg_replace('/ *<!--(.*?)-->/', '', $sectionText);
+        preg_match_all('/{{[Cc]oncordo}}/',         $section_sanitized, $parsedSection['concordo']);
+        preg_match_all('/{{[Dd]iscordo}}/',         $section_sanitized, $parsedSection['discordo']);
+        preg_match_all('/\| *timestamp *= *(\d*)/', $section_sanitized, $parsedSection['timestamp']);
+        preg_match_all('/\| *imagem *= *([^\n<]*)/',$section_sanitized, $parsedSection['image']);
+        preg_match_all('/\| *bot *= *(\w)/',        $section_sanitized, $parsedSection['bot']);
+        preg_match_all('/\| *texto *= *([^\n<]*)/', $section_sanitized, $parsedSection['texto']);
+        preg_match_all('/\| *artigo *= *([^\n<]*)/',$section_sanitized, $parsedSection['article']);
 
-	//Pula seção inicial
-	if ($key == "0") continue;
+        // Check if all necessary variables are set
+        if (!isset($parsedSection['concordo']["0"]) ||
+            !isset($parsedSection['discordo']["0"]) ||
+            !isset($parsedSection['timestamp']["1"]["0"]) ||
+            !isset($parsedSection['bot']["1"]["0"]) ||
+            !isset($parsedSection['texto']["1"]["0"]) ||
+            !isset($parsedSection['article']["1"]["0"])) {
+            throw new UnexpectedValueException('One or more necessary variables are not set.');
+        }
 
-	//Coleta informações da seção
-	$section_sanitized = preg_replace('/ *<!--(.*?)-->/', '', $section);
-	preg_match_all('/{{[Cc]oncordo}}/', 		$section_sanitized, $section_concordo);
-	preg_match_all('/{{[Dd]iscordo}}/', 		$section_sanitized, $section_discordo);
-	preg_match_all('/\| *timestamp *= *(\d*)/', $section_sanitized, $section_timestamp);
-	preg_match_all('/\| *imagem *= *([^\n<]*)/',$section_sanitized, $section_image);
-	preg_match_all('/\| *bot *= *(\w)/', 		$section_sanitized, $section_bot);
-	preg_match_all('/\| *texto *= *([^\n<]*)/',	$section_sanitized, $section_texto);
-	preg_match_all('/\| *artigo *= *([^\n<]*)/',$section_sanitized, $section_article);
+        return [
+            'concordo'  => count($parsedSection['concordo']["0"]),
+            'discordo'  => count($parsedSection['discordo']["0"]),
+            'elapsed'   => time() - $parsedSection['timestamp']["1"]["0"],
+            'image'     => trim($parsedSection['image']["1"]["0"]) ?? '',
+            'bot'       => trim($parsedSection['bot']["1"]["0"]),
+            'texto'     => trim($parsedSection['texto']["1"]["0"]),
+            'article'   => trim($parsedSection['article']["1"]["0"])
+        ];
+    }
 
-	//Pula seção caso marcador de bot esteja desativado
-	if ($section_bot["1"]["0"] != "s") continue;
+    /**
+     * Analyzes a proposal section and returns APPROVED if it is approved,
+     * SKIP if it is not yet eligible for approval, or REJECTED if it is rejected.
+     * 
+     * @param array $parsedSection An array containing parsed data of the proposal section
+     * @return string Returns APPROVED if the proposal is approved, SKIP if it is not eligible for approval, or REJECTED if it is rejected
+     */
+    private function proposalAnalyser($parsedSection)
+    {
+        $discordo = $parsedSection['discordo'];
+        $concordo = $parsedSection['concordo'];
+        $elapsed = $parsedSection['elapsed'];
 
-	//Prepara variáveis para condicionais
-	$approved = false;
-	$declined = false;
-	$section_time_passed = $timestamp_now - $section_timestamp["1"]["0"];
-	$concordo = count($section_concordo["0"]);
-	$discordo = count($section_discordo["0"]);
-	$section_article = $section_article["1"]["0"];
+        // If the section was not pending, return SKIP
+        if ($parsedSection['bot'] !== "s") {
+            return 'SKIP';
+        }
 
-	//Echos
-	echo("\n".$section_article.": ");
-	echo (bcdiv($section_time_passed, 60, 0)." minutos");
-	echo (" / ");
-	echo ($concordo." concordos");
-	echo (" / ");
-	echo ($discordo." discordos");
-	echo (" => ");
+        // If the section was posted less than 2 hours ago, return SKIP
+        if ($parsedSection['elapsed'] < 7200) {
+        	echo "<b><2</b>";
+            return 'SKIP';
+        }
 
-	//Loop para analisar situação da proposta
-	if ($section_time_passed < 7200) { 			//Menos de 2 horas
-		echo("<b><2</b>");
-		continue;
-	} elseif ($section_time_passed < 14400) { 	//2 horas
-		echo("<b>2</b>");
-		if ($discordo > 0) continue;
-		if ($concordo >= 5) $approved = true;
-	} elseif ($section_time_passed < 21600) { 	//4 horas
-		echo("<b>4</b>");
-		if ($discordo > 0) continue;
-		if ($concordo >= 3) $approved = true;
-	} elseif ($section_time_passed < 28800) { 	//6 horas
-		echo("<b>6</b>");
-		if ($discordo > 0) continue;
-		if ($concordo >= 1) $approved = true;
-	} else { 									//8 horas
-		echo("<b>8 ");
-		if ($discordo == 0){ 					//8 horas sem discordos
-			echo("?</b>");
-			$approved = true;
-		} else {								//8 horas com discordos e concordos
-			if ($concordo / ($concordo + $discordo) >= 0.75) {
-				echo("OOX</b>");
-				$approved = true;
-			} else {
-				echo("OXX</b>");
-				$declined = true;
-			}
-		}
-	}
+        // Determine the minimum number of approvals based on elapsed time
+        $minConcordo = 0;
+        $rejectionAllowed = false;
+        switch (true) {
+            case $elapsed < 14400:
+            	echo "<b>2~4</b>";
+                $minConcordo = 5;
+                break;
+            case $elapsed < 21600:
+            	echo "<b>4~6</b>";
+                $minConcordo = 3;
+                break;
+            case $elapsed < 28800:
+            	echo "<b>6~8</b>";
+                $minConcordo = 1;
+                break;
+            default:
+            	echo "<b>>8</b>";
+                $minConcordo = ceil(($concordo + $discordo) * 0.75);
+                $rejectionAllowed = true;
+        }
 
-	//Código para ser executado na atualização em caso de aprovação
-	if ($approved) {
-		echo("APPROVED ");
+        // Check if the number of approvals meets the minimum requirement
+        if ($discordo > 0 && !$rejectionAllowed) {
+            return 'SKIP';
+        } elseif ($concordo >= $minConcordo) {
+            return 'APPROVED';
+        } else {
+            return 'REJECTED';
+        }
+    }
 
-		///////////////
-		//
-		//	Wikipédia:Eventos atuais/Propostas
-		//
-		///////////////
+    /**
+     * Modifies a template page with a new approved event.
+     *
+     * @param string $page The name of the template page to modify.
+     * @param string $texto The text of the new approved event.
+     * @param string $image The name of the image to include in the template.
+     * @param string $article The name of the article related to the event.
+     * @return array An array containing the modified code of the template and the oldest event.
+     * @throws UnexpectedValueException If the main template is formatted incorrectly.
+     */
+    private function compileTemplate($page, $texto, $image, $article)
+    {
+        // Get the code of the main template page
+        $code = $this->get($page);
 
-		//Altera marcador de bot
-		$section = preg_replace('/\| *bot *= *\w/', '|bot = p |em = '.$timestamp_now, $section);
+        // Split the code into its sections
+        $code_sections = explode("\n<!-- % -->\n", $code);
 
-		//Salva edição
-		editAPI($section, $key, FALSE, "bot: (1/4) Marcando proposta como publicada", $pageA, $usernameEA);
+        // Check that the main template page is formatted correctly
+        if (count($code_sections) != 3) {
+            throw new UnexpectedValueException("Predefinição principal formatada incorretamente!");
+        }
 
+        // Remove the ''(imagem)'' marker from the text section
+        $code_sections["1"] = preg_replace('/\(\'\'[^\']*?\'\'\) |\'\'\([^\)]*\)\'\' /', '', $code_sections["1"]);
 
-		///////////////
-		//
-		//	Predefinição:Eventos atuais
-		//
-		///////////////
+        // Split the text section into individual events
+        $code_events = explode("\n", $code_sections["1"]);
 
-		//Define página principal
-		$pageB = "Predefinição:Eventos atuais";
-		$htmlB = getAPI($pageB);
+        // Insert the new event at the beginning of the list
+        array_unshift($code_events, "*<!-- ".utf8_encode(strftime('%e de %B de %Y', time()))." --> ".$texto);
 
-		//Explode código e remove marcador de imagem no texto
-		$htmlB_sections = explode("\n<!-- % -->\n", $htmlB);
-		if (count($htmlB_sections) != 3) die("Predefinição principal formatada incorretamente!");
-		$htmlB_sections["1"] = preg_replace('/\(\'\'[^\']*?\'\'\) |\'\'\([^\)]*\)\'\' /', '', $htmlB_sections["1"]);
-		$htmlB_events = explode("\n", $htmlB_sections["1"]);
+        // Remove the oldest event from the list
+        $oldest = end($code_events);
+        array_pop($code_events);
 
-		//Insere novo evento aprovado
-		array_unshift($htmlB_events, "*<!-- ".utf8_encode(strftime('%e de %B de %Y', $timestamp_now))." --> ".$section_texto["1"]["0"]);
+        // Reassemble the code with the updated event list
+        $code_sections["1"] = implode("\n", $code_events);
+        $code = implode("\n<!-- % -->\n", $code_sections);
 
-		//Remove evento mais antigo
-		$recente = end($htmlB_events);
-		array_pop($htmlB_events);
+        // Add the image to the template
+        $params = [
+            'action' => 'query',
+            'format' => 'php',
+            'prop'   => 'info',
+            'titles' => "File:$image"
+        ];
+        $imageInfo = $this->see($params)["query"]["pages"];
+        if (isset($imageInfo["lastrevid"])) {
+            $code = preg_replace(
+                '/<imagemap>[^>]*?<\/imagemap>/',
+                "<imagemap>\nFicheiro:$imageInfo|125x175px|borda|direita\ndefault [[$article]]\n</imagemap>",
+                $code
+            );
+        } else {
+            $code = preg_replace(
+                '/<imagemap>[^>]*?<\/imagemap>/',
+                "<imagemap>\nFicheiro:Globe-with-clock-2.svg|125x175px|borda|direita\ndefault [[$article]]\n</imagemap>",
+                $code
+            );
+        }
 
-		//Remonta código
-		$htmlB_sections["1"] = implode("\n", $htmlB_events);
-		$htmlB = implode("\n<!-- % -->\n", $htmlB_sections);
+        // Return the updated code and the most recent event
+        return [$code, $oldest];
+    }
 
-		//Insere imagem
-		$image = file_get_contents("https://commons.wikimedia.org/w/api.php?action=query&format=php&prop=info&titles=".rawurlencode("File:".trim($section_image["1"]["0"])));
-		$image = end(unserialize($image)["query"]["pages"]);
-		if (isset($image["lastrevid"])) {
-			$htmlB = preg_replace(
-				'/<imagemap>[^>]*?<\/imagemap>/',
-				"<imagemap>\nFicheiro:".$section_image["1"]["0"]."|125x175px|borda|direita\ndefault [[".$section_article."]]\n</imagemap>",
-				$htmlB
-			);
-		} else {
-			$htmlB = preg_replace(
-				'/<imagemap>[^>]*?<\/imagemap>/',
-				"<imagemap>\nFicheiro:Globe-with-clock-2.svg|125x175px|borda|direita\ndefault [[".$section_article."]]\n</imagemap>",
-				$htmlB
-			);
-		}
+    /**
+     * Modifies the recent's event page by adding an old event.
+     *
+     * @param string $page The name of the page to modify.
+     * @param string $last The code of the old event to add.
+     * @return string The modified code of the page.
+     */
+    private function compileRecent($page, $last)
+    {
+        // Remove comments from the last event
+        $removeComments = preg_replace('/<!--+ *|(?<=-)-+>/', '', $last);
 
-		//Salva página
-		$diff = editAPI($htmlB, NULL, FALSE, "bot: (2/4) Publicando nova proposta", $pageB, $usernameEA);
+        // Insert the last event at the top of the page code
+        $code = preg_replace('/-->/', "-->\n$removeComments", $this->get($page));
 
+        return $code;
+    }
 
-		///////////////
-		//
-		//	Predefinição:Ea-notícias
-		//
-		///////////////
+    /**
+     * Modifies a article's talk page with a new event note.
+     *
+     * @param string $page The name of the article related to the event.
+     * @param string $diff The RevID of the event's publication.
+     * @return array An array containing the modified code of the talk page and the name of the talk page.
+     */
+    private function compileArticleTalk($page, $diff)
+    {
+        $talkPage = "Discussão:".$this->resolveRedirect($page);
+        $html = $this->get($talkPage, 0);
+        $html .= "\n{{EvRdiscussão|data1=".utf8_encode(strftime('%e de %B de %Y', time()))."|oldid1=$diff}}";
+        return [$html, $talkPage];
+    }
 
-		//Define página de recentes
-		$pageC = "Predefinição:Ea-notícias";
-		$htmlC = getAPI($pageC);
+    /**
+     * Posts a tweet on Twitter using the TwitterOAuth library.
+     * @param string $text The text of the tweet.
+     * @param string $article The name of the article to include in the tweet.
+     * @param array $tokens An array with keys and tokens of the Twitter API
+     * @return array An array containing the tweet text and the ID of the posted tweet.
+     */
+    private function doTweet($text, $article, $tokens)
+    {
+		$tweet = preg_replace(
+			'/\'|\[\[[^\|\]]*\||\]|\[\[/', 
+			'', 
+			preg_replace(
+				'/ *<!--(.*?)--> */', 
+				'', 
+				$text
+			)
+		);
+		$tweet .= "\n\nEsse é um evento recente ou em curso que está sendo acompanhado por nossas voluntárias e voluntários. Veja mais detalhes no link: https://pt.wikipedia.org/w/index.php?title=";
+		$tweet .= rawurlencode($article);
 
-		//Insere novo evento recente
-		$htmlC = preg_replace('/-->/', "-->\n".preg_replace('/<!--+ *|(?<=-)-+>/', '', $recente), $htmlC);
+        $twitter_conn = new TwitterOAuth(...$tokens);
+        $post = $twitter_conn->post(
+            "statuses/update",
+            ["status" => $tweet]
+        );
 
-		//Salva página
-		editAPI($htmlC, NULL, FALSE, "bot: (3/4) Inserido proposta recente", $pageC, $usernameEA);
+        return [$post->id];
+    }
 
+    /**
+     * Marks a nomination as declined.
+     *
+     * @param string $text The code of the nomination page.
+     * @param int $section The section to edit on the nomination page.
+     * @param string $nominationPage The name of the nomination page.
+     * @return void
+     */
+    private function declineNomination($text, $section, $nominationPage)
+    {
+        $nominationCode = preg_replace('/\| *bot *= *\w/', "|bot = r |em = ".time(), $text);
+        $summary = "bot: Marcando proposta como recusada";
+        $this->edit($nominationCode, $section, FALSE, $summary, $nominationPage);
+    }
 
-		///////////////
-		//
-		//	Discussão:Artigo
-		//
-		///////////////
+    /**
+     * Marks a nomination as approved and edits the relevant pages
+     *
+     * @param string $text The text of the nomination to approve.
+     * @param int $section The section number of the nomination to approve.
+     * @param string $nominationPage The page on which the nomination appears.
+     * @param array $parser An array containing parsed information about the nomination.
+     * @param array $tokens An array with keys and tokens of the Twitter API
+     */
+    private function approveNomination($text, $section, $nominationPage, $parser, $tokens)
+    {
 
-		//Verifica se página é redirect
-		$section_article_renamed = json_decode(file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=json&titles=".urlencode($section_article)."&redirects=1"), TRUE);
-		if (isset($section_article_renamed["query"]["redirects"])) $section_article = $section_article_renamed["query"]["redirects"]["0"]["to"];
+        // Define the page names for various templates and logs
+        $templatePage = "Predefinição:Eventos atuais";
+        $recentPage = "Predefinição:Ea-notícias";
+        $logPage = "User:EventosAtuaisBot/log";
 
-		//Define página
-		$pageD = "Discussão:".$section_article;
+        // Define edit summaries for each edit made by the bot
+        $nominationSummary = "bot: (1/4) Marcando proposta como publicada";
+        $templateSummary = "bot: (2/4) Publicando nova proposta";
+        $recentSummary = "bot: (3/4) Inserido proposta recente";
+        $articleTalkSummary = "bot: (4/4) Inserindo EvRdiscussão";
+        $logSummary = "bot: (log) Registrando último evento aprovado";
 
-		//Recupera dados da seção inicial da página de discussão do artigo-chave
-		$htmlD = getsectionsAPI($pageD)['0'];
+        // Update the nomination page by marking it as approved
+        $nominationCode = preg_replace('/\| *bot *= *\w/', "|bot = p |em = ".time(), $text);
+        $this->edit($nominationCode, $section, FALSE, $nominationSummary, $nominationPage);
 
-		//Insere nova predefinição no final da seção
-		$htmlD = $htmlD."\n{{EvRdiscussão|data1=".utf8_encode(strftime('%e de %B de %Y', $timestamp_now))."|oldid1=".$diff."}}";
+        // Publish the new event in a template
+        list($templateCode, $oldEvent) = $this->compileTemplate($templatePage, $parser['texto'], $parser['image'], $parser['article']);
+        $dif = $this->edit($templateCode, NULL, FALSE, $templateSummary, $templatePage);
 
-		//Grava página
-		editAPI($htmlD, 0, FALSE, "bot: (4/4) Inserindo EvRdiscussão", $pageD, $usernameEA);
+        // Add the new event to a list of recent events
+        $recentCode = $this->compileRecent($recentPage, $oldEvent);
+        $this->edit($recentCode, NULL, FALSE, $recentSummary, $recentPage);
 
-		///////////////
-		//
-		//	User:$username/log
-		//
-		///////////////
+        // Add a discussion section about the new event to the relevant article talk page
+        list($articleTalkCode,  $articleTalkPage) = $this->compileArticleTalk($parser['article'], $dif);
+        $this->edit($articleTalkCode, 0, FALSE, $articleTalkSummary, $articleTalkPage);
 
-		//Define página
-		$pageE = "User:EventosAtuaisBot/log";
+        //Post on Twitter
+        $tweet = $this->doTweet($parser['texto'], $parser['article'], $tokens);
 
-		//Grava página
-		editAPI($section_texto["1"]["0"], NULL, FALSE, "bot: (log) Registrando último evento aprovado", $pageE, $usernameEA);
+        // Log the new event in a bot log
+        $this->edit($parser['texto'], NULL, FALSE, $logSummary, $logPage);
+    }
 
-		///////////////
-		//
-		//	Twitter
-		//
-		///////////////
+    /**
+     * Runs the main loop that processes each proposal in the nominations page.
+     * For each proposal, it checks its status and acts accordingly by either
+     * rejecting or approving it.
+     *
+     * @param array $tokens An array with keys and tokens of the Twitter API
+     */
+    public function run($tokens)
+    {
+        $nominationPage = "Wikipédia:Eventos atuais/Propostas";
 
-		//Monta status para envio ao Twitter
-		$twitter_status = preg_replace('/ *<!--(.*?)--> */', '', $section_texto["1"]["0"]);
-		$twitter_status = preg_replace('/\'|\[\[[^\|\]]*\||\]|\[\[/', '', $twitter_status);
-		$twitter_status = $twitter_status."\n\nEsse é um evento recente ou em curso que está sendo acompanhado por nossas voluntárias e voluntários. Veja mais detalhes no link: https://pt.wikipedia.org/w/index.php?title=".rawurlencode($section_article);
+        $sectionText = $this->getSections($nominationPage);
 
-		//Envia Tweet
-		define('CONSUMER_KEY', $twitter_consumer_key);
-		define('CONSUMER_SECRET', $twitter_consumer_secret);
-		$twitter_conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, $twitter_access_token, $twitter_access_token_secret);
-		$post_tweets = $twitter_conn->post("statuses/update", ["status" => $twitter_status]);
-	
-	} elseif ($declined) {
-		echo("DECLINED ");
+        foreach ($sectionText as $section => $text) {
 
-		///////////////
-		//
-		//	Wikipédia:Eventos atuais/Propostas
-		//
-		///////////////
+            if ($section == "0") {
+                continue;
+            }
 
-		//Altera marcador de bot
-		$section = preg_replace('/\| *bot *= *\w/', '|bot = r |em = '.$timestamp_now, $section);
+            $parser = $this->proposalParser($text);
+			echo "\n{$parser['article']}: ".bcdiv($parser['elapsed'], 60, 0)." minutos / {$parser['concordo']} concordos / {$parser['discordo']} discordos => ";
 
-		//Salva edição
-		editAPI($section, $key, FALSE, "bot: Marcando proposta como recusada", $pageA, $usernameEA);
-	}
+            $proposalStatus = $this->proposalAnalyser($parser);
+            echo " - $proposalStatus";
 
+            if ($proposalStatus === 'SKIP') {
+                continue;
+            } 
+
+            if($proposalStatus === 'REJECTED') {
+                $this->declineNomination($text, $section, $nominationPage);
+            } 
+
+            if($proposalStatus === 'APPROVED') {
+                $this->approveNomination($text, $section, $nominationPage, $parser, $tokens);
+            }
+        }
+    }
 }
 
-
-echo("\n\nExecutado!");
-?>
+//Run script
+$tokens = [
+    $twitter_consumer_key,
+    $twitter_consumer_secret,
+    $twitter_access_token,
+    $twitter_access_token_secret
+];
+$api = new EventosAtuais('https://pt.wikipedia.org/w/api.php',$usernameEA, $passwordEA);
+$api->run($tokens);

@@ -121,4 +121,27 @@ trait WikiAphpiSee
 
         return $result;
     }
+
+    /**
+     * Resolves the target page of a redirect and returns its title.
+     *
+     * @param string $page The title of the page that may be a redirect.
+     * @return string The title of the target page, or the input page title if it is not a redirect.
+     */
+    public function resolveRedirect($page)
+    {
+        //Coleta token
+        $params = [
+            'action'    => 'query',
+            'format'    => 'php',
+            'titles'    => $page,
+            'redirects' => '1'
+        ];
+        $resultApi = $this->see($params);
+        if (isset($resultApi["query"]["redirects"])) {
+            return $resultApi["query"]["redirects"]['0']["to"];
+        } else {
+            return $page;
+        }
+    }
 }
