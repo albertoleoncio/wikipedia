@@ -74,7 +74,7 @@ class EventosAtuais extends WikiAphpiLogged
 
         // If the section was posted less than 2 hours ago, return SKIP
         if ($parsedSection['elapsed'] < 7200) {
-        	echo "<b><2</b>";
+            echo "<b><2</b>";
             return 'SKIP';
         }
 
@@ -83,19 +83,19 @@ class EventosAtuais extends WikiAphpiLogged
         $rejectionAllowed = false;
         switch (true) {
             case $elapsed < 14400:
-            	echo "<b>2~4</b>";
+                echo "<b>2~4</b>";
                 $minConcordo = 5;
                 break;
             case $elapsed < 21600:
-            	echo "<b>4~6</b>";
+                echo "<b>4~6</b>";
                 $minConcordo = 3;
                 break;
             case $elapsed < 28800:
-            	echo "<b>6~8</b>";
+                echo "<b>6~8</b>";
                 $minConcordo = 1;
                 break;
             default:
-            	echo "<b>>8</b>";
+                echo "<b>>8</b>";
                 $minConcordo = ceil(($concordo + $discordo) * 0.75);
                 $rejectionAllowed = true;
         }
@@ -218,17 +218,17 @@ class EventosAtuais extends WikiAphpiLogged
      */
     private function doTweet($text, $article, $tokens)
     {
-		$tweet = preg_replace(
-			'/\'|\[\[[^\|\]]*\||\]|\[\[/',
-			'',
-			preg_replace(
-				'/ *<!--(.*?)--> */',
-				'',
-				$text
-			)
-		);
-		$tweet .= "\n\nEsse é um evento recente ou em curso que está sendo acompanhado por nossas voluntárias e voluntários. Veja mais detalhes no link: https://pt.wikipedia.org/w/index.php?title=";
-		$tweet .= rawurlencode($article);
+        $tweet = preg_replace(
+            '/\'|\[\[[^\|\]]*\||\]|\[\[/',
+            '',
+            preg_replace(
+                '/ *<!--(.*?)--> */',
+                '',
+                $text
+            )
+        );
+        $tweet .= "\n\nEsse é um evento recente ou em curso que está sendo acompanhado por nossas voluntárias e voluntários. Veja mais detalhes no link: https://pt.wikipedia.org/w/index.php?title=";
+        $tweet .= rawurlencode($article);
 
         $twitter_conn = new TwitterOAuth(...$tokens);
         $post = $twitter_conn->post(
@@ -321,7 +321,7 @@ class EventosAtuais extends WikiAphpiLogged
             }
 
             $parser = $this->proposalParser($text);
-			echo "\n{$parser['article']}: ".bcdiv($parser['elapsed'], 60, 0)." minutos / {$parser['concordo']} concordos / {$parser['discordo']} discordos => ";
+            echo "\n{$parser['article']}: ".bcdiv($parser['elapsed'], 60, 0)." minutos / {$parser['concordo']} concordos / {$parser['discordo']} discordos => ";
 
             $proposalStatus = $this->proposalAnalyser($parser);
             echo " - $proposalStatus";

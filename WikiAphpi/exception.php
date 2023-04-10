@@ -14,6 +14,7 @@ class ContentRetrievalException extends Exception
      */
     public function __construct($resultApi)
     {
+        http_response_code(505);
         $message = 'Content retrieval failed: ' . print_r($resultApi, true);
         parent::__construct($message);
     }
