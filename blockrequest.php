@@ -174,13 +174,19 @@ class BloqBotRequests extends WikiAphpiLogged
             $timestamp
         );
 
-        $y = $timestamp['5']['0'];
+        $y = sprintf("%04d", $timestamp['5']['0']);
         $m = $this->convertMonthNameToNumber($timestamp['4']['0']);
-        $d = $timestamp['3']['0'];
-        $h = $timestamp['2']['0'];
-        $i = $timestamp['1']['0'];
+        $d = sprintf("%02d", $timestamp['3']['0']);
+        $h = sprintf("%02d", $timestamp['1']['0']);
+        $i = sprintf("%02d", $timestamp['2']['0']);
 
-        return strtotime("{$y}-{$m}-{$d}T{$h}:{$i}:00Z");
+        $time = strtotime("{$y}-{$m}-{$d}T{$h}:{$i}:00Z");
+
+        if (!$time) {
+            throw new UnexpectedValueException("Error converting {$y}-{$m}-{$d}T{$h}:{$i}:00Z");
+        }
+
+        return $time;
     }
 
     /**
@@ -326,7 +332,7 @@ class BloqBotRequests extends WikiAphpiLogged
     private function processProtectingSection($text, $section, $page)
     {
         $protectLog = $this->getProtectionInfo($this->getSectionTitle($text));
-        if ($protectLog && $this->requestTimestamp($text) > $protectLog['timestamp']) {
+        if ($protectLog && $this->requestTimestamp($text) < $protectLog['timestamp']) {
             echo " e já finalizada. Fechando...";
             $text = $this->replaceInitialSection($text);
             $text = $this->replaceFinalProtectSection($text, $protectLog);
