@@ -103,6 +103,8 @@ class EventosAtuais extends WikiAphpiLogged
         // Check if the number of approvals meets the minimum requirement
         if ($discordo > 0 && !$rejectionAllowed) {
             return 'SKIP';
+        } elseif ($concordo < $minConcordo && !$rejectionAllowed) {
+            return 'SKIP';
         } elseif ($concordo >= $minConcordo) {
             return 'APPROVED';
         } else {
