@@ -41,7 +41,7 @@ trait WikiAphpiSee
             "formatversion" => "2",
             "format"        => "php"
         ];
-        if ($section) $params['rvsection'] = $section;
+        if (is_numeric($section)) $params['rvsection'] = $section;
         $resultApi = $this->see($params);
         $result = $resultApi["query"]["pages"]["0"]["revisions"]["0"]["slots"]["main"]["content"] ?? false;
 
