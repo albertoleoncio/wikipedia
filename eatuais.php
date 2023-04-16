@@ -206,7 +206,11 @@ class EventosAtuais extends WikiAphpiLogged
     private function compileArticleTalk($page, $diff)
     {
         $talkPage = "Discussão:".$this->resolveRedirect($page);
-        $html = $this->get($talkPage, 0);
+        if ($this->isPageCreated($talkPage)) {
+            $html = $this->get($talkPage, 0);
+        } else {
+            $html = '{{PD}}';
+        }
         $html .= "\n{{EvRdiscussão|data1=".utf8_encode(strftime('%e de %B de %Y', time()))."|oldid1=$diff}}";
         return [$html, $talkPage];
     }

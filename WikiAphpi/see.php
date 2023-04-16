@@ -144,4 +144,23 @@ trait WikiAphpiSee
             return $page;
         }
     }
+
+    /**
+     * Checks whether a page exists on the wiki.
+     *
+     * @param string $page The title of the page to check.
+     * @return bool Returns `true` if the page exists, `false` otherwise.
+     */
+    private function isPageCreated($page)
+    {
+        $params = [
+            'action'        => 'query',
+            'format'        => 'php',
+            'titles'        => $page,
+            "formatversion" => "2"
+        ];
+        $api = $this->see($params);
+        $missing = $api['query']['pages']['0']['missing'] ?? false;
+        return boolval($missing);
+    }
 }

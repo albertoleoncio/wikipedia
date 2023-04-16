@@ -179,24 +179,6 @@ class SabiaQue extends WikiAphpiLogged
         return [$old, $html];
     }
 
-    /**
-     * Checks whether a page exists on the wiki.
-     * @param string $page The title of the page to check.
-     * @return bool Returns `true` if the page exists, `false` otherwise.
-     */
-    private function isPageCreated($page)
-    {
-        $params = [
-            'action'        => 'query',
-            'format'        => 'php',
-            'titles'        => $page,
-            "formatversion" => "2"
-        ];
-        $api = $this->see($params);
-        $missing = $api['query']['pages']['0']['missing'] ?? false;
-        return boolval($missing);
-    }
-
 
     /**
      * Compiles the text to be added to the article talk page.
@@ -301,7 +283,7 @@ class SabiaQue extends WikiAphpiLogged
             );
             $section = $map[$monthName];
         } else {
-            $html['0'] .= "==== {$monthName} ====\n";
+            $html['0'] .= "\n==== {$monthName} ====\n";
             $html['0'] .= "*… {$oldFact}\n";
             $section = 0;
         }
