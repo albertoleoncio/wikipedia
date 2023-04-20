@@ -151,7 +151,7 @@ trait WikiAphpiSee
      * @param string $page The title of the page to check.
      * @return bool Returns `true` if the page exists, `false` otherwise.
      */
-    private function isPageCreated($page)
+    public function isPageCreated($page)
     {
         $params = [
             'action'        => 'query',
@@ -161,6 +161,6 @@ trait WikiAphpiSee
         ];
         $api = $this->see($params);
         $missing = $api['query']['pages']['0']['missing'] ?? false;
-        return boolval($missing);
+        return !boolval($missing);
     }
 }
