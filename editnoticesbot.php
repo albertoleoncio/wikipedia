@@ -127,7 +127,7 @@ class EditNotices extends WikiAphpiLogged
     {
         foreach ($pagesToDelete as $page) {
             $this->delete(
-                $page,
+                "MediaWiki:Editnotice-0-$page",
                 "G1 - [[WP:ER#ERg1|Eliminação técnica]] (bot: Eliminando editnotice desnecessário)"
             );
             echo("<br>Eliminado MediaWiki:Editnotice-0-$page");
