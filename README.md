@@ -15,10 +15,6 @@ Bots:
 - https://pt.wikipedia.org/wiki/User:EventosAtuaisBot
 - https://pt.wikipedia.org/wiki/User:BloqBot
 
-## Script COVID-19
-
-- covid-19-brasil.php - Atualiza os dados dos casos por unidade federativa brasileira. Utiliza os dados do Ministério da Saúde. Link: https://covid.saude.gov.br/.
-
 ## Bots
 
 ### BloqBot
