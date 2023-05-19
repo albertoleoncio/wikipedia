@@ -5,6 +5,11 @@ require_once 'WikiAphpi/main.php';
 class UnreliableSources extends WikiAphpiLogged
 {
 
+    /**
+     * Retrieves an array of titles for all pages matching specific prefix (or just subpages).
+     *
+     * @return array The list of page titles.
+     */
     private function getAllPages()
     {
         $params = [
@@ -19,12 +24,20 @@ class UnreliableSources extends WikiAphpiLogged
         $api = $this->see($params)["query"]["allpages"];
 
         foreach ($api as $pages) {
+            if ($pages["pageid"] == '6839845') continue; //Intro page
+            if ($pages["pageid"] == '6839835') continue; //Preload page
             $list[] = $pages["title"];
         }
 
         return $list;
     }
+    
 
+    /**
+     * Retrieves an array of titles for rejected proposals of unreliable sources in its category.
+     *
+     * @return array The list of rejected proposal titles.
+     */
     private function getRejected()
     {
         $params = [
@@ -45,14 +58,37 @@ class UnreliableSources extends WikiAphpiLogged
         return $list;
     }
 
+
+    /**
+     * Retrieves an array of titles for approved proposals by filtering out the rejected ones.
+     *
+     * @return array The list of approved page titles.
+     */
     private function getApproved()
     {
         return array_diff($this->getAllPages(), $this->getRejected());
     }
 
+
+    /**
+     * Retrieves the actual consensus for a given proposal by analyzing its sections.
+     *
+     * This function retrieves the wikitext of the last section with a conclusive state from a given page.
+     * It performs the following steps:
+     *   1. Queries the API to fetch the sections of the page.
+     *   2. Filters the sections to include only level 2 sections.
+     *   3. Reverses the order of the sections, starting from the last section.
+     *   4. Iterates over the filtered sections, examining their wikitext.
+     *   5. Searches for the "estado" parameter in the wikitext to determine the state.
+     *   6. If the "estado" parameter is present and set to "inconclusivo", the loop continues to the next section.
+     *   7. If the "estado" parameter is not present or is set to a value other than "inconclusivo", the function returns the wikitext of that section.
+     *
+     * @param string $page The title of the page to retrieve the actual consensus for.
+     * @throws Exception If the page is not formatted correctly
+     * @return string|null The wikitext of the last section with a conclusive state, or null if no conclusive section is found.
+     */
     private function getActualConsensus($page)
     {
-        //Procura número da última seção de nível principal
         $approved_sections_params = [
             "action"    => "parse",
             "format"    => "php",
@@ -61,31 +97,14 @@ class UnreliableSources extends WikiAphpiLogged
         ];
         $approved_sections = $this->see($approved_sections_params)["parse"]["sections"];
 
-        //Cria array com parâmetros "level" de cada seção
         $filter = array_column($approved_sections, "level");
-
-        //Coleta as keys de cada level e insere como valores em uma array
         $filter = array_keys($filter, "2");
-
-        //Inverte array, para que os valores se tornem keys
         $filter = array_flip($filter);
-
-        //Finaliza filtragem, criando array com as keys correspondentes
         $filter = array_intersect_key($approved_sections, $filter);
-
-        //Inverte ordem das seções para começar análise a partir da última seção, mantendo as keys
         $filter = array_reverse($filter, true);
-
-        //Loop para recuperar o código-fonte de cada seção, a partir da última
         foreach ($filter as $section_last) {
             $section_last_wikitext = $this->get($page, $section_last["index"]);
-
-            //Procura pelo parâmetro "estado"
             preg_match_all('/\| *?estado *?= *?\K[^\|]*/', $section_last_wikitext, $estado);
-
-            //Verifica se o parâmetro existe
-            //Caso sim, verifica se o valor é "inconclusivo" e, caso sim, pula loop atual e procede para a próxima seção
-            //Caso não, interrompe loop e segue para a análise da seção
             if (isset($estado["0"]["0"])) {
                 if (trim($estado["0"]["0"]) == "inconclusivo") {
                     continue;
@@ -96,14 +115,22 @@ class UnreliableSources extends WikiAphpiLogged
                 return $section_last_wikitext;
             }
         }
+        throw new InvalidArgumentException("Código de $page inadequado!");
+        
     }
 
+    /**
+     * Processes a domain by checking its blacklist status and formatting it accordingly.
+     * Depending on the blacklist result, the function formats the domain as a nowiki tag enclosed with triple quotes if blacklisted, or as a nowiki tag if not blacklisted.
+     *
+     * @param string|null $domain The domain to process.
+     * @return string|false The processed domain enclosed in nowiki tags, or false if the domain is empty or null.
+     */
     private function processDomain($domain)
     {
+        $domain = trim($domain) ?? false;
         if (empty($domain)) {
             return false;
-        } else {
-            $domain = trim($domain);
         }
         
         $params = [
@@ -119,9 +146,15 @@ class UnreliableSources extends WikiAphpiLogged
         }
     }
 
+
+    /**
+     * Processes the consensus text by extracting parameters and formatting domain information.
+     *
+     * @param string $text The consensus text to process.
+     * @return array|false The processed consensus information as an associative array, or false if the required name parameter is empty.
+     */
     private function processConsensus($text)
     {
-        //Captura parâmetros via regex
         preg_match_all('/\| *?nome *?= *?\K[^\|]*/', $text, $nome);
         preg_match_all('/\| *?área *?= *?\K[^\|]*/', $text, $area);
         preg_match_all('/\| *?domínio1 *?= *?\K[^\|]*/', $text, $dominio1);
@@ -131,7 +164,6 @@ class UnreliableSources extends WikiAphpiLogged
         preg_match_all('/\| *?domínio5 *?= *?\K[^\|]*/', $text, $dominio5);
         preg_match_all('/\| *?timestamp *?= *?\K[^\|]*/', $text, $timestamp);
 
-        //Insere dados na array
         $refname = isset($nome["0"]["0"]) ? trim($nome["0"]["0"]) : false;
         if(empty($refname)) {
             return false;
@@ -149,6 +181,13 @@ class UnreliableSources extends WikiAphpiLogged
         ];
     }
 
+
+    /**
+     * Compiles a table based on the provided list of sources.
+     *
+     * @param array $list The list of sources to compile into a table.
+     * @return string The compiled wikicode representing the table.
+     */
     private function compileTable($list)
     {
         uksort($list, array(Collator::create( 'pt_BR' ), 'compare'));
@@ -180,6 +219,19 @@ class UnreliableSources extends WikiAphpiLogged
         return $wikicode;
     }
 
+    /**
+     * Executes the main logic of the bot to update the list of unreliable sources.
+     *
+     * This function executes the main logic of the bot to update the list of unreliable sources on the Wikipedia page.
+     * It performs the following steps:
+     *   1. Initializes an empty array to store the compiled source information.
+     *   2. Retrieves the approved sources using the `getApproved()` method.
+     *   3. Iterates over each approved source and processes the consensus using the `processConsensus()` and `getActualConsensus()` methods.
+     *   4. If the processed consensus data is empty, the iteration continues to the next source.
+     *   5. Adds the processed consensus data to the list array, using the name as the key.
+     *   6. Compiles the table using the `compileTable()` method, passing the list array.
+     *   7. Calls the `edit()` method to update the Wikipedia page with the compiled table.
+     */
     public function run()
     {
         $list = [];
