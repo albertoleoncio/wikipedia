@@ -117,7 +117,7 @@ class EventosAtuais extends WikiAphpiLogged
      *
      * @param string $page The name of the template page to modify.
      * @param string $texto The text of the new approved event.
-     * @param string $image The name of the image to include in the template.
+     * @param string $image The name of the image to be included in the template.
      * @param string $article The name of the article related to the event.
      * @return array An array containing the modified code of the template and the oldest event.
      * @throws UnexpectedValueException If the main template is formatted incorrectly.
@@ -159,11 +159,11 @@ class EventosAtuais extends WikiAphpiLogged
             'prop'   => 'info',
             'titles' => "File:$image"
         ];
-        $imageInfo = $this->see($params)["query"]["pages"];
-        if (isset($imageInfo["lastrevid"])) {
+        $imageInfo = end($this->see($params)["query"]["pages"]);
+        if (isset($imageInfo["known"])) {
             $code = preg_replace(
                 '/<imagemap>[^>]*?<\/imagemap>/',
-                "<imagemap>\nFicheiro:$imageInfo|125x175px|borda|direita\ndefault [[$article]]\n</imagemap>",
+                "<imagemap>\nFicheiro:$image|125x175px|borda|direita\ndefault [[$article]]\n</imagemap>",
                 $code
             );
         } else {
