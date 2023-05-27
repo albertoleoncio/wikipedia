@@ -33,7 +33,7 @@ class BlockList extends WikiAphpiUnlogged
      *   2. Splits the content into individual lines.
      *   3. Iterates over each line.
      *   4. Parses the line using the `parseLine()` method.
-     *   5. Continues to the next line if the parsed line is empty or a comment.
+     *   5. Continues to the next line if the parsed line is empty or a comment or already exists on the database.
      *   6. Calls the `insertBlocklistEntry()` method to insert the parsed line into the blocklist.
      *
      */
@@ -135,6 +135,11 @@ class BlockList extends WikiAphpiUnlogged
         $stmt->close();
     }
 
+    /**
+     * Retrieves the existing regex list from the database.
+     *
+     * @return array The array of existing regex patterns.
+     */
     private function getExistingRegexList()
     {
         $query = $this->mysqli->query("SELECT regex FROM ptwiki_sbl;");
@@ -233,7 +238,7 @@ class BlockList extends WikiAphpiUnlogged
             'needle'         => $needle,
             'skipversions'   => '0',
             'ignorefirst'    => '0',
-            'limit'          => rand(700, 4000),
+            'limit'          => random_int(700, 4000),
             'searchmethod'   => 'int',
             'order'          => 'desc',
             'force_wikitags' => 'on',
