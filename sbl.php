@@ -35,7 +35,6 @@ class BlockList extends WikiAphpiUnlogged
      *   4. Parses the line using the `parseLine()` method.
      *   5. Continues to the next line if the parsed line is empty or a comment or already exists on the database.
      *   6. Calls the `insertBlocklistEntry()` method to insert the parsed line into the blocklist.
-     *
      */
     public function sync()
     {
@@ -103,9 +102,32 @@ class BlockList extends WikiAphpiUnlogged
         $this->reloadPage();
     }
 
+    /**
+     * Retrieves the results from the database.
+     * Note: The regex field is processed to replace certain characters for better readability.
+     *
+     * @return array The array of results from the database.
+     */
     public function results()
     {
-        return $this->getAllList();
+        $query = "SELECT regex, add_diff, add_user, add_timestamp, add_summary, comment FROM ptwiki_sbl";
+        $stmt = $this->mysqli->prepare($query);
+
+        if (!$stmt) {
+            throw new ContentRetrievalException("Erro na consulta SQL");
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $list = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $row['regex'] = strtr($row['regex'], ['\b' => '', '\\' => '']);
+            $list[] = $row;
+        }
+
+        $stmt->close();
+        return $list;
     }
 
     /**
@@ -154,38 +176,6 @@ class BlockList extends WikiAphpiUnlogged
         }
 
         return $existingRegexList;
-    }
-
-    private function getAllList()
-    {
-        $q = chr(39);
-        $s = chr(92);
-        $query = $this->mysqli->query("
-            SELECT 
-                REPLACE(
-                    REPLACE(
-                        regex, 
-                        {$q}{$s}{$s}b{$q}, 
-                        {$q}{$q}
-                    ), 
-                    {$q}{$s}{$s}{$q}, 
-                    {$q}{$q}
-                ) AS regex,
-                add_diff,
-                add_user,
-                add_timestamp,
-                add_summary,
-                comment
-            FROM 
-                ptwiki_sbl;
-        ");
-        $list = [];
-
-        while ($row = $query->fetch_assoc()) {
-            $list[] = $row;
-        }
-
-        return $list;
     }
 
     /**
@@ -367,7 +357,7 @@ $lines = $api->results();
                         <table id="myTable" class="display responsive nowrap" style="width:100%">
                             <thead>
                                 <tr>
-                                    <th>Regex</th>
+                                    <th>URL</th>
                                     <th>Diff</th>
                                     <th>Autor</th>
                                     <th>Timestamp</th>
