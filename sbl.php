@@ -347,14 +347,35 @@ $lines = $api->results();
         <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/datatables.net-responsive/2.4.1/dataTables.responsive.min.js"></script>
         <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/datatables.net-buttons/2.3.6/js/dataTables.buttons.min.js"></script>
         <script src="https://tools-static.wmflabs.org/cdnjs/ajax/libs/datatables.net-buttons/2.3.6/js/buttons.colVis.min.js"></script>
+        <style>
+        .loader {
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            width: 120px;
+            height: 120px;
+            margin: auto;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #myTable {
+            display: none;
+        }
+        </style>
     </head>
     <body>
         <div class="w3-container" id="menu">
             <div class="w3-content" style="max-width:800px">
                 <h5 class="w3-center w3-padding-48"><span class="w3-tag w3-wide">Block List</span></h5>
                 <div class="w3-row-padding w3-center w3-margin-top">
-                    <div class="w3-container w3-padding-48 w3-card w3-small">
-                        <table id="myTable" class="display responsive nowrap" style="width:100%">
+                    <div class="w3-container w3-padding-48 w3-card w3-small" id="main">
+                        <div class="loader"></div>
+                        <table id="myTable" class="display responsive" style="width:100%">
                             <thead>
                                 <tr>
                                     <th>URL</th>
@@ -380,6 +401,8 @@ $lines = $api->results();
                         </table>
                         <script type="text/javascript">
                             $(document).ready( function () {
+                                $('.loader').hide();
+                                $('#myTable').show();
                                 $('#myTable').DataTable( {
                                     responsive: true
                                 } );
