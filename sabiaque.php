@@ -352,6 +352,7 @@ class SabiaQue extends WikiAphpiLogged
      */
     private function doTweet($text, $article, $tokens)
     {
+        if ($article == "LZ 129 Hindenburg") return;
         $tweet  = "Você sabia que...\n\n…";
         $tweet .= preg_replace(
             '/[\[\]\']/',

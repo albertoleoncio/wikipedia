@@ -83,6 +83,7 @@ foreach ($sq_api as $prop) {
 	preg_match_all('/…[^\n]*/', $prop["slots"]["main"]["*"], $content);
 	preg_match_all('/https:.*/', $prop["slots"]["main"]["*"], $address);
 	preg_match_all('/(?<=wiki\/).*/', $prop["slots"]["main"]["*"], $title);
+	if ($title["0"]["0"] == 'LZ%20129%20Hindenburg') continue;
 	$sq[] = array(
 		"title"			=> $title["0"]["0"],
 		"description" 	=> "Você sabia que...\n\n".$content["0"]["0"]."\n\n#wikipedia #ptwikipedia #ptwiki #conhecimentolivre #wikicuriosidade #sabiaque",
