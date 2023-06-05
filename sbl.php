@@ -122,7 +122,7 @@ class BlockList extends WikiAphpiUnlogged
         $list = [];
 
         while ($row = $result->fetch_assoc()) {
-            $row['regex'] = strtr($row['regex'], ['\b' => '', '\\' => '']);
+            $row['regex'] = strtr($row['regex'], ['\b' => '', '\\' => '', '/' => '/<wbr>']);
             $list[] = $row;
         }
 
@@ -371,7 +371,7 @@ $lines = $api->results();
     <body>
         <div class="w3-container" id="menu">
             <div class="w3-content" style="max-width:800px">
-                <h5 class="w3-center w3-padding-48"><span class="w3-tag w3-wide">Block List</span></h5>
+                <h5 class="w3-center w3-padding-48"><span class="w3-tag w3-wide">Spam Block List</span></h5>
                 <div class="w3-row-padding w3-center w3-margin-top">
                     <div class="w3-container w3-padding-48 w3-card w3-small" id="main">
                         <div class="loader"></div>
