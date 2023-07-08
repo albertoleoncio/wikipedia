@@ -49,10 +49,10 @@ Bots:
 
 ## Utilitários
 
-- apurador.php - Contabilizador de votos.
 - db.php - Gerador de pedidos de abertura de discussões de bloqueio.
 - siw.php - Script para auxiliar o envio de mensagens para o https://pt.wikipedia.org/wiki/WP:ESR-SIW
 - voto.php - Verifica se usuário possui direito a voto de acordo com as regras vigentes da Wikipédia lusófona.
+- sbl.php - Visualiza os domínios bloqueados pela lista de spam, fornecendo mais informações sobre sua inclusão.
 - wikiportugal - Gera código para atualizar https://pt.wikipedia.org/wiki/Usuário:Vanthorn/Wikipedistas_de_Portugal
 
 ## Little disclaimer

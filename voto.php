@@ -201,6 +201,6 @@ if ($getUser) {
             </div>
         </div>
         <hr>
-        <a href="https://wikitech.wikimedia.org/wiki/Portal:Toolforge"><img src="https://tools-static.wmflabs.org/toolforge/banners/Powered-by-Toolforge-button.png" alt="Powered by Wikimedia Toolforge"></a>
+        <?php include('footer.html'); ?>
     </body>
 </html>
