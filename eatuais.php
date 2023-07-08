@@ -301,7 +301,7 @@ class EventosAtuais extends WikiAphpiLogged
         $this->edit($articleTalkCode, 0, FALSE, $articleTalkSummary, $articleTalkPage);
 
         //Post on Twitter
-        $tweet = $this->doTweet($parser['texto'], $parser['article'], $tokens);
+        //$tweet = $this->doTweet($parser['texto'], $parser['article'], $tokens);
 
         // Log the new event in a bot log
         $this->edit($parser['texto'], NULL, FALSE, $logSummary, $logPage);

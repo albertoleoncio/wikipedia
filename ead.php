@@ -86,7 +86,7 @@ class Ead extends WikiAphpiLogged
         } else {
             return [
                 $this->doLog($currentArticle, $logPage),
-                $this->doTweet($currentArticle, $tokens)
+                //$this->doTweet($currentArticle, $tokens)
             ];
         }
 

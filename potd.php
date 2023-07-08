@@ -167,7 +167,7 @@ class Potd extends WikiAphpiLogged
 }
 
 //Executa script
-$tokens = [
+/*$tokens = [
     $twitter_consumer_key,
     $twitter_consumer_secret,
     $twitter_access_token,
@@ -175,4 +175,4 @@ $tokens = [
 ];
 $api = new Potd('https://pt.wikipedia.org/w/api.php', $username, $password);
 print_r($api->run($tokens));
-echo "\nExecução finalizada";
+echo "\nExecução finalizada";*/

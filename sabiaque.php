@@ -365,13 +365,13 @@ class SabiaQue extends WikiAphpiLogged
         );
         $tweet .= "\n\nLeia mais na Wikipédia: https://pt.wikipedia.org/wiki/".rawurlencode($article);
 
-        $twitter_conn = new TwitterOAuth(...$tokens);
+        /*$twitter_conn = new TwitterOAuth(...$tokens);
         $post = $twitter_conn->post(
             "statuses/update",
             ["status" => $tweet]
-        );
+        );*/
 
-        return [$tweet, $post->id];
+        return [$tweet, true /*$post->id*/];
     }
 
 
