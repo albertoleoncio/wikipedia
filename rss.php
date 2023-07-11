@@ -10,7 +10,7 @@ header('Content-type: application/xml');
 function busca_imagem ($article)
 {
 	//Busca imagem
-	$address = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&format=php&prop=pageimages&piprop=name&titles=".$article);
+	$address = file_get_contents("https://pt.wikipedia.org/w/api.php?action=query&redirects=1&format=php&prop=pageimages&piprop=name&titles=".$article);
 	$address = end(unserialize($address)["query"]["pages"]);
 
 	//Retorna caso imagem exista imagem principal no artigo
@@ -117,6 +117,78 @@ foreach ($ea_api as $event) {
 	);
 }
 
+/////////
+//
+// MAIS VISITADO
+//
+/////////
+
+if (date("N") == 7) {
+
+	// Get list from API
+	$list = [];
+	for ($i=-1; $i > -8 ; $i--) { 
+		$day = date("Y/m/d", strtotime("$i day"));
+		$json_all = file_get_contents("https://wikimedia.org/api/rest_v1/metrics/pageviews/top/pt.wikipedia.org/all-access/$day");
+		$api_all = json_decode($json_all, true)["items"]["0"]["articles"];
+
+		foreach ($api_all as $page) {
+			$title = $page['article'];
+			if (strpos($title, ":") !== false) {
+				continue;
+			}
+			if (!isset($list[$title])) {
+				$list[$title] = intval($page['views']);
+			} else {
+				$list[$title] += intval($page['views']);
+			}
+		}
+	}
+
+	//Remove false positives
+	$fp = [
+		"AMBEV",
+		"Instagram",
+		"Estados_Unidos",
+		"YouTube",
+		"Cleópatra",
+		"Canal_Brasil",
+		"Sony_Channel",
+	];
+	foreach ($fp as $key) {
+		unset($list[$key]);
+	}
+
+	//Get values and construct the output
+	arsort($list);
+
+  $top_articles = array_slice($list, 0, 3, true);
+
+  $first_key = key($top_articles);
+  $first_value = number_format(current($top_articles), 0, ',', '.');
+  next($top_articles);
+
+  $second_key = key($top_articles);
+  $second_value = number_format(current($top_articles), 0, ',', '.');
+  next($top_articles);
+
+  $third_key = key($top_articles);
+  $third_value = number_format(current($top_articles), 0, ',', '.');
+
+  $first_key_display = str_replace("_", " ", $first_key);
+  $second_key_display = str_replace("_", " ", $second_key);
+  $third_key_display = str_replace("_", " ", $third_key);
+
+  $mv[] = array(
+	"title"			=> $first_key,
+	"description" 	=> "$first_key_display foi o artigo mais visto na Wikipédia em português na semana passada. Foi visto $first_value vezes.\nOutros artigos de destaque da semana foram: $second_key_display ($second_value) e $third_key_display ($third_value)\n\n#wikipedia #maisvistos #conhecimentolivre",
+	"instagram" => busca_imagem(rawurlencode($first_key_display)),
+	"link" 			=> "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($first_key_display),
+	"timestamp"		=> date('D, d M Y H:i:s O',strtotime("midnight")),
+	"guid"			=> $first_value
+	);
+}
+
 //print_r($ead);
 //print_r($sq);
 ?>
@@ -166,6 +238,20 @@ foreach ($ea_api as $event) {
 	if (!is_null($sq_item["instagram"])) {
 		echo("\n    <instagram>".$sq_item["instagram"]["image_about"]."</instagram>");
 		echo("\n    <enclosure url=\"".$sq_item["instagram"]["image_url"]."\" length=\"".$sq_item["instagram"]["image_lenght"]."\" type=\"".$sq_item["instagram"]["image_type"]."\" />");
+	}
+	echo("\n  </item>");
+  }
+
+  foreach ($mv as $mv_item) {
+	echo("\n  <item>");
+	echo("\n    <title>".$mv_item["title"]."</title>");
+	echo("\n    <link>".$mv_item["link"]."</link>");
+	echo("\n    <pubDate>".$mv_item["timestamp"]."</pubDate>");
+	echo("\n    <guid>https://pt.wikipedia.org/w/index.php?title=".$mv_item["guid"]."</guid>");
+	echo("\n    <description>".$mv_item["description"]."</description>");
+	if (!is_null($mv_item["instagram"])) {
+		echo("\n    <instagram>".$mv_item["instagram"]["image_about"]."</instagram>");
+		echo("\n    <enclosure url=\"".$mv_item["instagram"]["image_url"]."\" length=\"".$mv_item["instagram"]["image_lenght"]."\" type=\"".$mv_item["instagram"]["image_type"]."\" />");
 	}
 	echo("\n  </item>");
   }
