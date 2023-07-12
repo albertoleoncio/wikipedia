@@ -268,11 +268,15 @@ if(count($users) != 0) {
 
 	        // JavaScript function to send notifications to all editors
 	        function sendAvisos() {
-	            alert('Lembre-se de habilitar os pop-ups!');
 
 	            // Get user array from PHP and iterate through each user
-	            var users = <?=$userArray?>;
 	            var formTitle = '<?=$formTitle?>';
+	            
+	            var users = <?=$userArray?>;
+	            if (users.length > 1) {
+			        alert('Lembre-se de habilitar os pop-ups!');
+			    }
+	            
 	            users.forEach(function(user) {
 
 	                var url = new URL('https://pt.wikipedia.org/w/index.php');
