@@ -404,6 +404,6 @@ if(count($users) != 0) {
       		</div>
       	</div>
 		<hr>
-		<?php include('footer.html'); ?>
+		<?php include_once('footer.html'); ?>
 	</body>
 </html>
