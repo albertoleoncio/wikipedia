@@ -3,6 +3,7 @@ require_once 'interface.php';
 require_once 'exception.php';
 require_once 'see.php';
 require_once 'do.php';
+require_once 'behalf.php';
 require_once 'mock.php';
 
 /**
@@ -304,5 +305,170 @@ class WikiAphpiTest implements WikiAphpiInterface
         }
 
         return $result2;
+    }
+}
+
+/**
+ * Represents a class that implements the WikiAphpiInterface and provides functionality
+ * for making requests to a MediaWiki API with OAuth authentication.
+ *
+ * @see see.php
+ * @see do.php
+ * @uses WikiAphpiSee
+ * @uses WikiAphpiDo
+ * @uses WikiAphpiBehalf
+ */
+class WikiAphpiOAuth implements WikiAphpiInterface
+{
+    use WikiAphpiBehalf;
+
+    /** @var string The base URL for API requests. */
+    private $endpoint;
+
+    /** @var string The base URL for OAuth requests. */
+    private $endpointOAuth;
+
+    /** @var string The consumer key for OAuth authentication. */
+    private $consumerKey;
+
+    /** @var string The secret key for OAuth authentication. */
+    private $consumerSecret;
+
+    /** @var string The session key for OAuth authentication. */
+    private $sessionKey;
+
+    /** @var string The session secret for OAuth authentication. */
+    private $sessionSecret;
+    
+    /**
+     * Constructor for the WikiAphpiOAuth class with setup.
+     *
+     * Initializes a new instance of the WikiAphpiOAuth class and sets the endpoint, consumer key, and consumer secret.
+     * Additionally, it sets the OAuth endpoint for OAuth requests and performs setup to set up the session cookie and
+     * fetch access tokens if this is the callback from requesting authorization.
+     *
+     * @param string $endpoint      The base URL for API requests.
+     * @param string $consumerKey   The consumer key to use for API requests.
+     * @param string $consumerSecret The secret key to use for API requests.
+     */
+    public function __construct($endpoint, $consumerKey, $consumerSecret)
+    {
+        $this->endpoint = $endpoint;
+        $this->consumerKey = $consumerKey;
+        $this->consumerSecret = $consumerSecret;
+        $this->endpointOAuth = 'https://meta.wikimedia.org/w/index.php';
+
+        // perform setup in constructor
+        $this->setup();
+    }
+
+    /**
+     * Sends a cURL request to the specified endpoint with the provided parameters.
+     *
+     * This method sends a cURL request to the specified endpoint with the provided parameters and returns the response
+     * in PHP format. It prepares headers, sets the request type and parameters, and handles any errors that occur during
+     * the cURL request. Additionally, it unserializes the result to PHP format if possible.
+     *
+     * @param array $params   The parameters for the API request.
+     * @param bool  $isPost   A boolean indicating whether the request is a POST request.
+     * @param bool  $headers  A boolean indicating whether headers are needed in the cURL request.
+     *
+     * @return array The response from the API request in PHP format.
+     *
+     * @throws ContentRetrievalException If there is an error during the cURL request.
+     * @throws InvalidArgumentException If the API response cannot be unserialized to PHP format.
+     */
+    public function performRequest(array $params, bool $isPost, array $headers = []): array
+    {
+        $url = $this->endpoint;
+        $ch = curl_init();
+
+        // making sure to request the right format
+        $params['format'] = 'php';
+
+        // prepare headers
+        $oauthHeaders = array(
+            'oauth_consumer_key'     => $this->consumerKey,
+            'oauth_token'            => $_SESSION['sessionKey'] ?? '',
+            'oauth_version'          => '1.0',
+            'oauth_nonce'            => md5( microtime() . mt_rand() ),
+            'oauth_timestamp'        => time(),
+            'oauth_signature_method' => 'HMAC-SHA1',
+        );
+        if (!empty($headers)) $oauthHeaders += $headers;
+
+        $signature = $this->signRequest(
+            $isPost ? 'POST' : 'GET', 
+            $url,
+            $params + $oauthHeaders 
+        );
+        $oauthHeaders['oauth_signature'] = $signature;
+        $authHeader = array();
+        foreach ( $oauthHeaders as $k => $v ) {
+            $authHeader[] = rawurlencode( $k ) . '="' . rawurlencode( $v ) . '"';
+        }
+        $authHeader = 'Authorization: OAuth ' . join( ', ', $authHeader );
+
+        // set the request type and parameters
+        if ($isPost) {
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
+        } else {
+            $url .= "?" . http_build_query($params);
+        }
+
+        // set other curl options as needed
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [$authHeader]);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        // execute the curl request and handle any errors
+        $result = curl_exec($ch);
+        if ($result === false) {
+            throw new ContentRetrievalException(curl_error($ch));
+        }
+
+        // close the curl handle and return the result
+        curl_close($ch);
+        $unserializedResult = unserialize($result) ?? false;
+        if ($unserializedResult === false) {
+            throw new InvalidArgumentException("Error unserializing. API' format is PHP?");
+        }
+
+        return $unserializedResult;
+    }
+
+    /**
+     * Sets up the session cookie and fetches access tokens if this is the callback from requesting authorization.
+     *
+     * This method sets up the session cookie with the appropriate parameters. It loads the user token (request or access)
+     * from the session and fetches the access token if this is the callback from requesting authorization.
+     */
+    public function setup()
+    {
+        // Setup the session cookie
+        session_name( str_replace('.php', '', $_SERVER['SCRIPT_NAME']) );
+        $params = session_get_cookie_params();
+        session_set_cookie_params(
+            $params['lifetime'],
+            dirname( $_SERVER['SCRIPT_NAME'] )
+        );
+
+        // Load the user token (request or access) from the session
+        session_start();
+        $this->sessionKey = '';
+        $this->sessionSecret = '';
+        if ( isset( $_SESSION['sessionKey'] ) ) {
+            $this->sessionKey = $_SESSION['sessionKey'];
+            $this->sessionSecret = $_SESSION['sessionSecret'];
+        }
+        session_write_close();
+
+        // Fetch the access token if this is the callback from requesting authorization
+        if ( isset( $_GET['oauth_verifier'] ) && $_GET['oauth_verifier'] ) {
+            $this->gotLogin();
+        } elseif ( isset( $_GET['oauth'] ) && $_GET['oauth'] === 'seek' ){
+            $this->seekLogin();
+        }
     }
 }
