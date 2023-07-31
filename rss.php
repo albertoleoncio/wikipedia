@@ -185,7 +185,7 @@ if (date("N") == 7) {
 	"instagram" => busca_imagem(rawurlencode($first_key_display)),
 	"link" 			=> "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($first_key_display),
 	"timestamp"		=> date('D, d M Y H:i:s O',strtotime("midnight")),
-	"guid"			=> $first_value
+	"guid"			=> strtotime("midnight")
 	);
 }
 
@@ -242,7 +242,7 @@ if (date("N") == 7) {
 	echo("\n  </item>");
   }
 
-  foreach ($mv as $mv_item) {
+  foreach ($mv ?? [] as $mv_item) {
 	echo("\n  <item>");
 	echo("\n    <title>".$mv_item["title"]."</title>");
 	echo("\n    <link>".$mv_item["link"]."</link>");
