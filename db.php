@@ -340,11 +340,11 @@ class BlockingDiscussion extends WikiAphpiUnlogged
  *
  * If the `conta` parameter is not set, the code block returns `false`.
  */
-$conta =    filter_input(INPUT_GET, 'conta',    FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$sysop =    filter_input(INPUT_GET, 'sysop',    FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$evidence = filter_input(INPUT_GET, 'evidence', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$defesa =   filter_input(INPUT_GET, 'defesa',   FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$diff =     filter_input(INPUT_GET, 'diff',     FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$conta =    filter_input(INPUT_POST, 'conta',    FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$sysop =    filter_input(INPUT_POST, 'sysop',    FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$evidence = filter_input(INPUT_POST, 'evidence', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$defesa =   filter_input(INPUT_POST, 'defesa',   FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$diff =     filter_input(INPUT_POST, 'diff',     FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 if ($conta) {
     $discussion = new BlockingDiscussion('https://pt.wikipedia.org/w/api.php');
     $echo = $discussion->run($conta, $sysop, $evidence, $defesa, $diff);
@@ -377,7 +377,7 @@ if ($conta) {
                 <h5 class="w3-center w3-padding-48"><span class="w3-tag w3-wide">ASSISTENTE DE ABERTURA DE DISCUSSÕES DE BLOQUEIO</span></h5>
                 <div class="w3-row-padding w3-center w3-margin-top">
                     <div class="w3-half">
-                        <form method="get">
+                        <form method="post">
                             <div class="w3-container w3-padding-48 w3-card">
                                 <p class="w3-center w3-wide">NOME DO USUÁRIO</p>
                                 <p class="w3-text-grey">
