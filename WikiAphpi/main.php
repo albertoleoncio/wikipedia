@@ -39,7 +39,7 @@ class WikiAphpiUnlogged implements WikiAphpiInterface
      * @return array The response from the curl request.
      * @throws Exception if there is an error sending the curl request.
      */
-    public function performRequest(array $params, bool $isPost, bool $headers = false): array
+    public function performRequest(array $params, bool $isPost, array $headers = []): array
     {
         $url = $this->endpoint;
         $ch = curl_init();
@@ -56,7 +56,7 @@ class WikiAphpiUnlogged implements WikiAphpiInterface
         }
 
         // optional for specific headers
-        if ($headers !== false) {
+        if (!empty($headers)) {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         }
 
@@ -128,7 +128,7 @@ class WikiAphpiLogged implements WikiAphpiInterface
      * @return array The response from the curl request.
      * @throws Exception if there is an error sending the curl request.
      */
-    public function performRequest(array $params, bool $isPost, bool $headers = false): array
+    public function performRequest(array $params, bool $isPost, array $headers = []): array
     {
         $url = $this->endpoint;
         $ch = curl_init();
@@ -146,7 +146,7 @@ class WikiAphpiLogged implements WikiAphpiInterface
         }
 
         // optional for specific headers
-        if ($headers !== false) {
+        if (!empty($headers)) {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         }
 
@@ -265,7 +265,7 @@ class WikiAphpiTest implements WikiAphpiInterface
      * @return array The response from the curl request.
      * @throws Exception if there is an error sending the curl request.
      */
-    public function performRequest(array $params, bool $isPost, bool $headers = false): array
+    public function performRequest(array $params, bool $isPost, array $headers = []): array
     {
         $url = $this->endpoint;
         $ch = curl_init();
@@ -282,7 +282,7 @@ class WikiAphpiTest implements WikiAphpiInterface
         }
 
         // optional for specific headers
-        if ($headers !== false) {
+        if (!empty($headers)) {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         }
 

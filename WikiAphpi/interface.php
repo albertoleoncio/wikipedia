@@ -7,5 +7,5 @@
  * @package WikiAphpi
  */
 interface WikiAphpiInterface {
-	public function performRequest(array $params, bool $isPost, bool $headers = false): array;
+	public function performRequest(array $params, bool $isPost, array $headers = []): array;
 }
