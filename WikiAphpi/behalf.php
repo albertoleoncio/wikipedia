@@ -97,7 +97,7 @@ trait WikiAphpiBehalf
             'oauth_callback'         => 'oob',
             'oauth_consumer_key'     => $this->consumerKey,
             'oauth_version'          => '1.0',
-            'oauth_nonce'            => md5(microtime() . mt_rand()),
+            'oauth_nonce'            => hash("sha512", microtime() . random_int(0,99)),
             'oauth_timestamp'        => time(),
             'oauth_signature_method' => 'HMAC-SHA1'
         ];
@@ -173,7 +173,7 @@ trait WikiAphpiBehalf
             'oauth_consumer_key'     => $this->consumerKey,
             'oauth_token'            => $this->sessionKey,
             'oauth_version'          => '1.0',
-            'oauth_nonce'            => md5(microtime().mt_rand()),
+            'oauth_nonce'            => hash("sha512", microtime().random_int(0,99)),
             'oauth_timestamp'        => time(),
             'oauth_signature_method' => 'HMAC-SHA1',
         ];
@@ -239,7 +239,7 @@ trait WikiAphpiBehalf
             'oauth_consumer_key'        => $this->consumerKey,
             'oauth_token'               => $this->sessionKey,
             'oauth_version'             => '1.0',
-            'oauth_nonce'               => md5( microtime() . mt_rand() ),
+            'oauth_nonce'               => hash("sha512",  microtime() . random_int(0,99) ),
             'oauth_timestamp'           => time(),
             'oauth_signature_method'    => 'HMAC-SHA1',
         ];

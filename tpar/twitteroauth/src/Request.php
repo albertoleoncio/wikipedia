@@ -257,6 +257,6 @@ class Request
      */
     public static function generateNonce()
     {
-        return md5(microtime() . random_int('10', '99'));
+        return hash("sha512", microtime() . random_int('10', '99'));
     }
 }

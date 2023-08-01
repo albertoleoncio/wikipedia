@@ -391,7 +391,7 @@ class WikiAphpiOAuth implements WikiAphpiInterface
             'oauth_consumer_key'     => $this->consumerKey,
             'oauth_token'            => $_SESSION['sessionKey'] ?? '',
             'oauth_version'          => '1.0',
-            'oauth_nonce'            => md5( microtime() . mt_rand() ),
+            'oauth_nonce'            => hash("sha512",  microtime() . random_int(0,99) ),
             'oauth_timestamp'        => time(),
             'oauth_signature_method' => 'HMAC-SHA1',
         );
@@ -451,7 +451,8 @@ class WikiAphpiOAuth implements WikiAphpiInterface
         $params = session_get_cookie_params();
         session_set_cookie_params(
             $params['lifetime'],
-            dirname( $_SERVER['SCRIPT_NAME'] )
+            dirname( $_SERVER['SCRIPT_NAME'] ),
+            true
         );
 
         // Load the user token (request or access) from the session
