@@ -6,7 +6,7 @@ require_once 'WikiAphpi/main.php';
  * Class BlockingDiscussion
  * This class represents a Wikipedia discussion about blocking a user.
  */
-class BlockingDiscussion extends WikiAphpiUnlogged
+class BlockingDiscussion extends WikiAphpiOAuth
 {
 
     /**
@@ -50,7 +50,7 @@ class BlockingDiscussion extends WikiAphpiUnlogged
     }
 
     /**
-     * Generate an array to create a new database page for a given account name, defense statement, evidence,
+     * Create a new discussion page for a given account name, defense statement, evidence,
      * diff of the defense statement and subpage (optional).
      *
      * @param string $conta The account name to generate the new discussion page for.
@@ -59,63 +59,57 @@ class BlockingDiscussion extends WikiAphpiUnlogged
      * @param string $diff The diff of the defense statement
      * @param string $subpage The optional subpage to generate the new discussion page for.
      *
-     * @return array The array to create the new discussion page.
+     * @return int The revision number of the edit.
      */
     private function doNewDB($conta, $defesa, $evidence, $diff, $subpage = '')
     {
-        $array      = [
-            'type' => 'link',
-            'text' => "Criar DB{$subpage}",
-            'params' => [
-                'action'    => 'edit',
-                'title'     => "Wikipedia:Pedidos a administradores/Discussão de bloqueio/{$conta}{$subpage}",
-                'preload'   => 'Template:DB1/Preload',
-                'preloadparams' => [
-                    $evidence,
-                    "{{subst:#if:$defesa|{{citação2|1=$defesa|2={{subst:#if:$diff|{{dif|$diff}}}}}}}}"
-                ]
-            ]
-        ];
-        return $array;
+        $text  = "{{subst:DB2";
+        $text .= "|";
+        $text .= "1 = $evidence";
+        $text .= "|";
+        $text .= "2 = {{subst:#if:$defesa|{{citação2|1=$defesa|2={{subst:#if:$diff|{{dif|$diff}}}}}}}}";
+        $text .= "|";
+        $text .= "3 = {{subst:#if:$evidence|~~~~~}}";
+        $text .= "|";
+        $text .= "4 = {{subst:#if:$defesa|~~~~~}}";
+        $text .= "}}";
+        return $this->edit(
+            $text, 
+            NULL, 
+            FALSE, 
+            "Criando discussão de bloqueio{$subpage}", 
+            "Wikipedia:Pedidos a administradores/Discussão de bloqueio/{$conta}{$subpage}"
+        );
     }
 
     /**
-     * Generates a link to add a discussion page to the list of pending discussions on Wikipedia.
+     * Add a discussion page to the list of pending discussions on Wikipedia.
      *
      * @param string $conta The name of the account to add to the list.
      * @param string $subpage The subpage for the discussion (optional).
      *
-     * @return array The generated link as an array.
+     * @return int The revision number of the edit.
      */
     private function doAddList($conta, $subpage = '')
     {
-        $array = [
-            'type' => 'link',
-            'text' => 'Publicar DB na lista de pedidos',
-            'params' => [
-                'action'    => 'edit',
-                'title'     => 'Wikipédia:Pedidos a administradores/Discussão de bloqueio/Lista de pedidos',
-                'preload'   => 'Wikipédia:Pedidos a administradores/Discussão de bloqueio/Lista de pedidos/Preload',
-                'section'   => 'new',
-                'nosummary' => 1,
-                'preloadparams' => [
-                    "{$conta}{$subpage}",
-                    $conta
-                ]
-            ]
-        ];
-        return $array;
+        return $this->edit(
+            "{{Ver discussão|Wikipédia:Pedidos a administradores/Discussão de bloqueio/{$conta}{$subpage}|l1=$conta}}", 
+            'append', 
+            FALSE, 
+            "Publicando DB na lista de pedidos", 
+            "Wikipédia:Pedidos a administradores/Discussão de bloqueio/Lista de pedidos"
+        );
     }
 
     /**
-     * Generates the code to update the "MRConduta" template on Wikipedia with a new discussion.
+     * Update the "MRConduta" template on Wikipedia with a new discussion.
      *
      * @param string $conta The name of the account being discussed.
      * @param string $subpage The subpage for the discussion (optional).
      *
-     * @return array The generated code as an array.
+     * @return int The revision number of the edit
      */
-    private function doGenerateMRConduta($conta, $subpage = '')
+    private function doMRConduta($conta, $subpage = '')
     {
         $text = file_get_contents("https://pt.wikipedia.org/w/index.php?title=Template:MRConduta&action=raw");
         $text = preg_replace(
@@ -128,156 +122,109 @@ class BlockingDiscussion extends WikiAphpiUnlogged
             "* [[Wikipédia:Pedidos a administradores/Discussão de bloqueio/{$conta}{$subpage}|$conta]]\n|BloqueioConcluídosTotal",
             $text
         );
-        $array = [
-            'type'      => 'textarea',
-            'id'        => 'panel',
-            'button'    => 'Copiar código do painel',
-            'text'      => $text
-        ];
-        return $array;
+        return $this->edit(
+            $text, 
+            NULL, 
+            FALSE, 
+            "Publicando DB no painel de pedidos", 
+            "Template:MRConduta"
+        );
     }
 
     /**
-     * Generates an array with parameters for a link to edit the "Template:MRConduta" page and replace the existing code with the new code.
-     *
-     * @return array An array with parameters for a link to edit the "Template:MRConduta" page.
-     */
-    private function doPasteMRConduta()
-    {
-        $array = [
-            'type' => 'link',
-            'text' => 'Colar (substituir) novo código no painel',
-            'params' => [
-                'action'    => 'edit',
-                'title'     => 'Template:MRConduta',
-            ]
-        ];
-        return $array;
-    }
-
-    /**
-     * Generates an array with parameters for a link to move the previous discussion page to a subpage.
+     * Move the previous discussion page to a subpage.
      *
      * @param string $conta The username of the blocked user.
-     * @return array An array with parameters for a link to move the previous discussion page to a subpage.
+     * @return string The new page's title after renamed
      */
     private function doMoveOldDB($conta)
     {
-        $array = [
-            'type' => 'link',
-            'text' => 'Mover DB anterior para /1',
-            'params' => [
-                'title'           => "Especial:Mover página/Wikipedia:Pedidos a administradores/Discussão de bloqueio/$conta",
-                'wpNewTitle'      => "Wikipédia:Pedidos a administradores/Discussão de bloqueio/$conta/1",
-                'wpNewTitleNs'    => '4',
-                'wpLeaveRedirect' => '1',
-                'wpReason'        => 'Arquivando discussão anterior'
-            ]
-        ];
-        return $array;
+        return $this->move(
+            "Wikipedia:Pedidos a administradores/Discussão de bloqueio/$conta", 
+            "Wikipédia:Pedidos a administradores/Discussão de bloqueio/$conta/1", 
+            'Arquivando discussão anterior'
+        );
+
     }
 
     /**
-     * Generates an array with parameters for a text area containing code to create a new disambiguation page for the blocked user.
+     * Create a new disambiguation page for the blocked user.
      *
      * @param string $conta The username of the blocked user.
-     * @return array An array with parameters for a text area containing code to create a new disambiguation page for the blocked user.
+     * @return int The revision ID of the edit
      */
-    private function doGenerateDesambig($conta)
+    private function doDesambig($conta)
     {
-        $array = [
-            'type'      => 'textarea',
-            'id'        => 'newdesambig',
-            'button'    => 'Copiar código de desambiguação',
-            'text'      => "{{!Desambiguação}}\n\n*[[/1|1.º pedido]]\n*[[/2|2.º pedido]]\n\n[[Categoria:!Desambiguações de $conta]]\n[[Categoria:!Desambiguações de pedidos de discussão de bloqueio|$conta]]"
-        ];
-        return $array;
+        $text .= "{{!Desambiguação}}\n";
+        $text .= "\n";
+        $text .= "*[[/1|1.º pedido]]\n";
+        $text .= "*[[/2|2.º pedido]]\n";
+        $text .= "\n";
+        $text .= "[[Categoria:!Desambiguações de $conta]]\n";
+        $text .= "[[Categoria:!Desambiguações de pedidos de discussão de bloqueio|$conta]]";
+        return $this->edit(
+            $text, 
+            NULL, 
+            FALSE, 
+            "Publicando página de desambiguação", 
+            "Wikipedia:Pedidos a administradores/Discussão de bloqueio/$conta"
+        );
     }
 
-    /**
-     * Generates an array with parameters for a link to edit the disambiguation page and replace the existing code with the new code.
-     *
-     * @param string $conta The username of the blocked user.
-     * @return array An array with parameters for a link to edit the disambiguation page.
-     */
-    private function doPasteDesambig($conta)
-    {
-        $array = [
-            'type' => 'link',
-            'text' => 'Colar (substituir) novo código para página de desambiguação',
-            'params' => [
-                'action'    => 'edit',
-                'title'     => "Wikipedia:Pedidos a administradores/Discussão de bloqueio/$conta",
-            ]
-        ];
-        return $array;
-    }
 
     /**
-     * Generates an array with the link and params to request/send a mass message for an user's unblocking.
+     * Request/send a mass message for an user's discussion block.
      *
      * @param string $conta The name of the blocked user.
      * @param bool $sysop A boolean indicating if the current user is a sysop or not.
-     * @return array An array with the link and params to request/send a mass message.
+     * @return int|array The revision ID of the edit (not sysop) or an array with the mass message API result.
      */
     private function doRequestMassMessage($conta, $sysop)
     {
+        $params = [
+                'spamlist'  => 'Wikipédia:Pedidos/Discussão de bloqueio/Massmessage',
+                'subject'   => "Discussão de bloqueio de $conta",
+                'message'   => "{{subst:Usuário:Teles/MassMessage/Desbloqueio|1=$conta|3=~~~~~}}}}"
+        ];
         if ($sysop) {
-            $array = [
-                'type'      => 'link',
-                'text'      => 'Enviar mensagens em massa',
-                'params'    => [
-                    'title'     => 'Especial:Mensagens em massa',
-                    'spamlist'  => 'Wikipédia:Pedidos/Discussão de bloqueio/Massmessage',
-                    'subject'   => "Discussão de bloqueio de $conta",
-                    'message'   => "{{subst:Usuário:Teles/MassMessage/Desbloqueio|1=$conta|3=~~~~~}}"
-                ]
+            $params += [
+                'action'    => 'massmessage',
+                'token'     => $this->getCsrfToken()
             ];
+            return $this->do($params);
         } else {
-            $array = [
-                'type'      => 'link',
-                'text'      => 'Enviar mensagens em massa',
-                'params'    => [
-                    'action'        => 'edit',
-                    'title'         => 'Wikipédia:Pedidos/Outros',
-                    'section'       => 'new',
-                    'preloadtitle'  => "Mensagens em massa para discussão de bloqueio do usuário $conta",
-                    'preload'       => 'Wikipédia:Pedidos/Outros/PreloadMassMessageDB',
-                    'preloadparams' => [
-                        $conta,
-                        'https://pt.wikipedia.org/w/index.php?' . http_build_query([
-                            'title'     => 'Especial:Mensagens em massa',
-                            'spamlist'  => 'Wikipédia:Pedidos/Discussão de bloqueio/Massmessage',
-                            'subject'   => "Discussão de bloqueio de $conta",
-                            'message'   => "{{subst:Usuário:Teles/MassMessage/Desbloqueio|1=$conta}}"
-                        ])
-                    ]
-                ]
+            $params += [
+                'title'     => 'Especial:Mensagens em massa'
             ];
+            $link  = 'https://pt.wikipedia.org/w/index.php?' . http_build_query($params);
+            $text = file_get_contents("https://pt.wikipedia.org/w/index.php?title=Project:Pedidos/Outros/PreloadMassMessageDB&action=raw");
+            $text = str_replace('$1', $conta, $text);
+            $text = str_replace('$2',  $link, $text);
+            return $this->edit(
+                $text, 
+                'new', 
+                FALSE, 
+                "Mensagens em massa para discussão de bloqueio do usuário $conta", 
+                'Wikipédia:Pedidos/Outros'
+            );
         }
-        return $array;
     }
 
     /**
-     * Generates a link for notifying a user about their discussion block.
+     * GNotifying a user about their discussion block.
      *
      * @param string $conta The username of the user to notify.
      * @return array An array containing information about the link.
      */
     private function doNotifyUser($conta)
     {
-        $array = [
-            'type' => 'link',
-            'text' => 'Enviar notificação ao usuário',
-            'params' => [
-                'action'    => 'edit',
-                'title'     => "User talk:$conta",
-                'section'   => 'new',
-                'nosummary' => '1',
-                'preload'   => 'Predefinição:Notificação de discussão de bloqueio/Preload'
-            ]
-        ];
-        return $array;
+        return $this->edit(
+            '{{subst:Notificação de discussão de bloqueio}}', 
+            'new', 
+            FALSE, 
+            "Notificação de discussão de bloqueio", 
+            "User talk:$conta"
+        );
     }
 
     /**
@@ -301,14 +248,15 @@ class BlockingDiscussion extends WikiAphpiUnlogged
      * Runs the script for a given user account, generating and returning the required actions to be taken as an array of strings.
      *
      * @param string $conta The name of the user account to generate the actions for.
-     * @param bool $sysop Indicates if the user performing the action is a sysop or not.
      * @param string $evidence The evidence string to be used in the new discussion page.
      * @param string $defesa The defense string to be used in the new discussion page.
      * @param string $diff The diff string to be used in the new discussion page.
-     * @return array The array containing the required actions as strings.
+     * @param array $user Info about the user from OAuth.
+     * @return void
     */
-    public function run($conta, $sysop, $evidence, $defesa, $diff)
+    public function run($conta, $evidence, $defesa, $diff, $user)
     {
+        $sysop = in_array('massmessage', $user['rights']);
 
         $result = $this->getCategory($conta);
         $isFirst = isset($result['-1']);
@@ -316,20 +264,15 @@ class BlockingDiscussion extends WikiAphpiUnlogged
 
         $index = $isFirst ? '' : ($isDesambig ? $this->getCount($conta) : '/2');
 
-        $echo = [];
-        $echo[] = $this->doNewDB($conta, $defesa, $evidence, $diff, $index);
-        $echo[] = $this->doAddList($conta, $index);
-        $echo[] = $this->doGenerateMRConduta($conta, $index);
-        $echo[] = $this->doPasteMRConduta();
+        $this->doNewDB($conta, $defesa, $evidence, $diff, $index);
+        $this->doAddList($conta, $index);
+        $this->doMRConduta($conta, $index);
         if (!$isFirst && !$isDesambig) {
-            $echo[] = $this->doMoveOldDB($conta);
-            $echo[] = $this->doGenerateDesambig($conta);
-            $echo[] = $this->doPasteDesambig($conta);
+            $this->doMoveOldDB($conta);
+            $this->doDesambig($conta);
         }
-        $echo[] = $this->doRequestMassMessage($conta, $sysop);
-        $echo[] = $this->doNotifyUser($conta);
-
-        return $echo;
+        $this->doRequestMassMessage($conta, $sysop);
+        $this->doNotifyUser($conta);
     }
 }
 
@@ -341,15 +284,15 @@ class BlockingDiscussion extends WikiAphpiUnlogged
  * If the `conta` parameter is not set, the code block returns `false`.
  */
 $conta =    filter_input(INPUT_POST, 'conta',    FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$sysop =    filter_input(INPUT_POST, 'sysop',    FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $evidence = filter_input(INPUT_POST, 'evidence', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $defesa =   filter_input(INPUT_POST, 'defesa',   FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $diff =     filter_input(INPUT_POST, 'diff',     FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$discussion = new BlockingDiscussion('https://pt.wikipedia.org/w/api.php', $db_consumer_token, $db_secret_token);
+$user = $discussion->checkLogin();
 if ($conta) {
-    $discussion = new BlockingDiscussion('https://pt.wikipedia.org/w/api.php');
-    $echo = $discussion->run($conta, $sysop, $evidence, $defesa, $diff);
+    $run = $discussion->run($conta, $evidence, $defesa, $diff, $user);
 } else {
-    $echo = false;
+    $run = false;
 }
 
 ?><!DOCTYPE html>
@@ -359,24 +302,24 @@ if ($conta) {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="./tpar/w3.css">
-        <script>function copyclip(inputId) {
-            var e = document.getElementById(inputId);
-
-            if (e) {
-                navigator.clipboard.writeText(e.value)
-                .then(() => console.log('Text copied to clipboard'))
-                .catch((err) => console.error('Failed to copy text: ', err));
-            } else {
-                console.log('Element not found: ' + inputId);
-            }
-        }</script>
     </head>
     <body>
         <div class="w3-container" id="menu">
             <div class="w3-content" style="max-width:800px">
                 <h5 class="w3-center w3-padding-48"><span class="w3-tag w3-wide">ASSISTENTE DE ABERTURA DE DISCUSSÕES DE BLOQUEIO</span></h5>
-                <div class="w3-row-padding w3-center w3-margin-top">
-                    <div class="w3-half">
+                <div class="w3-row-padding w3-center w3-padding-8 w3-margin-top">
+                    <div class="w3-container w3-padding-12 w3-card w3-center">
+                        <?php if($user): ?>
+                            <p>Olá <?=$user['username']?>!</p>
+                        <?php else: ?>
+                            <p>Olá! Você precisará se identificar 
+                                <a href="<?=$_SERVER['SCRIPT_NAME']?>?oauth=seek">aqui</a>
+                            antes de usar a ferramenta.</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php if($user): ?>
+                    <div class="w3-row-padding w3-center w3-margin-top">
                         <form method="post">
                             <div class="w3-container w3-padding-48 w3-card">
                                 <p class="w3-center w3-wide">NOME DO USUÁRIO</p>
@@ -384,13 +327,6 @@ if ($conta) {
                                     <input class="w3-input w3-padding-16 w3-border"
                                     value='<?=$conta??''?>'
                                     type="text" name="conta" placeholder="Usuário">
-                                </p>
-                                <br>
-                                <p class="w3-center w3-wide">VOCÊ É ADMINISTRADOR?</p>
-                                <p>
-                                    <input name="sysop" class="w3-check" type="checkbox"
-                                    <?=(@$sysop)?"checked":''?>>
-                                    <label>Sim</label>
                                 </p>
                                 <br>
                                 <p class="w3-center w3-wide">EVIDÊNCIAS:</p>
@@ -412,53 +348,12 @@ if ($conta) {
                                     value="<?=$diff??''?>">
                                 </p>
                                 <p>
-                                    <button class="w3-button w3-block w3-black w3-margin-top" type="submit">Preparar lista de links</button>
+                                    <button class="w3-button w3-block w3-black w3-margin-top" type="submit">Abrir discussão de bloqueio</button>
                                 </p>
                             </div>
                         </form>
                     </div>
-                    <div class="w3-half">
-                        <div class="w3-container w3-padding-48 w3-card">
-                            <ul class='w3-ul w3-hoverable w3-border'>
-                                <?php if (!$echo): ?>
-                                    <p>Preencha o formulário ao lado</p>
-                                <?php else: ?>
-                                    <p class='w3-center w3-wide'>DISCUSSÃO DE BLOQUEIO</p>
-                                    <h3 class='w3-center'><b><?=$conta??''?></b></h3>
-                                    <small>
-                                        <b>Clique em cada link abaixo na ordem apresentada.</b>
-                                        Ao clicar, uma nova janela será aberta para a edição da página. Em seguida, clique em "Publicar alterações".
-                                        <br>
-                                        Esta ferramenta está sujeita a erros, então não esqueça de verificar se as edições foram feitas corretamente.
-                                    </small>
-                                    <br>
-                                    <br>
-                                    <ul class='w3-ul w3-hoverable w3-border'>
-                                    <?php foreach ($echo as $line): ?>
-                                        <?php if ($line['type'] == 'link'): ?>
-                                            <li
-                                            class="w3-padding-small w3-left-align"
-                                            style="cursor: pointer;"
-                                            onclick="window.open(
-                                                'https://pt.wikipedia.org/w/index.php?<?=http_build_query($line['params'])?>'
-                                            )"><?=$line['text']?></li>
-                                        <?php else: ?>
-                                            <li class="w3-padding-small w3-left-align">
-                                                <textarea
-                                                readonly rows='1' cols='2' id='<?=$line['id']?>'
-                                                style='resize: none; margin-bottom: -8px;'
-                                                ><?=$line['text']?></textarea>
-                                                <button
-                                                onclick="copyclip('<?=$line['id']?>')"
-                                                ><?=$line['button']?></button>
-                                            </li>
-                                        <?php endif; ?>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
         <hr>

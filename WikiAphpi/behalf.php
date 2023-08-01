@@ -324,6 +324,6 @@ trait WikiAphpiBehalf
         }
 
         // Return the username retrieved from the payload
-        return $payload['username'];
+        return $payload;
     }
 }
