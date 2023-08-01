@@ -86,7 +86,7 @@ trait WikiAphpiDo
      *
      * @param string $page The title of the page to delete.
      * @param string $reason The reason for deleting the page.
-     * @return bool True on success, false on failure.
+     * @return int|bool Log ID on success, false on failure.
      */
     public function delete($page, $reason)
     {
@@ -106,6 +106,36 @@ trait WikiAphpiDo
         }
 
         //Retorna número do log
+        return $result;
+    }
+
+    /**
+     * Moves a page
+     *
+     * @param string $page The title of the page to move.
+     * @param string $reason The reason for moving the page.
+     * @return string|bool New page title on success, false on failure.
+     */
+    public function move($oldTitle, $newTitle, $reason, $moveTalk = 1) 
+    {
+        $params = [
+            "action"        => "move",
+            "from"          => $oldTitle,
+            "to"            => $newTitle,
+            "reason"        => $reason,
+            "movetalk"      => $moveTalk,
+            "token"         => $this->getCsrfToken(),
+            "format"        => "php"
+        ];
+        $resultApi = $this->performRequest($params, true);
+        $result = $resultApi['move']["to"] ?? false;
+
+        //Retorna número da revisão
+        if ($result === false) {
+            throw new ContentRetrievalException($resultApi);
+        }
+
+        //Retorna novo nome da página
         return $result;
     }
 
