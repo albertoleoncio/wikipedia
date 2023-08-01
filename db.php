@@ -155,7 +155,7 @@ class BlockingDiscussion extends WikiAphpiOAuth
      */
     private function doDesambig($conta)
     {
-        $text .= "{{!Desambiguação}}\n";
+        $text  = "{{!Desambiguação}}\n";
         $text .= "\n";
         $text .= "*[[/1|1.º pedido]]\n";
         $text .= "*[[/2|2.º pedido]]\n";
@@ -196,7 +196,7 @@ class BlockingDiscussion extends WikiAphpiOAuth
             $params += [
                 'title'     => 'Especial:Mensagens em massa'
             ];
-            $link  = 'https://pt.wikipedia.org/w/index.php?' . http_build_query($params);
+            $link = 'https://pt.wikipedia.org/w/index.php?' . http_build_query($params);
             $text = file_get_contents("https://pt.wikipedia.org/w/index.php?title=Project:Pedidos/Outros/PreloadMassMessageDB&action=raw");
             $text = str_replace('$1', $conta, $text);
             $text = str_replace('$2',  $link, $text);
