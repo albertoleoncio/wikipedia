@@ -391,7 +391,7 @@ class WikiAphpiOAuth implements WikiAphpiInterface
             'oauth_consumer_key'     => $this->consumerKey,
             'oauth_token'            => $_SESSION['sessionKey'] ?? '',
             'oauth_version'          => '1.0',
-            'oauth_nonce'            => hash("sha512",  microtime() . random_int(0,99) ),
+            'oauth_nonce'            => bin2hex(random_bytes(16)),
             'oauth_timestamp'        => time(),
             'oauth_signature_method' => 'HMAC-SHA1',
         );
