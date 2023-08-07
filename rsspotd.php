@@ -156,6 +156,11 @@ class PotdRss extends WikiAphpiUnlogged
         $dayTitle = $thisDay["slots"]["main"]["*"];
         $imageInfo = $this->fetchImageInfo($dayTitle);
         $description = $this->buildDescription($dayTitle, $imageInfo);
+        $instagram = str_replace(
+            'Veja mais informações no link.', 
+            "\nPara mais informações sobre essa imagem, entre no endereço da bio e pesquise por Imagem:{$imageInfo['filename']}", 
+            $description
+        );
         $link = "https://pt.wikipedia.org/wiki/WP:Imagem_em_destaque/" . rawurlencode($dayTitle);
         $guid = $thisDay["revid"];
         $timestamp = date('D, d M Y H:i:s O', strtotime($thisDay["timestamp"]));
@@ -164,6 +169,7 @@ class PotdRss extends WikiAphpiUnlogged
         return [
             'title'         => $dayTitle,
             'description'   => $description,
+            'instagram'     => $instagram,
             'link'          => $link,
             'guid'          => $guid,
             'timestamp'     => $timestamp,
@@ -216,6 +222,7 @@ class PotdRss extends WikiAphpiUnlogged
             $item->addChild('pubDate', htmlspecialchars($potd_item["timestamp"]));
             $item->addChild('guid', 'https://pt.wikipedia.org/w/index.php?diff=' . $potd_item["guid"]);
             $item->addChild('description', htmlspecialchars($potd_item["description"]));
+            $item->addChild('instagram', htmlspecialchars($potd_item["instagram"]));
             $enclosure = $item->addChild('enclosure');
             $enclosure->addAttribute('url', htmlspecialchars($potd_item["image_url"]));
             $enclosure->addAttribute('length', htmlspecialchars($potd_item["image_length"]));
