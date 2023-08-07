@@ -182,7 +182,9 @@ if (date("N") == 7) {
   $mv[] = array(
     "title"         => $first_key,
     "description"   => "$first_key_display foi o artigo mais visto na Wikipédia em português na semana passada. Foi visto $first_value vezes.\nOutros artigos de destaque da semana foram: $second_key_display ($second_value) e $third_key_display ($third_value)\n\n#wikipedia #maisvistos #conhecimentolivre",
-    "instagram"     => busca_imagem(rawurlencode($first_key_display)),
+    "instagram"     =>  busca_imagem(rawurlencode($first_key_display)) ?? 
+                        busca_imagem(rawurlencode($second_key_display)) ?? 
+                        busca_imagem(rawurlencode($third_key_display)),
     "link"          => "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($first_key_display),
     "timestamp"     => date('D, d M Y H:i:s O',strtotime("midnight")),
     "guid"          => strtotime("midnight")
