@@ -4,32 +4,28 @@ require_once 'WikiAphpi/main.php';
 header('Content-type: application/xml');
 
 /**
- * A classe PotdRss é responsável por buscar as imagens do dia (POTD) mais recentes que foram
- * publicadas via bot no Twitter, extrair as informações de texto da imagem da página "Imagem
- * em Destaque" da Wikipédia, buscar informações adicionais sobre a imagem, como o nome do
- * arquivo, o tamanho e o tipo do arquivo, e buscar metadados adicionais da imagem através da
- * API do MediaWiki. As informações são devolvidas em um RSS ATOM.
+ * A classe PotdRss é responsável por buscar a imagem do dia (POTD) mais recentes que foi
+ * publicada na Wikipédia em português, extrair as informações de texto da imagem da página 
+ * buscar informações adicionais sobre a imagem, como o nome do arquivo, o tamanho e o tipo 
+ * do arquivo, e buscar metadados adicionais da imagem através da API do MediaWiki. As 
+ * informações são devolvidas em um RSS ATOM.
  */
 class PotdRss extends WikiAphpiUnlogged
 {
 
     /**
-     * Recupera os dados da imagem do dia (POTD) recentes já publicadas no Twitter
-     * @return array contendo os títulos das últimas 5 imagens do dia
+     * Recupera o título da imagem do dia (POTD) mais recente já publicada
+     * @return array Título da imagem (ex: 5 de janeiro de 2023)
      */
     private function fetchPotdData()
     {
-        $potd_params = [
-            'action'  => 'query',
+        $atual_params = [
+            'action'  => 'expandtemplates',
             'format'  => 'php',
-            'prop'    => 'revisions',
-            'titles'  => 'Usuário(a):AlbeROBOT/POTD',
-            'rvprop'  => 'timestamp|content|ids',
-            'rvslots' => 'main',
-            'rvlimit' => 5
+            'prop'    => 'wikitext',
+            'text'    => "{{CURRENTDAY}} de {{CURRENTMONTHNAME}} de {{CURRENTYEAR}}"
         ];
-        $potd_api = $this->see($potd_params)["query"]["pages"]["6720820"]["revisions"];
-        return $potd_api;
+        return array($this->see($atual_params)['expandtemplates']['wikitext']);
     }
 
     /**
@@ -151,9 +147,8 @@ class PotdRss extends WikiAphpiUnlogged
      * @param array $image Array com informações do log da Imagem do Dia
      * @return array Array com as informações formatadas para o RSS.
      */
-    private function buildRssItem($thisDay)
+    private function buildRssItem($dayTitle)
     {
-        $dayTitle = $thisDay["slots"]["main"]["*"];
         $imageInfo = $this->fetchImageInfo($dayTitle);
         $description = $this->buildDescription($dayTitle, $imageInfo);
         $instagram = str_replace(
@@ -162,8 +157,8 @@ class PotdRss extends WikiAphpiUnlogged
             $description
         );
         $link = "https://pt.wikipedia.org/wiki/WP:Imagem_em_destaque/" . rawurlencode($dayTitle);
-        $guid = $thisDay["revid"];
-        $timestamp = date('D, d M Y H:i:s O', strtotime($thisDay["timestamp"]));
+        $guid = crc32($dayTitle);
+        $timestamp = date('D, d M Y H:i:s O', strtotime("today"));
         $fileInfo = $this->fetchFileInfo($imageInfo['filename']);
 
         return [
