@@ -149,6 +149,7 @@ if (date("N") == 7) {
     $fp = [
         "AMBEV",
         "Instagram",
+        "Facebook",
         "Estados_Unidos",
         "YouTube",
         "Cleópatra",
@@ -187,7 +188,7 @@ if (date("N") == 7) {
                         busca_imagem(rawurlencode($third_key_display)),
     "link"          => "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($first_key_display),
     "timestamp"     => date('D, d M Y H:i:s O',strtotime("midnight")),
-    "guid"          => strtotime("midnight")
+    "guid"          => strtotime("midnight")+1
     );
 }
 
