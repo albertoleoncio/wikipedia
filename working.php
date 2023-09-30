@@ -114,7 +114,7 @@ foreach ($quality as $index => $item) {
     $title_exploded = explode('|', $title);
     $title = end($title_exploded);
 
-    $wikitext .= "|-\n| {{Barra de progresso|${item['1']}|${item['2']}|${item['3']}|${item['4']}|${item['0']}|${item['x']}}}\n| [[${index}|${title}]]\n";
+    $wikitext .= "|-\n| {{Barra de progresso|{$item['1']}|{$item['2']}|{$item['3']}|{$item['4']}|{$item['0']}|{$item['x']}}}\n| [[{$index}|{$title}]]\n";
 }
 $wikitext .= "|}<noinclude>{{documentação}}</noinclude>";
 

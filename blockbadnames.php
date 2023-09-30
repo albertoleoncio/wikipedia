@@ -167,7 +167,7 @@ class BadNames extends WikiAphpiLogged {
                 return '';
             } else {
                 $user = $this->getUserFromUserTalk($userTalk);
-                return "\n\n{{subst:Nome de usuário impróprio/BloqBot|${user}}}";
+                return "\n\n{{subst:Nome de usuário impróprio/BloqBot|{$user}}}";
             }
         }
     }
