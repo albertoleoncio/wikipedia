@@ -189,7 +189,7 @@ class BlockingDiscussion extends WikiAphpiOAuth
         if ($sysop) {
             $params += [
                 'action'    => 'massmessage',
-                'token'     => $this->getCsrfToken()
+                'token'     => $this->getCsrfToken(),
             ];
             return $this->do($params);
         } else {
@@ -200,6 +200,7 @@ class BlockingDiscussion extends WikiAphpiOAuth
             $text = file_get_contents("https://pt.wikipedia.org/w/index.php?title=Project:Pedidos/Outros/PreloadMassMessageDB&action=raw");
             $text = str_replace('$1', $conta, $text);
             $text = str_replace('$2',  $link, $text);
+            $text = str_replace('<noinclude />', '', $text);
             return $this->edit(
                 $text, 
                 'new', 

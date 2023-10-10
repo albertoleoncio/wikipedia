@@ -103,7 +103,7 @@ trait WikiAphpiSee
      *
      * @return string The CSRF token.
      */
-    private function getCsrfToken()
+    protected function getCsrfToken()
     {
         //Coleta token
         $params = [
