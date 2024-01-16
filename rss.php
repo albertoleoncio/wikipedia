@@ -155,6 +155,8 @@ if (date("N") == 7) {
         "Cleópatra",
         "Canal_Brasil",
         "Sony_Channel",
+        "XXx",
+        "ChatGPT",
     ];
     foreach ($fp as $key) {
         unset($list[$key]);
