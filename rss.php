@@ -129,8 +129,8 @@ if (date("N") == 7) {
     $list = [];
     for ($i=-1; $i > -8 ; $i--) { 
         $day = date("Y/m/d", strtotime("$i day"));
-        $json_all = file_get_contents("https://wikimedia.org/api/rest_v1/metrics/pageviews/top/pt.wikipedia.org/all-access/$day");
-        $api_all = json_decode($json_all, true)["items"]["0"]["articles"];
+        $json_all = @file_get_contents("https://wikimedia.org/api/rest_v1/metrics/pageviews/top/pt.wikipedia.org/all-access/$day");
+        $api_all = json_decode($json_all, true)["items"]["0"]["articles"] ?? [];
 
         foreach ($api_all as $page) {
             $title = $page['article'];

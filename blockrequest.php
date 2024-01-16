@@ -75,8 +75,11 @@ class BloqBotRequests extends WikiAphpiLogged
             'letitle'   => $page
         ];
 
-        $queryResult = $this->see($info_params);
-        return $queryResult['query']['logevents']['0'] ?? false;
+        $queryResult = $this->see($info_params)['query']['logevents']['0'];
+        if (!isset($queryResult['params']['description'])) {
+            return false;
+        }
+        return $queryResult ?? false;
     }
 
     /**
