@@ -274,6 +274,8 @@ class BlockingDiscussion extends WikiAphpiOAuth
         }
         $this->doRequestMassMessage($conta, $sysop);
         $this->doNotifyUser($conta);
+
+        return true;
     }
 }
 
@@ -310,7 +312,11 @@ if ($conta) {
                 <h5 class="w3-center w3-padding-48"><span class="w3-tag w3-wide">ASSISTENTE DE ABERTURA DE DISCUSSÕES DE BLOQUEIO</span></h5>
                 <div class="w3-row-padding w3-center w3-padding-8 w3-margin-top">
                     <div class="w3-container w3-padding-12 w3-card w3-center">
-                        <?php if($user): ?>
+                        <?php if($run): ?>
+                            <p>Olá <?=$user['username']?>!</p>
+                            <p>Pedido aberto com sucesso!</p>
+                            <p>Para abrir um novo pedido, <a href="javascript:window.location.href = window.location.href;">clique aqui</a>.</p>
+                        <?php elseif($user): ?>
                             <p>Olá <?=$user['username']?>!</p>
                         <?php else: ?>
                             <p>Olá! Você precisará se identificar 
@@ -319,14 +325,13 @@ if ($conta) {
                         <?php endif; ?>
                     </div>
                 </div>
-                <?php if($user): ?>
+                <?php if($user && !$run) : ?>
                     <div class="w3-row-padding w3-center w3-margin-top">
                         <form method="post">
                             <div class="w3-container w3-padding-48 w3-card">
                                 <p class="w3-center w3-wide">NOME DO USUÁRIO</p>
                                 <p class="w3-text-grey">
                                     <input class="w3-input w3-padding-16 w3-border"
-                                    value='<?=$conta??''?>'
                                     type="text" name="conta" placeholder="Usuário">
                                 </p>
                                 <br>
@@ -334,19 +339,18 @@ if ($conta) {
                                 <p>
                                     <textarea class="w3-input w3-padding-16 w3-border"
                                     id="evidence" name="evidence" rows="4" cols="50"
-                                    placeholder="Insira aqui as evidências para a solicitação do bloqueio. Utilize [[wikicode]] e não esqueça de assinar com ~~~~."><?=$evidence??''?></textarea>
+                                    placeholder="Insira aqui as evidências para a solicitação do bloqueio. Utilize [[wikicode]] e não esqueça de assinar com ~~~~."></textarea>
                                 </p>
                                 <br>
                                 <p class="w3-center w3-wide">DEFESA:</p>
                                 <p>
-                                    <textarea class="w3-input w3-padding-16 w3-border" id="defesa" name="defesa" rows="4" cols="50" placeholder="Insira aqui a defesa, caso fornecida, acompanhada do diff abaixo. Caso contrário, deixe ambos os campos em branco."><?=$defesa??''?></textarea>
+                                    <textarea class="w3-input w3-padding-16 w3-border" id="defesa" name="defesa" rows="4" cols="50" placeholder="Insira aqui a defesa, caso fornecida, acompanhada do diff abaixo. Caso contrário, deixe ambos os campos em branco."></textarea>
                                 </p>
                                 <br>
                                 <p class="w3-center w3-wide">DIFF DA DEFESA:</p>
                                 <p class="w3-text-grey">
                                     <input class="w3-input w3-padding-16 w3-border"
-                                    type="text" name="diff" placeholder="67890123"
-                                    value="<?=$diff??''?>">
+                                    type="text" name="diff" placeholder="67890123">
                                 </p>
                                 <p>
                                     <button class="w3-button w3-block w3-black w3-margin-top" type="submit">Abrir discussão de bloqueio</button>
