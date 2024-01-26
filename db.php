@@ -184,7 +184,7 @@ class BlockingDiscussion extends WikiAphpiOAuth
         $params = [
                 'spamlist'  => 'Wikipédia:Pedidos/Discussão de bloqueio/Massmessage',
                 'subject'   => "Discussão de bloqueio de $conta",
-                'message'   => "{{subst:Usuário:Teles/MassMessage/Desbloqueio|1=$conta|3=~~~~~}}}}"
+                'message'   => "{{subst:Usuário:Teles/MassMessage/Desbloqueio|1=$conta|3=~~~~~}}"
         ];
         if ($sysop) {
             $params += [
