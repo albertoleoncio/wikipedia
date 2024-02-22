@@ -73,7 +73,7 @@ class SourceTranslator extends WikiAphpiUnlogged
         // Generate wikitext for the range of pages
         $pages = '';
         for ($i = $from; $i <= $to; $i++) {
-            $pages .= "{{subst:Page:$index/$i}}";
+            $pages .= "{{subst:Page:$index/$i}} ";
         }
 
         // Return the parsed wikitext after processing

@@ -157,6 +157,7 @@ if (date("N") == 7) {
         "Sony_Channel",
         "XXx",
         "ChatGPT",
+        "Porno_Graffitti"
     ];
     foreach ($fp as $key) {
         unset($list[$key]);
@@ -190,7 +191,7 @@ if (date("N") == 7) {
                         busca_imagem(rawurlencode($third_key_display)),
     "link"          => "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($first_key_display),
     "timestamp"     => date('D, d M Y H:i:s O',strtotime("midnight")),
-    "guid"          => strtotime("midnight")+1
+    "guid"          => strtotime("midnight")+2
     );
 }
 
