@@ -1,6 +1,20 @@
 <?php
 header('Content-type: application/xml');
 
+function resolveRedirect($address)
+{
+    $ch = curl_init($address);
+    curl_setopt($ch, CURLOPT_NOBODY, 1);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+    curl_setopt($ch, CURLOPT_AUTOREFERER, 1);
+    curl_setopt($ch, CURLOPT_HEADER, false);
+    $response   = curl_exec($ch);
+    $location   = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+    curl_close($ch);
+
+    return $location;
+}
+
 /////////
 //
 // IMAGENS
@@ -64,7 +78,7 @@ foreach ($ead_api as $article) {
         "title"         => $article["slots"]["main"]["*"],
         "description"   => $article["slots"]["main"]["*"]." é um artigo de destaque na Wikipédia!\n\nIsso significa que foi identificado como um dos melhores artigos produzidos pela comunidade da Wikipédia.\n\nO que achou? Ainda tem como melhorar?\n\n#wikipedia #ptwikipedia #ptwiki #conhecimentolivre #artigodedestaque",
         "instagram" => busca_imagem(rawurlencode($article["slots"]["main"]["*"])),
-        "link"          => "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($article["slots"]["main"]["*"]),
+        "link"          => resolveRedirect("https://pt.wikipedia.org/wiki/".rawurlencode($article["slots"]["main"]["*"])),
         "timestamp"     => date('D, d M Y H:i:s O',strtotime($article["timestamp"])),
         "guid"          => $article["revid"]
     );
@@ -88,7 +102,7 @@ foreach ($sq_api as $prop) {
         "title"         => $title["0"]["0"],
         "description"   => "Você sabia que...\n\n".$content["0"]["0"]."\n\n#wikipedia #ptwikipedia #ptwiki #conhecimentolivre #wikicuriosidade #sabiaque",
         "instagram" => busca_imagem($title["0"]["0"]),
-        "link"          => str_replace('https://pt.wikipedia.org/wiki/', 'https://pt.wikipedia.org/w/index.php?title=', $address["0"]["0"]),
+        "link"          => resolveRedirect(str_replace('https://pt.wikipedia.org/wiki/', 'https://pt.wikipedia.org/w/index.php?title=', $address["0"]["0"])),
         "timestamp"     => date('D, d M Y H:i:s O',strtotime($prop["timestamp"])),
         "guid"          => $prop["revid"]
     );
@@ -111,7 +125,7 @@ foreach ($ea_api as $event) {
         "title"         => $title["1"]["0"],
         "description"   => $text."\n\nEsse é um evento recente ou em curso que está sendo acompanhado por nossas voluntárias e voluntários. Veja mais detalhes no link.\n\n#wikipedia #ptwikipedia #ptwiki #conhecimentolivre #eventosatuais",
         "instagram" => busca_imagem(rawurlencode($title["1"]["0"])),
-        "link"          => "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($title["1"]["0"]),
+        "link"          => resolveRedirect("https://pt.wikipedia.org/w/index.php?title=".rawurlencode($title["1"]["0"])),
         "timestamp"     => date('D, d M Y H:i:s O',strtotime($event["timestamp"])),
         "guid"          => $event["revid"]
     );
@@ -189,7 +203,7 @@ if (date("N") == 7) {
     "instagram"     =>  busca_imagem(rawurlencode($first_key_display)) ?? 
                         busca_imagem(rawurlencode($second_key_display)) ?? 
                         busca_imagem(rawurlencode($third_key_display)),
-    "link"          => "https://pt.wikipedia.org/w/index.php?title=".rawurlencode($first_key_display),
+    "link"          => resolveRedirect("https://pt.wikipedia.org/w/index.php?title=".rawurlencode($first_key_display)),
     "timestamp"     => date('D, d M Y H:i:s O',strtotime("midnight")),
     "guid"          => strtotime("midnight")+2
     );
