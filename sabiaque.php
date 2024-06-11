@@ -88,6 +88,55 @@ class SabiaQue extends WikiAphpiLogged
     }
 
     /**
+     * Retrieves the creator of a Wikipedia article.
+     * @param string $article The name of the article to retrieve the creator from.
+     * @return string|null The username of the article creator, or null if the creator is a bot, a (b)locked user, or an IP address.
+     */
+    private function retrieveArticleCreator($article)
+    {
+        $creatorParams = [
+            'action'    => 'query',
+            'format'    => 'php',
+            'prop'      => 'revisions',
+            'titles'    => $article,
+            'rvlimit'   => '1',
+            'rvprop'    => 'user',
+            'rvdir'     => 'newer'
+        ];
+        $creator = $this->see($creatorParams)['query']['pages'];
+        $creator = reset($creator);
+        $creator = $creator['revisions']['0']['user'];
+
+        // Check if user is a IP
+        if (filter_var($creator, FILTER_VALIDATE_IP)) {
+            return null;
+        }
+
+        // Verify if user is not a bot, a blocked or a locked user
+        $userParams = [
+            'action'    => 'query',
+            'format'    => 'php',
+            'list'      => 'users',
+	        'meta'      => 'globaluserinfo',
+            'usprop'    => 'groups|blockinfo',
+            'ususers'   => $creator,
+            'guiuser'   => $creator
+        ];
+        $get = $this->see($userParams)['query'];
+        $local = $get['users']['0'];
+        $global = $get['globaluserinfo'];
+        if (
+            isset($local['blockid']) ||
+            in_array('bot', $local['groups']) ||
+            in_array($global['locked'])
+        ) {
+            return null;
+        }
+
+        return $creator;
+    }
+
+    /**
      * Extracts the nomination text from a proposition using a regular expression.
      * @param string $proposition The proposition to extract the text from.
      * @param string $regex The regular expression pattern to use for matching the text.
@@ -195,9 +244,9 @@ class SabiaQue extends WikiAphpiLogged
             'titles'    => $article,
             'redirects' => 1
         ];
-        $Page_renamed = $this->see($redirectParams);
-        if (isset($Page_renamed["query"]["redirects"])) {
-            $article = $Page_renamed["query"]["redirects"][0]["to"];
+        $page_renamed = $this->see($redirectParams);
+        if (isset($page_renamed["query"]["redirects"])) {
+            $article = $page_renamed["query"]["redirects"][0]["to"];
         }
 
         // Get the article talk page
@@ -210,7 +259,7 @@ class SabiaQue extends WikiAphpiLogged
         }
 
         // Checks if the template already exists. If yes, insert a new template at the end of the section. If not...
-        if (strpos($html, "SabiaQueDiscussão") == false) {
+        if (!strpos($html, "SabiaQueDiscussão")) {
             $html .= "\n\n";
             $html .= "{{SabiaQueDiscussão\n";
             $html .= "|data1    = {$timestamp}\n";
@@ -220,7 +269,7 @@ class SabiaQue extends WikiAphpiLogged
 
             //From the maximum number (10), check which is the highest number found.
             $n = 10;
-            while ($n > 0 AND strpos($html, "entrada{$n}") == FALSE) {
+            while ($n > 0 && !strpos($html, "entrada{$n}")) {
                 $n--;
             }
 
@@ -295,17 +344,17 @@ class SabiaQue extends WikiAphpiLogged
 
 
     /**
-     * Compiles the content and page name for a congratulatory message to the nominator
+     * Compiles the content and page name for a congratulatory message to the nominator/creator
      * of a newly approved article to be added to their user talk page.
-     * @param string $nominator The username of the nominator.
+     * @param string $user The user name.
      * @param string $article The article of the newly approved fact.
      * @param string $new The content of the newly approved fact.
      * @return array An array with the compiled message content and page name.
      */
-    private function compileNominatorTalkPage($nominator, $article, $new)
+    private function compileUserTalkPage($user, $article, $new, $creator = false)
     {
         // Define the page name.
-        $page = "Usuário Discussão:".$nominator;
+        $page = "Usuário Discussão:".$user;
 
         // Get the redirect (if any) for the user name
         $redirectParams = [
@@ -314,9 +363,9 @@ class SabiaQue extends WikiAphpiLogged
             'titles'    => $page,
             'redirects' => 1
         ];
-        $Page_renamed = $this->see($redirectParams);
-        if (isset($Page_renamed["query"]["redirects"])) {
-            $page = $Page_renamed["query"]["redirects"][0]["to"];
+        $page_renamed = $this->see($redirectParams);
+        if (isset($page_renamed["query"]["redirects"])) {
+            $page = $page_renamed["query"]["redirects"][0]["to"];
         }
 
         // Compile the congratulatory message content.
@@ -325,6 +374,9 @@ class SabiaQue extends WikiAphpiLogged
         $html .= "|data=".utf8_encode(strftime('%d de %B de %Y'))."\n";
         $html .= "|curiosidade=…{$new}\n";
         $html .= "|arquivo=".utf8_encode(strftime('%Y/%m'))."\n";
+        if ($creator) {
+            $html .= "|criador=sim\n";
+        }
         $html .= "}} --~~~~";
 
         // Return the compiled message content and page name.
@@ -424,17 +476,23 @@ class SabiaQue extends WikiAphpiLogged
         list($oldFact,          $templateCode)      = $this->compileTemplate(           $newFact,   $templatePage);
         list($articleTalkCode,  $articleTalkPage)   = $this->compileArticleTalk(        $article,   $newFact);
         list($recentCode,       $recentSection)     = $this->compileRecent(             $oldFact,   $recentPage);
-        list($nominatorMessage, $nominatorTalkPage) = $this->compileNominatorTalkPage(  $nominator, $article, $newFact);
+        list($nominatorMessage, $nominatorTalkPage) = $this->compileUserTalkPage(       $nominator, $article, $newFact);
         list($archiveCode,      $archivePage)       = $this->composeArchive(            $nomination);
         list($tweet,            $tweetID)           = $this->doTweet(                   $newFact,   $article, $tokens);
 
-        $this->edit($templateCode,      NULL,           FALSE, "bot: (1/6) Inserindo SabiaQue", $templatePage);
-        $this->edit($articleTalkCode,   0,              FALSE, "bot: (2/6) Inserindo SabiaQueDiscussão", $articleTalkPage);
-        $this->edit($recentCode,        $recentSection, FALSE, "bot: (3/6) Inserindo Arquivo/Recentes", $recentPage);
-        $this->edit($archiveCode,       'append',       FALSE, "bot: (4/6) Inserindo Propostas/Arquivo", $archivePage);
-        $this->edit('',                 1,              FALSE, "bot: (5/6) Arquivando proposição publicada", $approvedNominationPage);
-        $this->edit($nominatorMessage,  'append',       FALSE, "bot: (6/6) Inserindo ParabénsSQ", $nominatorTalkPage);
-        $this->edit($tweet,             NULL,           FALSE, "bot: (log) Registro de última proposição inserida", $logPage);
+        $this->edit($templateCode,      null,           false, "bot: (1/6) Inserindo SabiaQue", $templatePage);
+        $this->edit($articleTalkCode,   0,              false, "bot: (2/6) Inserindo SabiaQueDiscussão", $articleTalkPage);
+        $this->edit($recentCode,        $recentSection, false, "bot: (3/6) Inserindo Arquivo/Recentes", $recentPage);
+        $this->edit($archiveCode,       'append',       false, "bot: (4/6) Inserindo Propostas/Arquivo", $archivePage);
+        $this->edit('',                 1,              false, "bot: (5/6) Arquivando proposição publicada", $approvedNominationPage);
+        $this->edit($nominatorMessage,  'append',       false, "bot: (6/6) Inserindo ParabénsSQ", $nominatorTalkPage);
+        $this->edit($tweet,             null,           false, "bot: (log) Registro de última proposição inserida", $logPage);
+
+        $creator = $this->retrieveArticleCreator($article);
+        if ($creator) {
+            list($creatorMessage, $creatorTalkPage) = $this->compileUserTalkPage($creator, $article, $newFact, true);
+            $this->edit($creatorMessage, 'append', false, "bot: (xtr) Inserindo ParabénsSQ para criador do artigo", $creatorTalkPage);
+        }
     }
 }
 
