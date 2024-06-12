@@ -112,6 +112,11 @@ class SabiaQue extends WikiAphpiLogged
             return null;
         }
 
+        // Check if username begins with "imported>" (imported user)
+        if (strpos($creator, "imported>") === 0) {
+            return null;
+        }
+
         // Verify if user is not a bot, a blocked or a locked user
         $userParams = [
             'action'    => 'query',
