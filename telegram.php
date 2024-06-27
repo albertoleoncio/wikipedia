@@ -386,15 +386,18 @@ if (isset($_GET["auth_date"])) {
                             <hr>
                             <p>Olá <?=$user['username']?>! Em seguida, autentique-se com sua
                             conta do Telegram usando o botão abaixo.</p>
-                            <script 
+                            <script
                             async src="https://telegram.org/js/telegram-widget.js?22" 
                             data-auth-url="https://alberobot.toolforge.org/telegram.php"
                             data-telegram-login="WikiVerifyBot" data-size="large"></script>
                             <p>Uma nova tela será aberta, onde você fará login via Telegram.
                             Alguns dados poderão ser solicitados pelo próprio Telegram, tal
                             como um número de telefone, mas não teremos acesso a nenhuma
-                            informação sua exceto pelo seu nome e número de usuário na 
+                            informação sua exceto pelo seu nome e número de usuário na
                             plataforma.
+                            </p>
+                            <p>Caso o botão azul não esteja sendo exibido acima, tente abrir
+                            essa página em um navegador diferente ou em uma aba anônima.
                             </p>
                         <?php else: ?>
                             <div class="stepper-wrapper">
@@ -418,7 +421,7 @@ if (isset($_GET["auth_date"])) {
                             class="w3-button w3-white w3-border"
                             onclick="location.href='<?=$_SERVER['SCRIPT_NAME']?>?oauth=seek';"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" aria-label="Wikipedia" 
+                                <svg xmlns="http://www.w3.org/2000/svg" aria-label="Wikipedia"
                                 role="img" style="width: 30px;" viewBox="0 0 512 512">
                                     <rect width="512" height="512" rx="15%" fill="#fff"/>
                                     <path d="m65 152v8c0 2 1 3 4 3 20 1 20 5 28 23l90 196c7 
