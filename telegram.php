@@ -79,7 +79,7 @@ class TelegramVerify extends WikiAphpiOAuth
      */
     public function results()
     {
-        $query = "SELECT t_id, t_date, t_username, w_username, w_id FROM verifications";
+        $query = "SELECT t_id, t_date, t_username, w_username, w_id FROM verifications WHERE w_id IS NOT NULL ORDER BY n DESC";
         $stmt = $this->mysqli->prepare($query);
 
         if (!$stmt) {
@@ -152,8 +152,71 @@ class TelegramVerify extends WikiAphpiOAuth
         }
     }
 
+    /**
+     * Unmutes a Telegram user in a chat.
+     * 
+     * This method sends a request to the Telegram API to unmute a user in a chat. It takes the
+     * authentication data ($authData) and the Telegram verification token ($TelegramVerifyToken)
+     * as parameters. The user is unmuted in the chat with the ID "-1001169425230". The user is
+     * unmuted for 100 seconds and, then, it reverts to the default group permissions.
+     * 
+     * @param array  $authData            Authentication data containing 'id', 'auth_date', and 'username' (optional).
+     * @param string $TelegramVerifyToken The verification token provided by Telegram.
+     * 
+     * @return array The response from the Telegram API as an associative array.
+     */
+    public function unmuteTelegramUser($authData, $TelegramVerifyToken) {
+        $user_id = $authData['id'];
+
+        $params = [
+            "chat_id" => "-1001169425230",
+            "user_id" => $user_id,
+            "until_date" => time() + 100,
+            "permissions" => [
+                "can_send_messages" => true,
+                "can_send_audios" => true,
+                "can_send_documents" => true,
+                "can_send_photos" => true,
+                "can_send_videos" => true,
+                "can_send_video_notes" => true,
+                "can_send_voice_notes" => true,
+                "can_send_polls" => true,
+                "can_send_other_messages" => true,
+                "can_add_web_page_previews" => true,
+                "can_change_info" => false,
+                "can_invite_users" => true,
+                "can_pin_messages" => false,
+                "can_manage_topics" => false,
+            ]
+        ];
+
+        $api = "https://api.telegram.org/bot" . $TelegramVerifyToken . "/restrictChatMember";
+
+        #Make a Curl POST request to the Telegram API
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $api);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($params));
+        $response = curl_exec($curl);
+        curl_close($curl);
+
+        return json_decode($response, true);
+    }
+
 }
 
+$admins = [
+    'Albertoleoncio',
+    'Rkieferbaum',
+    'DarwIn',
+    'Sturm',
+    'GoEThe',
+    'Chicocvenancio',
+    'Teles',
+    'Everton137'
+];
 
 // Instantiate a new TelegramVerify object for handling Telegram verification.
 $verify = new TelegramVerify(
@@ -175,17 +238,15 @@ if (isset($_GET["auth_date"])) {
 
     // Add a new verification entry for the authenticated user.
     $verify->newVerification($authData, $user['username']);
+
+    if (!in_array($user['username'], $admins)) {
+        // Unmute the Telegram user in the group chat.
+        $verify->unmuteTelegramUser($authData, $TelegramVerifyToken);
+    }
 }
 
 
-$admins = [
-    'Albertoleoncio',
-    'Rkieferbaum',
-    'DarwIn',
-    'Sturm',
-    'GoEThe',
-    'Chicocvenancio'
-];
+
 
 ?><!DOCTYPE html>
 <html lang="pt-BR">
