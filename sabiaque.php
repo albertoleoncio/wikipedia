@@ -133,7 +133,7 @@ class SabiaQue extends WikiAphpiLogged
         if (
             isset($local['blockid']) ||
             in_array('bot', $local['groups']) ||
-            in_array($global['locked'])
+            isset($global['locked'])
         ) {
             return null;
         }
