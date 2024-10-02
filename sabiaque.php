@@ -494,7 +494,7 @@ class SabiaQue extends WikiAphpiLogged
         $this->edit($tweet,             null,           false, "bot: (log) Registro de última proposição inserida", $logPage);
 
         $creator = $this->retrieveArticleCreator($article);
-        if ($creator) {
+        if ($creator && $creator !== $nominator) {
             list($creatorMessage, $creatorTalkPage) = $this->compileUserTalkPage($creator, $article, $newFact, true);
             $this->edit($creatorMessage, 'append', false, "bot: (xtr) Inserindo ParabénsSQ para criador do artigo", $creatorTalkPage);
         }
