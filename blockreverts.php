@@ -29,7 +29,7 @@ $notify = array();
 foreach ($rollbacks_API as $rollback) {
 
 	//Recupera nome do alvo
-	preg_match_all('/Foram \[\[WP:REV\|revertidas\]\] as edições de \[\[Special:Contrib(?:s|uições|utions)\/\K[^\]\|]*/', $rollback["comment"], $rollbacked);
+	preg_match_all('/(?:Foi \[\[WP:REV\|revertida\]\] a edição|Foram \[\[WP:REV\|revertidas\]\] as edições) de \[\[Special:Contrib(?:s|uições|utions)\/\K[^\]\|]*/', $rollback["comment"], $rollbacked);
 
 	//Pula caso a reversão tenha sido manual
 	if (!isset($rollbacked["0"]["0"])) continue;
