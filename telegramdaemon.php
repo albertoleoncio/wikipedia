@@ -8,33 +8,78 @@ while (true) {
         $offset = 0;
     }
 
+    // Load restricted users from the file
+    $restricted_users_file = __DIR__ . '/restricted_users.inc';
+    $restricted_users = file_exists($restricted_users_file) ? file($restricted_users_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : [];
+
     $params = [
         'timeout' => 10,
-        'allowed_updates' => '["chat_member"]',
+        'allowed_updates' => '["chat_member","message"]', // Include "message" updates
         'offset' => $offset
     ];
 
     $content = file_get_contents("https://api.telegram.org/bot${TelegramVerifyToken}/getUpdates?" . http_build_query($params));
     $update = json_decode($content, true)["result"];
 
+    if (empty($update)) {
+        // No updates, skip output
+        usleep(200000); // Delay for 0.2 seconds
+        continue;
+    }
+
+    $highest_offset = $offset; // Track the highest offset in the batch
+
     foreach ($update as $event) {
         $offset = $event["update_id"];
         echo "Processing event... ${offset}\n";
-        if (isset($event["chat_member"]["new_chat_member"])) {
+        
+        // Check for messages from restricted users
+        if (isset($event["message"])) {
+            $message_user_id = $event["message"]["from"]["id"];
+            $message_id = $event["message"]["message_id"];
+            $chat_id = $event["message"]["chat"]["id"];
 
+            if (in_array($message_user_id, $restricted_users)) {
+                // Delete the message
+                $delete_params = [
+                    'chat_id' => $chat_id,
+                    'message_id' => $message_id
+                ];
+                $delete_content = file_get_contents("https://api.telegram.org/bot${TelegramVerifyToken}/deleteMessage?" . http_build_query($delete_params));
+                $delete_result = json_decode($delete_content, true);
+                if ($delete_result["ok"]) {
+                    echo "Deleted message ${message_id} from restricted user ${message_user_id}...\n";
+                } else {
+                    echo "Failed to delete message ${message_id} from restricted user ${message_user_id}...\n";
+                }
+            }
+        }
+
+        // Handle restriction updates
+        if (isset($event["chat_member"]["new_chat_member"])) {
+            if ($event["chat_member"]["new_chat_member"]["status"] == "restricted") {
+                $restricted_user_id = $event["chat_member"]["new_chat_member"]["user"]["id"];
+                if (in_array($restricted_user_id, $restricted_users)) {
+                    // Remove the user from the restricted users file
+                    $restricted_users = array_diff($restricted_users, [$restricted_user_id]);
+                    file_put_contents($restricted_users_file, implode(PHP_EOL, $restricted_users) . PHP_EOL);
+                    echo "Removed user ${restricted_user_id} from restricted users list...\n";
+                }
+            }
+        }
+
+        // Handle new chat members
+        if (isset($event["chat_member"]["new_chat_member"])) {
             if ($event["chat_member"]["chat"]["id"] != "-1001169425230") {
-                echo "Ignoring chat...\n";
-                continue;
+                continue; // Ignore unrelated chats
             }
 
             if ($event["chat_member"]["new_chat_member"]["user"]["is_bot"]) {
-                echo "Ignoring bot...\n";
-                continue;
+                continue; // Ignore bots
             }
 
             if ($event["chat_member"]["new_chat_member"]["status"] != "member") {
-                echo "Ignoring non-member...\n";
-                continue;
+                continue; // Ignore non-members
             }
 
             $new_user = $event["chat_member"]["new_chat_member"]["user"]["username"] ?? '';
@@ -101,14 +146,17 @@ while (true) {
                 $content = json_decode($content, true);
                 if ($content["ok"]) {
                     echo "Restricted ${new_user_id}...\n";
+
+                    // Add the restricted user to the file
+                    file_put_contents($restricted_users_file, $new_user_id . PHP_EOL, FILE_APPEND);
                 } else {
                     echo "Failed to restrict ${new_user_id}...\n";
                 }
             }
         }
-        echo "Event processed...\n\n\n";
     }
-    echo "Offset: $offset\n";
+
+    // Update the offset after processing all updates
     file_put_contents("telegram_offset.inc", $offset);
 
     // Delay for a fifth of a second
