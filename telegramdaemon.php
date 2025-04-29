@@ -1,6 +1,11 @@
-<pre><?php
+<?php
 require_once __DIR__ . '/bin/globals.php';
 require_once __DIR__ . '/WikiAphpi/main.php';
+
+function logMessage($type, $message) {
+    $timestamp = date("Y-m-d H:i:s");
+    echo "[$timestamp] [$type] $message\n";
+}
 
 while (true) {
     $offset = file_get_contents(__DIR__ . '/telegram_offset.inc');
@@ -18,8 +23,30 @@ while (true) {
         'offset' => $offset
     ];
 
-    $content = file_get_contents("https://api.telegram.org/bot${TelegramVerifyToken}/getUpdates?" . http_build_query($params));
-    $update = json_decode($content, true)["result"];
+    try {
+        $content = file_get_contents("https://api.telegram.org/bot${TelegramVerifyToken}/getUpdates?" . http_build_query($params));
+        
+        if ($content === false) {
+            logMessage("ERROR", "Failed to fetch updates from Telegram API.");
+            sleep(5); // Wait for 5 seconds before retrying
+            continue;
+        }
+
+        $response = json_decode($content, true);
+
+        if (!isset($response["ok"]) || !$response["ok"]) {
+            logMessage("ERROR", "Telegram API returned an error: " . $response);
+            sleep(5); // Wait for 5 seconds before retrying
+            continue;
+        }
+
+        $update = $response["result"];
+
+    } catch (Exception $e) {
+        logMessage("ERROR", "Exception occurred while fetching updates: " . $e->getMessage());
+        sleep(5); // Wait for 5 seconds before retrying
+        continue;
+    }
 
     if (empty($update)) {
         // No updates, skip output
@@ -27,11 +54,8 @@ while (true) {
         continue;
     }
 
-    $highest_offset = $offset; // Track the highest offset in the batch
-
     foreach ($update as $event) {
         $offset = $event["update_id"];
-        echo "Processing event... ${offset}\n";
         
         // Check for messages from restricted users
         if (isset($event["message"])) {
@@ -47,10 +71,10 @@ while (true) {
                 ];
                 $delete_content = file_get_contents("https://api.telegram.org/bot${TelegramVerifyToken}/deleteMessage?" . http_build_query($delete_params));
                 $delete_result = json_decode($delete_content, true);
-                if ($delete_result["ok"]) {
-                    echo "Deleted message ${message_id} from restricted user ${message_user_id}...\n";
+                if (isset($delete_result["ok"])) {
+                    logMessage("INFO", "Deleted message ${message_id} from restricted user ${message_user_id} in chat ${chat_id}.");
                 } else {
-                    echo "Failed to delete message ${message_id} from restricted user ${message_user_id}...\n";
+                    logMessage("ERROR", "Failed to delete message ${message_id} from restricted user ${message_user_id} in chat ${chat_id}.");
                 }
             }
         }
@@ -63,7 +87,7 @@ while (true) {
                     // Remove the user from the restricted users file
                     $restricted_users = array_diff($restricted_users, [$restricted_user_id]);
                     file_put_contents($restricted_users_file, implode(PHP_EOL, $restricted_users) . PHP_EOL);
-                    echo "Removed user ${restricted_user_id} from restricted users list...\n";
+                    logMessage("INFO", "Removed user ${restricted_user_id} from restricted users list.");
                 }
             }
         }
@@ -85,32 +109,39 @@ while (true) {
             $new_user = $event["chat_member"]["new_chat_member"]["user"]["username"] ?? '';
             $new_user_id = $event["chat_member"]["new_chat_member"]["user"]["id"];
 
-            echo "Processing ${new_user_id}...\n";
+            try {
 
-            $ts_pw = posix_getpwuid(posix_getuid());
-            $ts_mycnf = parse_ini_file($ts_pw['dir'] . "/replica.my.cnf");
-            $con = mysqli_connect(
-                'tools.db.svc.eqiad.wmflabs',
-                $ts_mycnf['user'],
-                $ts_mycnf['password'],
-                $ts_mycnf['user']."__telegram"
-            );
+                $ts_pw = posix_getpwuid(posix_getuid());
+                $ts_mycnf = parse_ini_file($ts_pw['dir'] . "/replica.my.cnf");
+                $con = mysqli_connect(
+                    'tools.db.svc.eqiad.wmflabs',
+                    $ts_mycnf['user'],
+                    $ts_mycnf['password'],
+                    $ts_mycnf['user']."__telegram"
+                );
 
-            $query = "SELECT * FROM `verifications` WHERE `t_id` = '$new_user_id'";
-            $result = mysqli_query($con, $query);
-            if (mysqli_num_rows($result) > 0) {
-                $row = mysqli_fetch_assoc($result);
-                $w_id = $row['w_id'];
+                $query = "SELECT * FROM `verifications` WHERE `t_id` = '$new_user_id'";
+                $result = mysqli_query($con, $query);
+                if (mysqli_num_rows($result) > 0) {
+                    $row = mysqli_fetch_assoc($result);
+                    $w_id = $row['w_id'];
 
-                if ($w_id != null) {
-                    echo "User already verified...\n";
-                    continue;
+                    if ($w_id != null) {
+                        logMessage("INFO", "User ${new_user} (${new_user_id}) already verified as ${w_id}.");
+                        continue;
+                    }
+                } else {
+                    $query = "INSERT IGNORE INTO `verifications` (`t_id`, `t_username`) VALUES ('$new_user_id', '$new_user')";
+                    mysqli_query($con, $query);
+                    mysqli_close($con);
+                    logMessage("INFO", "User ${new_user} (${new_user_id}) added to database.");
                 }
-            } else {
-                $query = "INSERT IGNORE INTO `verifications` (`t_id`, `t_username`) VALUES ('$new_user_id', '$new_user')";
-                mysqli_query($con, $query);
-                mysqli_close($con);
-                echo "User added to database...\n";
+
+            } catch (Exception $e) {
+                logMessage("ERROR", "Database connection error: " . $e->getMessage());
+                logMessage("INFO", "Retrying to connect in 15 seconds.");
+                sleep(15);
+                exit;
             }
 
             # Get user status on Telegram
@@ -144,21 +175,24 @@ while (true) {
                 ];
                 $content = file_get_contents("https://api.telegram.org/bot${TelegramVerifyToken}/restrictChatMember?" . http_build_query($params));
                 $content = json_decode($content, true);
-                if ($content["ok"]) {
-                    echo "Restricted ${new_user_id}...\n";
+                if (isset($content["ok"])) {
+                    $id = $content["result"]["user"]["id"];
+                    logMessage("INFO", "Restricted ${new_user} (${new_user_id}) in chat ${id}.");
 
                     // Add the restricted user to the file
                     file_put_contents($restricted_users_file, $new_user_id . PHP_EOL, FILE_APPEND);
                 } else {
-                    echo "Failed to restrict ${new_user_id}...\n";
+                    logMessage("ERROR", "Failed to restrict ${new_user} (${new_user_id}).");
                 }
             }
         }
-    }
 
-    // Update the offset after processing all updates
-    file_put_contents("telegram_offset.inc", $offset);
+        // Update the offset after processing all updates
+        file_put_contents(__DIR__ . "/telegram_offset.inc", $offset);
+    }
 
     // Delay for a fifth of a second
     usleep(200000); // 200,000 microseconds = 0.2 seconds
 }
+
+// toolforge jobs run telegramdaemon --command "php public_html/telegramdaemon.php" --image php8.2 --continuous
