@@ -72,32 +72,28 @@ class EventosAtuais extends WikiAphpiLogged
             return 'SKIP';
         }
 
-        // If the section was posted less than 2 hours ago, return SKIP
-        if ($parsedSection['elapsed'] < 7200) {
-            echo "<b><2</b>";
-            return 'SKIP';
-        }
-
         // Determine the minimum number of approvals based on elapsed time
         $minConcordo = 0;
         $rejectionAllowed = false;
-        switch (true) {
-            case $elapsed < 14400:
-                echo "<b>2~4</b>";
-                $minConcordo = 5;
-                break;
-            case $elapsed < 21600:
-                echo "<b>4~6</b>";
-                $minConcordo = 3;
-                break;
-            case $elapsed < 28800:
-                echo "<b>6~8</b>";
-                $minConcordo = 1;
-                break;
-            default:
-                echo "<b>>8</b>";
-                $minConcordo = ceil(($concordo + $discordo) * 0.75);
-                $rejectionAllowed = true;
+        if ($elapsed < 7200) { // 0-2h
+            echo "<b>0~2</b>";
+            $minConcordo = 6;
+        } elseif ($elapsed < 14400) { // 2-4h
+            echo "<b>2~4</b>";
+            $minConcordo = 5;
+        } elseif ($elapsed < 21600) { // 4-6h
+            echo "<b>4~6</b>";
+            $minConcordo = 3;
+        } elseif ($elapsed < 43200) { // 6-12h
+            echo "<b>6~12</b>";
+            $minConcordo = 2;
+        } elseif ($elapsed < 86400) { // 12-24h
+            echo "<b>12~24</b>";
+            $minConcordo = 1;
+        } else { // >= 24h
+            echo "<b>>=24</b>";
+            $minConcordo = ceil(($concordo + $discordo) * 0.75);
+            $rejectionAllowed = true; // allow approval or rejection based on ratio
         }
 
         // Check if the number of approvals meets the minimum requirement
