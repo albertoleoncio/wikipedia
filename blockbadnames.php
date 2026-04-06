@@ -127,9 +127,6 @@ class BadNames extends WikiAphpiLogged {
         if (array_search("6286011", array_column($linkshere, 'pageid')) !== false) {
             return true;
         }
-        if (array_search("2077627", array_column($linkshere, 'pageid')) !== false) {
-            return true;
-        }
         return false;
     }
 
@@ -206,11 +203,42 @@ class BadNames extends WikiAphpiLogged {
     }
 
     /**
+     * Processa usuários renomeados
+     */
+    private function processRenamedUsers() {
+        $log = $this->getLog("renameusers", 50);
+        $alreadyCategorized = $this->getCategorizedUserTalkPages("Categoria:!Usuários_renomeados_aguardando_nova_ranálise");
+        $listUsers = [];
+        foreach ($alreadyCategorized as $user) {
+            $listUsers[] = $this->getUserFromUserTalk($user);
+        }
+        
+        foreach ($log["query"]["logevents"] as $event) {
+            #Verifica se o usuário renomeado está bloqueado localmente
+            if ($this->isUserBlocked("User talk:{$event["title"]}")) {
+                echo "Processando usuário {$event["title"]}\n";
+                #Verifa se o usuário já está na categoria de monitoramento de usuários notificados
+                if (array_search($event["title"], $listUsers) === false) {
+                    #Se não estiver, adiciona categoria de monitoramento de usuários notificados
+                    $this->edit(
+                        "\n{{subst:Nome de usuário impróprio/Renomeado|{$event["title"]}}}",
+                        "append",
+                        true,
+                        "bot: Inserindo categoria de usuário renomeado",
+                        "User talk:{$event["title"]}"
+                    );
+                }
+            }
+        }
+    }
+
+    /**
      * Processa usuários
      */
     public function processUsers() {
         $this->processNotifiedUsers();
         $this->processPendingUsers();
+        $this->processRenamedUsers();
     }
 
 }
