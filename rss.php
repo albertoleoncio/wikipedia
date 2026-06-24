@@ -7,13 +7,30 @@ date_default_timezone_set('UTC');
 class RssFeed extends WikiAphpiUnlogged
 {
     /**
+     * Read wikitext from a revision slot, supporting both API shapes.
+     *
+     * @param array $revision
+     * @return string
+     */
+    private function getRevisionText(array $revision)
+    {
+        return $revision['slots']['main']['content']
+            ?? $revision['slots']['main']['*']
+            ?? '';
+    }
+
+    /**
      * Resolve final URL after redirects.
      *
      * @param string $address
      * @return string
      */
-    private function resolveRedirect($address)
+    public function resolveRedirect($address)
     {
+        if (empty($address)) {
+            return '';
+        }
+
         $ch = curl_init($address);
         curl_setopt($ch, CURLOPT_NOBODY, 1);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
@@ -41,7 +58,11 @@ class RssFeed extends WikiAphpiUnlogged
             'piprop' => 'name',
             'titles' => $article,
         ]);
-        $pageData = end($pageImageApi['query']['pages'] ?? []);
+        $pages = $pageImageApi['query']['pages'] ?? [];
+        if (empty($pages)) {
+            return null;
+        }
+        $pageData = end($pages);
 
         if (!isset($pageData['pageimage'])) {
             return null;
@@ -106,7 +127,7 @@ class RssFeed extends WikiAphpiUnlogged
 
         $items = [];
         foreach ($revisions as $article) {
-            $title = $article['slots']['main']['content'] ?? '';
+            $title = $this->getRevisionText($article);
             $items[] = [
                 'title' => $title,
                 'description' => $title . ' é um artigo de destaque na Wikipédia!' . "\n\n" . 'Isso significa que foi identificado como um dos melhores artigos produzidos pela comunidade da Wikipédia.' . "\n\n" . 'O que achou? Ainda tem como melhorar?' . "\n\n" . '#wikipedia #ptwikipedia #ptwiki #conhecimentolivre #artigodedestaque',
@@ -141,7 +162,7 @@ class RssFeed extends WikiAphpiUnlogged
 
         $items = [];
         foreach ($revisions as $prop) {
-            $contentRaw = $prop['slots']['main']['content'] ?? '';
+            $contentRaw = $this->getRevisionText($prop);
             preg_match_all('/…[^\n]*/', $contentRaw, $content);
             preg_match_all('/https:.*/', $contentRaw, $address);
             preg_match_all('/(?<=wiki\/).*/', $contentRaw, $title);
@@ -185,7 +206,7 @@ class RssFeed extends WikiAphpiUnlogged
 
         $items = [];
         foreach ($revisions as $event) {
-            $contentRaw = $event['slots']['main']['content'] ?? '';
+            $contentRaw = $this->getRevisionText($event);
             $content = preg_replace('/ *<!--(.*?)--> */', '', $contentRaw);
             preg_match_all('/\'\'\'\[\[([^\]\|\#]*)|\[\[([^\|]*)\|\'\'\'/', $content, $title);
             $text = preg_replace('/\'|\[\[[^\|\]]*\||\]|\[\[/', '', $content);
@@ -352,5 +373,21 @@ class RssFeed extends WikiAphpiUnlogged
 }
 
 header('Content-type: application/xml');
-$feed = new RssFeed('https://pt.wikipedia.org/w/api.php');
-echo $feed->buildRss();
+
+try {
+    $feed = new RssFeed('https://pt.wikipedia.org/w/api.php');
+    echo $feed->buildRss();
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo '<?xml version="1.0" encoding="UTF-8" ?>';
+    echo "\n<rss version=\"2.0\">";
+    echo "\n<channel>";
+    echo "\n  <title>WikiPT</title>";
+    echo "\n  <description>Erro ao gerar feed</description>";
+    echo "\n  <item>";
+    echo "\n    <title>Erro interno</title>";
+    echo "\n    <description>" . htmlspecialchars($e->getMessage(), ENT_XML1 | ENT_COMPAT, 'UTF-8') . "</description>";
+    echo "\n  </item>";
+    echo "\n</channel>";
+    echo "\n</rss>";
+}
