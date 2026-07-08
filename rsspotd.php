@@ -98,7 +98,6 @@ class PotdRss extends WikiAphpiUnlogged
         $location = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
         $size = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
         $type = curl_getinfo($ch, CURLINFO_CONTENT_TYPE );
-        curl_close($ch);
         return array($location, $size, $type);
     }
 

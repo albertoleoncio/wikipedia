@@ -32,7 +32,6 @@ $params_recentchanges = [
 $ch_recentchanges = curl_init($endPoint."?".http_build_query($params_recentchanges));
 curl_setopt($ch_recentchanges, CURLOPT_RETURNTRANSFER, true);
 $output_recentchanges = curl_exec($ch_recentchanges);
-curl_close($ch_recentchanges);
 $result_recentchanges = json_decode( $output_recentchanges, true );
 
 echo "<b>Mudanças recentes:</b>\n";
@@ -100,7 +99,6 @@ foreach ($lista as $user_block) {
 	$ch_blocks = curl_init($endPoint."?".http_build_query($params_blocks));
 	curl_setopt($ch_blocks, CURLOPT_RETURNTRANSFER, true);
 	$output_blocks = curl_exec($ch_blocks);
-	curl_close($ch_blocks);
 	$result_blocks = json_decode($output_blocks, true);
 
 	//Verifica se faixa de IP está bloqueada. Caso não esteja, realiza o bloqueio.
@@ -137,7 +135,6 @@ function getLoginToken()
 	curl_setopt($ch, CURLOPT_COOKIEJAR, "./cookie.inc");
 	curl_setopt($ch, CURLOPT_COOKIEFILE, "./cookie.inc");
 	$output = curl_exec($ch);
-	curl_close($ch);
 
 	return json_decode($output, true)["query"]["tokens"]["logintoken"];
 }
@@ -162,7 +159,6 @@ function loginRequest($logintoken, $bot_user, $bot_pass)
 	curl_setopt($ch, CURLOPT_COOKIEJAR, "./cookie.inc");
 	curl_setopt($ch, CURLOPT_COOKIEFILE, "./cookie.inc");
 	$output = curl_exec($ch);
-	curl_close($ch);
 }
 
 function getCSRFToken()
@@ -180,7 +176,6 @@ function getCSRFToken()
 	curl_setopt($ch, CURLOPT_COOKIEJAR, "./cookie.inc");
 	curl_setopt($ch, CURLOPT_COOKIEFILE, "./cookie.inc");
 	$output = curl_exec($ch);
-	curl_close($ch);
 
 	return json_decode($output, true)["query"]["tokens"]["csrftoken"];
 }
@@ -210,7 +205,6 @@ function block($csrftoken, $user_block)
 	curl_setopt($ch, CURLOPT_COOKIEJAR, "./cookie.inc");
 	curl_setopt($ch, CURLOPT_COOKIEFILE, "./cookie.inc");
 	$output = curl_exec($ch);
-	curl_close($ch);
 
 	$output = json_decode($output, true);
 

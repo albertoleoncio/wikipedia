@@ -38,7 +38,6 @@ class RssFeed extends WikiAphpiUnlogged
         curl_setopt($ch, CURLOPT_HEADER, false);
         curl_exec($ch);
         $location = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
-        curl_close($ch);
 
         return $location;
     }
@@ -95,7 +94,6 @@ class RssFeed extends WikiAphpiUnlogged
         $location = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
         $size = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
         $type = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-        curl_close($ch);
 
         if (!isset($meta['Artist']['value'])) {
             $meta['Artist']['value'] = 'Desconhecido';
@@ -390,6 +388,7 @@ try {
     echo "\n  <item>";
     echo "\n    <title>Erro interno</title>";
     echo "\n    <description>" . htmlspecialchars($e->getMessage(), ENT_XML1 | ENT_COMPAT, 'UTF-8') . "</description>";
+    echo "\n    <text>" . htmlspecialchars($e->getTraceAsString(), ENT_XML1 | ENT_COMPAT, 'UTF-8') . "</text>";
     echo "\n  </item>";
     echo "\n</channel>";
     echo "\n</rss>";

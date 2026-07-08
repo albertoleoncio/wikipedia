@@ -278,7 +278,6 @@ class BlockList extends WikiAphpiUnlogged
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_USERAGENT, 'AlbeROBOT/1.0');
         $get = curl_exec($ch);
-        curl_close($ch);
 
         preg_match('/\d*(?="><b>aqui<)/', $get, $output);
 
