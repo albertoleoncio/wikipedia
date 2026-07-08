@@ -51,6 +51,9 @@ class RssFeed extends WikiAphpiUnlogged
      */
     private function findImage($article)
     {
+        // Unescape the article title for the API query.
+        $article = rawurldecode($article);
+
         $pageImageApi = $this->see([
             'action' => 'query',
             'redirects' => '1',
