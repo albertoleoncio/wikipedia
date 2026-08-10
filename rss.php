@@ -326,7 +326,7 @@ class RssFeed extends WikiAphpiUnlogged
 
         if (!is_null($item['instagram'])) {
             $xml .= "\n    <instagram>" . $item['instagram']['image_about'] . '</instagram>';
-            $xml .= "\n    <enclosure url=\"" . $item['instagram']['image_url'] . "\" length=\"" . $item['instagram']['image_lenght'] . "\" type=\"" . $item['instagram']['image_type'] . "\" />";
+            $xml .= "\n    <enclosure url=\"" . htmlspecialchars($item['instagram']['image_url']) . "\" length=\"" . $item['instagram']['image_lenght'] . "\" type=\"" . $item['instagram']['image_type'] . "\" />";
         }
 
         $xml .= "\n  </item>";
