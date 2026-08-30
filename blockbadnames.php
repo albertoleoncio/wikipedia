@@ -87,6 +87,23 @@ class BadNames extends WikiAphpiLogged {
     }
 
     /**
+     * Recupera lista de eventos de log de renomeação de usuários
+     * @param string $logType Tipo de log
+     * @param int $limit Quantidade de eventos a serem recuperados
+     * @return array Lista de eventos
+     */
+    private function getRenameLog() {
+        $params = [
+            "action"  => "query",
+            "list"    => "logevents",
+            "formatversion" => "2",
+            "letype"  => "renameuser",
+            "lelimit" => "50",
+        ];
+        return $this->see($params)["query"]["logevents"];
+    }
+
+    /**
      * Coleta lista de afluentes da página de discussão do usuário
      * @param string $userTalk Página de discussão do usuário
      * @return array Lista de páginas afluentes
@@ -206,26 +223,32 @@ class BadNames extends WikiAphpiLogged {
      * Processa usuários renomeados
      */
     private function processRenamedUsers() {
-        $log = $this->getLog("renameusers", 50);
-        $alreadyCategorized = $this->getCategorizedUserTalkPages("Categoria:!Usuários_renomeados_aguardando_nova_ranálise");
+        $log = $this->getRenameLog();
+        $alreadyCategorized = $this->getCategorizedUserTalkPages("Categoria:!Usuários_renomeados_aguardando_nova_análise");
         $listUsers = [];
         foreach ($alreadyCategorized as $user) {
-            $listUsers[] = $this->getUserFromUserTalk($user);
+            $listUsers[] = $this->getUserFromUserTalk($user["title"]);
         }
-        
-        foreach ($log["query"]["logevents"] as $event) {
+
+        foreach ($log as $event) {
             #Verifica se o usuário renomeado está bloqueado localmente
-            if ($this->isUserBlocked("User talk:{$event["title"]}")) {
-                echo "Processando usuário {$event["title"]}\n";
+            $username = $event["params"]["newuser"] ?? null;
+            if ($username === null) {
+                continue;
+            }
+
+            if ($this->isUserBlocked("User talk:{$username}")) {
+                echo "Processando usuário {$username}\n";
                 #Verifa se o usuário já está na categoria de monitoramento de usuários notificados
-                if (array_search($event["title"], $listUsers) === false) {
+                if (array_search($username, $listUsers) === false) {
                     #Se não estiver, adiciona categoria de monitoramento de usuários notificados
+                    echo "- Usuário {$username} não está na categoria de monitoramento de usuários renomeados, adicionando...\n";
                     $this->edit(
-                        "\n{{subst:Nome de usuário impróprio/Renomeado|{$event["title"]}}}",
+                        "\n{{subst:Nome de usuário impróprio/Renomeado|{$username}}}",
                         "append",
                         true,
                         "bot: Inserindo categoria de usuário renomeado",
-                        "User talk:{$event["title"]}"
+                        "User talk:{$username}"
                     );
                 }
             }
