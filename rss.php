@@ -318,15 +318,15 @@ class RssFeed extends WikiAphpiUnlogged
             : 'https://pt.wikipedia.org/w/index.php?diff=' . $item['guid'];
 
         $xml = "\n  <item>";
-        $xml .= "\n    <title>" . $item['title'] . '</title>';
-        $xml .= "\n    <link>" . $item['link'] . '</link>';
-        $xml .= "\n    <pubDate>" . $item['timestamp'] . '</pubDate>';
-        $xml .= "\n    <guid>" . $guid . '</guid>';
-        $xml .= "\n    <description>" . $item['description'] . '</description>';
+        $xml .= "\n    <title>" . htmlspecialchars($item['title'], ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</title>';
+        $xml .= "\n    <link>" . htmlspecialchars($item['link'], ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</link>';
+        $xml .= "\n    <pubDate>" . htmlspecialchars($item['timestamp'], ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</pubDate>';
+        $xml .= "\n    <guid>" . htmlspecialchars($guid, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</guid>';
+        $xml .= "\n    <description>" . htmlspecialchars($item['description'], ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</description>';
 
         if (!is_null($item['instagram'])) {
-            $xml .= "\n    <instagram>" . $item['instagram']['image_about'] . '</instagram>';
-            $xml .= "\n    <enclosure url=\"" . htmlspecialchars($item['instagram']['image_url']) . "\" length=\"" . $item['instagram']['image_lenght'] . "\" type=\"" . $item['instagram']['image_type'] . "\" />";
+            $xml .= "\n    <instagram>" . htmlspecialchars($item['instagram']['image_about'], ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</instagram>';
+            $xml .= "\n    <enclosure url=\"" . htmlspecialchars($item['instagram']['image_url'], ENT_XML1 | ENT_QUOTES, 'UTF-8') . '" length="' . htmlspecialchars($item['instagram']['image_lenght'], ENT_XML1 | ENT_QUOTES, 'UTF-8') . '" type="' . htmlspecialchars($item['instagram']['image_type'], ENT_XML1 | ENT_QUOTES, 'UTF-8') . '" />';
         }
 
         $xml .= "\n  </item>";
