@@ -179,12 +179,12 @@ class BlockingDiscussion extends WikiAphpiOAuth
      * @param bool $sysop A boolean indicating if the current user is a sysop or not.
      * @return int|array The revision ID of the edit (not sysop) or an array with the mass message API result.
      */
-    private function doRequestMassMessage($conta, $sysop)
+    private function doRequestMassMessage($conta, $sysop, $username)
     {
         $params = [
                 'spamlist'  => 'Wikipédia:Pedidos/Discussão de bloqueio/Massmessage',
                 'subject'   => "Discussão de bloqueio de $conta",
-                'message'   => "{{subst:Usuário:Teles/MassMessage/Desbloqueio|1=$conta|3=~~~~~}}"
+                'message'   => "{{subst:Usuário:Teles/MassMessage/Desbloqueio|1=$conta|2=$username|3=~~~~~}}"
         ];
         if ($sysop) {
             $params += [
@@ -212,7 +212,7 @@ class BlockingDiscussion extends WikiAphpiOAuth
     }
 
     /**
-     * GNotifying a user about their discussion block.
+     * Notifying a user about their discussion block.
      *
      * @param string $conta The username of the user to notify.
      * @return array An array containing information about the link.
@@ -272,7 +272,7 @@ class BlockingDiscussion extends WikiAphpiOAuth
             $this->doMoveOldDB($conta);
             $this->doDesambig($conta);
         }
-        $this->doRequestMassMessage($conta, $sysop);
+        $this->doRequestMassMessage($conta, $sysop, $user['username']);
         $this->doNotifyUser($conta);
 
         return true;
