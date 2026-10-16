@@ -341,6 +341,9 @@ if ($conta) {
                                     id="evidence" name="evidence" rows="4" cols="50"
                                     placeholder="Insira aqui as evidências para a solicitação do bloqueio. Utilize [[wikicode]] e não esqueça de assinar com ~~~~."></textarea>
                                 </p>
+                                <p class="w3-center w3-wide">PRÉ-VISUALIZAÇÃO:</p>
+                                <p id="evidence-preview-status" class="w3-text-grey" role="status" aria-live="polite">A pré-visualização aparecerá aqui.</p>
+                                <div id="evidence-preview" class="w3-container w3-border w3-padding-16"></div>
                                 <br>
                                 <p class="w3-center w3-wide">DEFESA:</p>
                                 <p>
@@ -363,5 +366,120 @@ if ($conta) {
         </div>
         <hr>
         <?php include_once('footer.html'); ?>
+        <script>
+            const evidenceInput = document.getElementById('evidence');
+            const evidencePreview = document.getElementById('evidence-preview');
+            const evidencePreviewStatus = document.getElementById('evidence-preview-status');
+            const previewShadow = evidencePreview ? evidencePreview.attachShadow({ mode: 'open' }) : null;
+            let previewTimer;
+            let previewController;
+            let previewRequest = 0;
+
+            if (previewShadow) {
+                const previewBaseStyles = document.createElement('style');
+                previewBaseStyles.textContent = `
+                    .mw-body-content {
+                        all: initial;
+                        box-sizing: border-box;
+                        color: #202122;
+                        direction: ltr;
+                        display: block;
+                        font-family: sans-serif;
+                        font-size: 14px;
+                        line-height: 1.6;
+                        unicode-bidi: isolate;
+                    }
+                `;
+                const previewStylesheet = document.createElement('link');
+                previewStylesheet.rel = 'stylesheet';
+                previewStylesheet.href = 'https://pt.wikipedia.org/w/load.php?lang=pt&modules=site.styles%7Cskins.vector.styles%7Cmediawiki.skinning.interface%7Cmediawiki.skinning.content.parsoid&only=styles&skin=vector';
+                const previewContent = document.createElement('div');
+                previewContent.className = 'mw-body-content';
+                previewShadow.append(previewBaseStyles, previewStylesheet, previewContent);
+            }
+
+            if (evidenceInput) {
+                evidenceInput.addEventListener('input', () => {
+                    clearTimeout(previewTimer);
+                    if (previewController) {
+                        previewController.abort();
+                        previewController = null;
+                    }
+
+                    const request = ++previewRequest;
+                    const wikitext = evidenceInput.value;
+                    previewShadow.querySelector('.mw-body-content').replaceChildren();
+
+                    if (!wikitext.trim()) {
+                        evidencePreviewStatus.textContent = 'A pré-visualização aparecerá aqui.';
+                        return;
+                    }
+
+                    evidencePreviewStatus.textContent = 'Aguardando para gerar a pré-visualização...';
+                    previewTimer = setTimeout(async () => {
+                        const controller = new AbortController();
+                        previewController = controller;
+                        evidencePreviewStatus.textContent = 'Gerando pré-visualização...';
+
+                        const params = new URLSearchParams({
+                            action: 'parse',
+                            format: 'json',
+                            formatversion: '2',
+                            prop: 'text|modules|jsconfigvars',
+                            preview: 'true',
+                            title: 'Wikipedia:Pedidos a administradores/Discussão de bloqueio/Pré-visualização',
+                            text: wikitext,
+                            origin: '*'
+                        });
+
+                        try {
+                            const response = await fetch(`https://pt.wikipedia.org/w/api.php?${params}`, {
+                                signal: controller.signal
+                            });
+                            if (!response.ok) {
+                                throw new Error(`A API respondeu com o status ${response.status}.`);
+                            }
+
+                            const data = await response.json();
+                            if (data.error) {
+                                throw new Error(data.error.info || 'A API não conseguiu interpretar o código wiki.');
+                            }
+                            if (request !== previewRequest) {
+                                return;
+                            }
+
+                            const styleModules = [
+                                'site.styles',
+                                'skins.vector.styles',
+                                'mediawiki.skinning.interface',
+                                'mediawiki.skinning.content.parsoid',
+                                ...data.parse.modulestyles
+                            ];
+                            const styleParams = new URLSearchParams({
+                                lang: 'pt',
+                                modules: [...new Set(styleModules)].join('|'),
+                                only: 'styles',
+                                skin: 'vector'
+                            });
+                            previewShadow.querySelector('link').href =
+                                `https://pt.wikipedia.org/w/load.php?${styleParams}`;
+
+                            const parsedPreview = new DOMParser().parseFromString(data.parse.text, 'text/html');
+                            parsedPreview.querySelectorAll('a[href^="/"]').forEach(link => {
+                                link.href = new URL(link.getAttribute('href'), 'https://pt.wikipedia.org').href;
+                            });
+                            previewShadow.querySelector('.mw-body-content').replaceChildren(...parsedPreview.body.childNodes);
+                            evidencePreviewStatus.textContent = 'Pré-visualização atualizada.';
+                        } catch (error) {
+                            if (error.name === 'AbortError' || request !== previewRequest) {
+                                return;
+                            }
+
+                            evidencePreviewStatus.textContent = `Não foi possível gerar a pré-visualização: ${error.message}`;
+                        }
+                    }, 500);
+                });
+            }
+        </script>
     </body>
 </html>
