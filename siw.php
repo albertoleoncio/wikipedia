@@ -246,16 +246,28 @@ class Siw extends WikiAphpiUnlogged
 //Filter $_GET
 $formNoMinor = (isset($_GET["menor"])) ? true : false ;
 $formInactive = filter_var($_GET["inativo"] ?? 1, FILTER_SANITIZE_NUMBER_INT);
-$formTitle = filter_var($_GET["artigo_titulo"] ?? "", FILTER_SANITIZE_STRING);
+$formTitle = $_GET["artigo_titulo"] ?? "";
+if (!is_string($formTitle)) {
+    $formTitle = "";
+}
 $formTitle = str_replace('_', ' ', $formTitle);
 if (empty($formTitle)) $formTitle = false;
 
 //Call Siw class
 $api = new Siw('https://pt.wikipedia.org/w/api.php');
-$users = $api->getValidContributors($formTitle, $formInactive, $formNoMinor);
-if(count($users) != 0) { 
-    $userArray = json_encode(array_keys($users));
+$users = ($formTitle === false) ? [] : $api->getValidContributors($formTitle, $formInactive, $formNoMinor);
+if ($users === false) {
+    $users = [];
 }
+$formTitleForHtml = htmlspecialchars($formTitle ?: '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+$userArray = json_encode(
+    array_keys($users),
+    JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_INVALID_UTF8_SUBSTITUTE
+);
+$formTitleForJavascript = json_encode(
+    $formTitle === false ? '' : $formTitle,
+    JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_INVALID_UTF8_SUBSTITUTE
+);
 
 ?><!DOCTYPE html>
 <html lang="pt-BR">
@@ -270,7 +282,7 @@ if(count($users) != 0) {
 	        function sendAvisos() {
 
 	            // Get user array from PHP and iterate through each user
-	            var formTitle = '<?=$formTitle?>';
+	            var formTitle = <?=$formTitleForJavascript?>;
 	            
 	            var users = <?=$userArray?>;
 	            if (users.length > 1) {
@@ -311,7 +323,7 @@ if(count($users) != 0) {
 		      					<p class="w3-text-grey">
 		      						<input
 		      						class="w3-input w3-padding-16 w3-border"
-		      						value='<?=($formTitle)?:"";?>'
+									value="<?=$formTitleForHtml?>"
 		      						type="text"
 		      						name="artigo_titulo">
 		      					</p>
@@ -354,13 +366,13 @@ if(count($users) != 0) {
 		      				<?php elseif(!$users): ?>
 		      					<!-- Display a message indicating that the specified article does not exist. -->
 		      					<h3 class='w3-center' style='hyphens: auto;'>
-		      						<b>Artigo <?=$formTitle?> não existe!</b>
+									<b>Artigo <?=$formTitleForHtml?> não existe!</b>
 		      					</h3>
 		      				<?php else: ?>
 		      					<!-- Display the list of article editors and provide options for sending notifications. -->
 		      					<p class='w3-center w3-wide'>EDITORES DO ARTIGO</p>
 								<h3 class='w3-center' style='hyphens: auto;'>
-									<b><?=$formTitle?></b>
+									<b><?=$formTitleForHtml?></b>
 								</h3>
 								<small>Ao clicar, uma nova janela será aberta para o envio da mensagem. Em seguida, clique em "Publicar alterações", ou use o atalho ALT+SHIFT+S.</small>
 								<br>
