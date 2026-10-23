@@ -4,6 +4,10 @@
 
 Scripts para alguns bots da Wikipédia, dentre outras coisas.
 
+## Requisitos de execução
+
+Para formatar datas localizadas no PHP 8.4, habilite a extensão `intl`.
+
 ## Usuários
 
 Operador dos bots: https://pt.wikipedia.org/wiki/Usuário:Albertoleoncio

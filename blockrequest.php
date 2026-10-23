@@ -124,11 +124,9 @@ class BloqBotRequests extends WikiAphpiLogged
             'description' => $this->descriptionToWikitext($info['params']['description']),
             'user' => $info['user'],
             'logid' => $info['logid'],
-            'time' => utf8_encode(
-                strftime(
-                    "%Hh%Mmin de %d de %B de %Y",
-                    strtotime($info['timestamp'])
-                )
+            'time' => formatPortugueseDate(
+                "HH'h'mm'min' 'de' dd 'de' MMMM 'de' yyyy",
+                strtotime($info['timestamp'])
             )
         ];
     }

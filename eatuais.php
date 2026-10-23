@@ -138,7 +138,7 @@ class EventosAtuais extends WikiAphpiLogged
         $code_events = explode("\n", $code_sections["1"]);
 
         // Insert the new event at the beginning of the list
-        array_unshift($code_events, "*<!-- ".utf8_encode(strftime('%e de %B de %Y', time()))." --> ".$texto);
+        array_unshift($code_events, "*<!-- ".formatPortugueseDate("d 'de' MMMM 'de' yyyy")." --> ".$texto);
 
         // Remove the oldest event from the list
         $oldest = end($code_events);
@@ -207,7 +207,7 @@ class EventosAtuais extends WikiAphpiLogged
         } else {
             $html = '{{PD}}';
         }
-        $html .= "\n{{EvRdiscussão|data1=".utf8_encode(strftime('%e de %B de %Y', time()))."|oldid1=$diff}}";
+        $html .= "\n{{EvRdiscussão|data1=".formatPortugueseDate("d 'de' MMMM 'de' yyyy")."|oldid1=$diff}}";
         return [$html, $talkPage];
     }
 

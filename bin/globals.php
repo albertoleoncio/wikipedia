@@ -13,3 +13,23 @@ require_once __DIR__.'/../../credenciais.php';
 
 // URL da API da Wikipedia em português (padrão)
 $api_url = 'https://pt.wikipedia.org/w/api.php';
+
+// Função para substituir strftime() por IntlDateFormatter, deprecada em PHP 8.1, para formatar datas em português
+function formatPortugueseDate(string $pattern, ?int $timestamp = null): string
+{
+    $formatter = new IntlDateFormatter(
+        'pt_BR',
+        IntlDateFormatter::NONE,
+        IntlDateFormatter::NONE,
+        date_default_timezone_get(),
+        IntlDateFormatter::GREGORIAN,
+        $pattern
+    );
+    $formattedDate = $formatter->format($timestamp ?? time());
+
+    if ($formattedDate === false) {
+        throw new RuntimeException('Não foi possível formatar a data em português.');
+    }
+
+    return $formattedDate;
+}

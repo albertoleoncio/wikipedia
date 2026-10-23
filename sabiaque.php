@@ -211,7 +211,7 @@ class SabiaQue extends WikiAphpiLogged
         $html = explode("\n…", $html);
 
         // Add the new Sabia Que nomination text with timestamp to the template.
-        array_splice($html, 1, 0, " ".rtrim($new)."<!--".strtolower(utf8_encode(strftime('%B de %Y')))."-->\n");
+        array_splice($html, 1, 0, " ".rtrim($new)."<!--".strtolower(formatPortugueseDate("MMMM 'de' yyyy"))."-->\n");
 
         // Split the last line of the template at the end tag and get the oldest Sabia Que fact.
         $ultima = explode("<!-- FIM", $html[count($html)-1]);
@@ -255,7 +255,7 @@ class SabiaQue extends WikiAphpiLogged
         }
 
         // Get the article talk page
-        $timestamp = utf8_encode(strftime('%d de %B de %Y'));
+        $timestamp = formatPortugueseDate("dd 'de' MMMM 'de' yyyy");
         $page = "Discussão:{$article}";
         if ($this->isPageCreated($page)) {
             $html = $this->get($page, 0);
@@ -376,9 +376,9 @@ class SabiaQue extends WikiAphpiLogged
         // Compile the congratulatory message content.
         $html  = "{{subst:ParabénsSQ\n";
         $html .= "|artigo=''[[{$article}]]''\n";
-        $html .= "|data=".utf8_encode(strftime('%d de %B de %Y'))."\n";
+        $html .= "|data=".formatPortugueseDate("dd 'de' MMMM 'de' yyyy")."\n";
         $html .= "|curiosidade=…{$new}\n";
-        $html .= "|arquivo=".utf8_encode(strftime('%Y/%m'))."\n";
+        $html .= "|arquivo=".formatPortugueseDate('yyyy/MM')."\n";
         if ($creator) {
             $html .= "|criador=sim\n";
         }
@@ -395,8 +395,8 @@ class SabiaQue extends WikiAphpiLogged
      */
     private function composeArchive($proposition)
     {
-        $page = "Wikipédia:Sabia que/Propostas/Arquivo/".utf8_encode(strftime('%Y/%m'));
-        $html = "\n\n$proposition{{ADC|sim|".utf8_encode(strftime('%d de %B de %Y'))."|~~~}}";
+        $page = "Wikipédia:Sabia que/Propostas/Arquivo/".formatPortugueseDate('yyyy/MM');
+        $html = "\n\n$proposition{{ADC|sim|".formatPortugueseDate("dd 'de' MMMM 'de' yyyy")."|~~~}}";
         return [$html, $page];
     }
 
