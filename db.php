@@ -220,7 +220,7 @@ class BlockingDiscussion extends WikiAphpiOAuth
     private function doNotifyUser($conta)
     {
         return $this->edit(
-            '{{subst:Notificação de discussão de bloqueio}}', 
+            '{{subst:Notificação de discussão de bloqueio|titulo=não}}', 
             'new', 
             FALSE, 
             "Notificação de discussão de bloqueio", 
